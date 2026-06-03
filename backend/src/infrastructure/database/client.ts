@@ -1,0 +1,19 @@
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import { env } from "../../config/env.js";
+import * as schema from "./schema/index.js";
+import { ExtractTablesWithRelations } from "drizzle-orm";
+import { PgTransaction } from "drizzle-orm/pg-core";
+import { PostgresJsQueryResultHKT } from "drizzle-orm/postgres-js";
+
+const queryClient = postgres(env.DATABASE_URL);
+export const db = drizzle(queryClient, { schema });
+
+export type Database = typeof db;
+export type Transaction = PgTransaction<
+    PostgresJsQueryResultHKT,
+    typeof schema,
+    ExtractTablesWithRelations<typeof schema>
+>;
+
+export type DatabaseOrTransaction = Database | Transaction;
