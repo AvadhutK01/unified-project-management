@@ -9,6 +9,7 @@ const envSchema = z.object({
         .default("development"),
     PORT: z.coerce.number().default(3000),
     DATABASE_URL: z.string().url(),
+    JWT_SECRET: z.string().default("supersecret"),
 });
 
 const parsed = envSchema.safeParse(process.env);
