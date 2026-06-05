@@ -2,8 +2,8 @@ import {
     useState,
     useRef,
     useEffect,
-    KeyboardEvent,
-    ClipboardEvent,
+    type KeyboardEvent,
+    type ClipboardEvent,
 } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {

@@ -189,7 +189,7 @@ const Login = () => {
                     </div>
 
                     {/* Google SSO */}
-                    <Button
+                    {/* <Button
                         variant="outline"
                         className="w-full h-10 gap-2.5 font-medium"
                         type="button"
@@ -201,16 +201,16 @@ const Login = () => {
                     >
                         <GoogleIcon />
                         Continue with Google
-                    </Button>
+                    </Button> */}
 
                     {/* Divider */}
-                    <div className="relative flex items-center gap-3">
+                    {/* <div className="relative flex items-center gap-3">
                         <div className="flex-1 border-t border-border" />
                         <span className="text-xs text-muted-foreground uppercase tracking-wide">
                             or
                         </span>
                         <div className="flex-1 border-t border-border" />
-                    </div>
+                    </div> */}
 
                     {/* Form */}
                     <form

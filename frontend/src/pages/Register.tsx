@@ -301,7 +301,7 @@ const Register = () => {
                     </div>
 
                     {/* Google SSO — only on step 0 */}
-                    {step === 0 && (
+                    {/* {step === 0 && (
                         <>
                             <Button
                                 variant="outline"
@@ -326,7 +326,7 @@ const Register = () => {
                                 <div className="flex-1 border-t border-border" />
                             </div>
                         </>
-                    )}
+                    )} */}
 
                     <form
                         onSubmit={handleSubmit(onSubmit)}

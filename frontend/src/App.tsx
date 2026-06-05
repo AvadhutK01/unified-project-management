@@ -10,9 +10,10 @@ import Spinner from "./components/common/Spinner";
 import { Toaster } from "sonner";
 import Home from "./pages/Home";
 
-const Login = lazy(() => import("./pages/auth/Login"));
-const Register = lazy(() => import("./pages/auth/Register"));
-const VerifyOtp = lazy(() => import("./pages/auth/VerifyOtp"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const VerifyOtp = lazy(() => import("./pages/VerifyOtp"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 
 const Loading = () => (
     <div className="flex h-screen items-center justify-center">
@@ -69,6 +70,14 @@ const router = createBrowserRouter([
                 element: (
                     <Suspense fallback={<Loading />}>
                         <VerifyOtp />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/forgot-password",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <ForgotPassword />
                     </Suspense>
                 ),
             },
