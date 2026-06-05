@@ -11,7 +11,11 @@ import {
     internalServerError,
     unauthorizedError,
 } from "../../../shared/errors/app-error.js";
-import { generateToken } from "../../../shared/utils/jwt.js";
+import {
+    generateToken,
+    generateResetToken,
+    verifyResetToken,
+} from "../../../shared/utils/jwt.js";
 
 /**
  * Registers a new user or updates OTPs for an unverified user.
@@ -256,4 +260,115 @@ export const loginUser = async (data: { email: string; password: string }) => {
         email: user.email,
         phoneNumber: user.phoneNumber,
     };
+};
+
+/**
+ * Generates a password reset OTP for a verified user.
+ * @param email The user's email.
+ * @throws AppError if the user is not found or is not verified.
+ * @returns Object containing user ID, email, and generated OTP.
+ */
+export const generateResetPwdOtp = async (email: string) => {
+    const user = await findUserByEmail(email);
+    if (!user) {
+        throw notFoundError("User not found");
+    }
+
+    if (!user.isVerified) {
+        throw badRequestError("User is not verified");
+    }
+
+    const updated = await updateUserOtp(user.id, {
+        pwdResetOtp: "123456",
+    });
+
+    if (!updated) {
+        throw internalServerError("Failed to generate password reset OTP");
+    }
+
+    return {
+        id: updated.id,
+        email: updated.email,
+        pwdResetOtp: updated.pwdResetOtp,
+    };
+};
+
+/**
+ * Verifies a password reset OTP and generates a temporary reset token.
+ * @param data Parameters including email and OTP.
+ * @throws AppError if the user is not found, unverified, or if the OTP is invalid.
+ * @returns Object containing the generated reset token.
+ */
+export const verifyPwdResetOtp = async (data: {
+    email: string;
+    otp: string;
+}) => {
+    const user = await findUserByEmail(data.email);
+    if (!user) {
+        throw notFoundError("User not found");
+    }
+
+    if (!user.isVerified) {
+        throw badRequestError("User is not verified");
+    }
+
+    if (!user.pwdResetOtp || user.pwdResetOtp !== data.otp) {
+        throw badRequestError("Invalid OTP");
+    }
+
+    const updated = await updateUserOtp(user.id, {
+        pwdResetOtp: null,
+    });
+
+    if (!updated) {
+        throw internalServerError("Failed to consume OTP");
+    }
+
+    const token = generateResetToken({ email: user.email });
+    return {
+        token,
+    };
+};
+
+/**
+ * Resets a user's password using a valid reset token.
+ * @param data Parameters including reset token and new password.
+ * @throws AppError if the token is invalid/expired, user not found, or update fails.
+ * @returns Object containing the updated user's ID.
+ */
+export const resetPassword = async (data: {
+    token: string;
+    password: string;
+}) => {
+    try {
+        const { email } = verifyResetToken(data.token);
+        const user = await findUserByEmail(email);
+        if (!user) {
+            throw notFoundError("User not found");
+        }
+
+        const updated = await updateUserOtp(user.id, {
+            password: data.password,
+        });
+
+        if (!updated) {
+            throw internalServerError("Failed to reset password");
+        }
+
+        return {
+            id: updated.id,
+        };
+    } catch (error: unknown) {
+        if (error instanceof Error && error.name === "TokenExpiredError") {
+            throw badRequestError("Reset password request expired");
+        }
+        if (
+            error instanceof Error &&
+            (error.name === "JsonWebTokenError" ||
+                error.message === "Invalid token purpose")
+        ) {
+            throw badRequestError("Invalid reset token");
+        }
+        throw error;
+    }
 };

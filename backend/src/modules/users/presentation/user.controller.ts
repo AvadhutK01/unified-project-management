@@ -4,6 +4,9 @@ import {
     verifyOtp,
     resendOtp,
     loginUser,
+    generateResetPwdOtp,
+    verifyPwdResetOtp,
+    resetPassword,
 } from "../application/user.use-cases.js";
 
 /**
@@ -116,6 +119,75 @@ export const handleLogin = async (
     try {
         const { email, password } = req.body;
         const result = await loginUser({ email, password });
+        return res.status(200).json({
+            status: "success",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Handles generating password reset OTP.
+ * @param req Express request object containing email.
+ * @param res Express response object.
+ * @param next Express next function.
+ */
+export const handleGenerateResetPwdOtp = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    try {
+        const { email } = req.body;
+        const result = await generateResetPwdOtp(email);
+        return res.status(200).json({
+            status: "success",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Handles verifying password reset OTP and returning a reset token.
+ * @param req Express request object containing email and otp.
+ * @param res Express response object.
+ * @param next Express next function.
+ */
+export const handleVerifyResetPwdOtp = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    try {
+        const { email, otp } = req.body;
+        const result = await verifyPwdResetOtp({ email, otp });
+        return res.status(200).json({
+            status: "success",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Handles password reset request.
+ * @param req Express request object containing token and new password.
+ * @param res Express response object.
+ * @param next Express next function.
+ */
+export const handleResetPassword = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    try {
+        const { token, password } = req.body;
+        const result = await resetPassword({ token, password });
         return res.status(200).json({
             status: "success",
             data: result,

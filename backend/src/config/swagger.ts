@@ -255,6 +255,146 @@ const swaggerDocument = {
                 },
             },
         },
+        "/users/generate-reset-pwd-otp": {
+            post: {
+                summary: "Generate password reset OTP",
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                required: ["email"],
+                                properties: {
+                                    email: { type: "string", format: "email" },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    200: {
+                        description: "Reset OTP generated successfully",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        status: {
+                                            type: "string",
+                                            example: "success",
+                                        },
+                                        data: {
+                                            type: "object",
+                                            properties: {
+                                                id: { type: "string" },
+                                                email: { type: "string" },
+                                                pwdResetOtp: { type: "string" },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    400: { description: "Bad Request" },
+                    404: { description: "User not found" },
+                },
+            },
+        },
+        "/users/verify-reset-pwd-otp": {
+            post: {
+                summary: "Verify password reset OTP",
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                required: ["email", "otp"],
+                                properties: {
+                                    email: { type: "string", format: "email" },
+                                    otp: { type: "string" },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    200: {
+                        description:
+                            "OTP verified successfully. Temporary reset token is returned.",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        status: {
+                                            type: "string",
+                                            example: "success",
+                                        },
+                                        data: {
+                                            type: "object",
+                                            properties: {
+                                                token: { type: "string" },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    400: { description: "Bad Request" },
+                    404: { description: "User not found" },
+                },
+            },
+        },
+        "/users/reset-password": {
+            post: {
+                summary: "Reset user password with valid token",
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                required: ["token", "password"],
+                                properties: {
+                                    token: { type: "string" },
+                                    password: { type: "string" },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    200: {
+                        description: "Password reset successfully",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        status: {
+                                            type: "string",
+                                            example: "success",
+                                        },
+                                        data: {
+                                            type: "object",
+                                            properties: {
+                                                id: { type: "string" },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    400: { description: "Bad Request" },
+                    404: { description: "User not found" },
+                },
+            },
+        },
     },
 };
 

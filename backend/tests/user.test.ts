@@ -4,6 +4,9 @@ import {
     verifyOtp,
     resendOtp,
     loginUser,
+    generateResetPwdOtp,
+    verifyPwdResetOtp,
+    resetPassword,
 } from "../src/modules/users/application/user.use-cases.js";
 
 describe("User Flow Integration Tests", () => {
@@ -237,5 +240,141 @@ describe("User Flow Integration Tests", () => {
                 phoneNumber: "9999999999",
             }),
         ).rejects.toThrow("Email and phone number do not match");
+    });
+
+    it("should successfully generate a password reset OTP for a verified user", async () => {
+        const unique = Date.now() + 40;
+        const emailE = `usere_${unique}@example.com`;
+        const phoneE = `4444${String(unique).slice(-6)}`;
+
+        await registerUser({
+            username: "usere",
+            email: emailE,
+            phoneNumber: phoneE,
+            password: "Password@123",
+        });
+
+        await verifyOtp({
+            email: emailE,
+            phoneNumber: phoneE,
+            emailOtp: "123456",
+            phoneOtp: "123456",
+        });
+
+        const result = await generateResetPwdOtp(emailE);
+        expect(result.email).toBe(emailE);
+        expect(result.pwdResetOtp).toBe("123456");
+    });
+
+    it("should fail to generate reset OTP for an unverified user", async () => {
+        const unique = Date.now() + 50;
+        const emailF = `userf_${unique}@example.com`;
+        const phoneF = `3333${String(unique).slice(-6)}`;
+
+        await registerUser({
+            username: "userf",
+            email: emailF,
+            phoneNumber: phoneF,
+            password: "Password@123",
+        });
+
+        await expect(generateResetPwdOtp(emailF)).rejects.toThrow(
+            "User is not verified",
+        );
+    });
+
+    it("should fail to verify password reset OTP with an invalid OTP", async () => {
+        const unique = Date.now() + 60;
+        const emailG = `userg_${unique}@example.com`;
+        const phoneG = `2222${String(unique).slice(-6)}`;
+
+        await registerUser({
+            username: "userg",
+            email: emailG,
+            phoneNumber: phoneG,
+            password: "Password@123",
+        });
+
+        await verifyOtp({
+            email: emailG,
+            phoneNumber: phoneG,
+            emailOtp: "123456",
+            phoneOtp: "123456",
+        });
+
+        await generateResetPwdOtp(emailG);
+
+        await expect(
+            verifyPwdResetOtp({
+                email: emailG,
+                otp: "999999",
+            }),
+        ).rejects.toThrow("Invalid OTP");
+    });
+
+    it("should successfully verify OTP, get token, and reset password", async () => {
+        const unique = Date.now() + 70;
+        const emailH = `userh_${unique}@example.com`;
+        const phoneH = `1111${String(unique).slice(-6)}`;
+
+        await registerUser({
+            username: "userh",
+            email: emailH,
+            phoneNumber: phoneH,
+            password: "Password@123",
+        });
+
+        await verifyOtp({
+            email: emailH,
+            phoneNumber: phoneH,
+            emailOtp: "123456",
+            phoneOtp: "123456",
+        });
+
+        await generateResetPwdOtp(emailH);
+
+        const verifyResult = await verifyPwdResetOtp({
+            email: emailH,
+            otp: "123456",
+        });
+
+        expect(verifyResult.token).toBeDefined();
+
+        const result = await resetPassword({
+            token: verifyResult.token,
+            password: "NewPassword@123",
+        });
+
+        expect(result.id).toBeDefined();
+
+        const loginResult = await loginUser({
+            email: emailH,
+            password: "NewPassword@123",
+        });
+        expect(loginResult.isVerified).toBe(true);
+    });
+
+    it("should reject invalid forget/reset schemas", async () => {
+        const {
+            generateResetPwdOtpSchema,
+            verifyResetPwdOtpSchema,
+            resetPasswordSchema,
+        } =
+            await import("../src/modules/users/presentation/user.validation.js");
+
+        const forgotResult = await generateResetPwdOtpSchema.safeParseAsync({
+            body: { email: "invalid" },
+        });
+        expect(forgotResult.success).toBe(false);
+
+        const verifyResult = await verifyResetPwdOtpSchema.safeParseAsync({
+            body: { email: "invalid", otp: "123" },
+        });
+        expect(verifyResult.success).toBe(false);
+
+        const resetResult = await resetPasswordSchema.safeParseAsync({
+            body: { token: "", password: "pwd" },
+        });
+        expect(resetResult.success).toBe(false);
     });
 });

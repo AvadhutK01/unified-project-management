@@ -14,6 +14,7 @@ export const users = pgTable("users", {
     password: varchar("password", { length: 255 }).notNull(),
     emailOtp: varchar("email_otp", { length: 255 }),
     phoneOtp: varchar("phone_otp", { length: 255 }),
+    pwdResetOtp: varchar("pwd_reset_otp", { length: 255 }),
     isVerified: boolean("is_verified").default(false).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),

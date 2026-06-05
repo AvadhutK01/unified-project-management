@@ -91,6 +91,7 @@ export const updateUserOtp = async (
         password?: string;
         emailOtp?: string | null;
         phoneOtp?: string | null;
+        pwdResetOtp?: string | null;
     },
 ) => {
     const [user] = await db

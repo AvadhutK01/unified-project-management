@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "pwd_reset_otp" varchar(255);

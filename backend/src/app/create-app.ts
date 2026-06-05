@@ -4,6 +4,7 @@ import { registerRoutes } from "./routes.js";
 import { serveSwagger } from "../config/swagger.js";
 import { errorHandler } from "../shared/middleware/error-handler.js";
 import { notFound } from "../shared/middleware/not-found.js";
+import { requestLogger } from "../shared/middleware/request-logger.js";
 
 /**
  * Factory function to instantiate, configure, and return the Express application.
@@ -13,6 +14,8 @@ export const createApp = (): Express => {
     const app = express();
 
     app.set("trust proxy", 1);
+
+    app.use(requestLogger);
 
     app.use(
         cors({

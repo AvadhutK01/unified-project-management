@@ -90,3 +90,29 @@ export const loginSchema = z.object({
         password: z.string(),
     }),
 });
+
+export const generateResetPwdOtpSchema = z.object({
+    body: z.object({
+        email: z.string().email(),
+    }),
+});
+
+export const verifyResetPwdOtpSchema = z.object({
+    body: z.object({
+        email: z.string().email(),
+        otp: z.string().regex(/^\d{6}$/, "OTP must be exactly 6 digits"),
+    }),
+});
+
+export const resetPasswordSchema = z.object({
+    body: z.object({
+        token: z.string(),
+        password: z
+            .string()
+            .min(8)
+            .regex(
+                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])/,
+                "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+            ),
+    }),
+});
