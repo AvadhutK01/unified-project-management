@@ -5,13 +5,17 @@ import {
     RouterProvider,
     Outlet,
 } from "react-router-dom";
-import { Suspense } from "react";
+import { Suspense, lazy } from "react";
 import Spinner from "./components/common/Spinner";
 import { Toaster } from "sonner";
 import Home from "./pages/Home";
 
+const Login = lazy(() => import("./pages/auth/Login"));
+const Register = lazy(() => import("./pages/auth/Register"));
+const VerifyOtp = lazy(() => import("./pages/auth/VerifyOtp"));
+
 const Loading = () => (
-    <div className="flex h-full items-center justify-center py-24">
+    <div className="flex h-screen items-center justify-center">
         <Spinner />
     </div>
 );
@@ -41,6 +45,30 @@ const router = createBrowserRouter([
                 element: (
                     <Suspense fallback={<Loading />}>
                         <Home />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/login",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <Login />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/register",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <Register />
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/verify-otp",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <VerifyOtp />
                     </Suspense>
                 ),
             },
