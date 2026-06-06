@@ -31,6 +31,7 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     const token = localStorage.getItem("token");
 
     if (!token) {
+        toast.dismiss();
         toast.error("Please login to continue");
         return <Navigate to="/login" replace />;
     }

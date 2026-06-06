@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { RegisterBrandPanel } from "@/features/auth/components/RegisterBrandPanel";
 import { useOtpInput } from "@/features/auth/hooks/useOtpInput";
-import { OtpInputRow } from "@/components/common/OtpInputRow";
+import { OtpInputRow } from "@/features/auth/components/OtpInputRow";
 import { useResendOtp, useVerifyOtp } from "../hooks/useOtp";
 
 const OTP_LENGTH = 6;
@@ -60,7 +60,10 @@ const VerifyOtp = () => {
                 phoneOtp: mobileOtp.otp.join(""),
             },
             {
-                onSuccess: () => {
+                onSuccess: (response) => {
+                    if (response?.data?.token) {
+                        localStorage.setItem("token", response.data.token);
+                    }
                     toast.success("Verification successful!");
                     navigate("/");
                 },

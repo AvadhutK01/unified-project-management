@@ -15,13 +15,13 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { api } from "@/lib/axios";
 import { RegisterBrandPanel } from "@/features/auth/components/RegisterBrandPanel";
 import { StepIndicator } from "@/features/auth/components/StepIndicator";
 import {
     registerSchema,
     type RegisterFormData,
 } from "@/features/auth/schemas/auth.schema";
+import { useRegisterUser } from "../hooks/useAuth";
 
 const STEPS = [{ label: "Your info" }, { label: "Security" }];
 
@@ -51,12 +51,12 @@ const strengthColors = [
 const Register = () => {
     const navigate = useNavigate();
 
-    const baseUrl = import.meta.env.VITE_PUBLIC_API_BASE_URL;
-
     const [step, setStep] = useState(0);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [passwordValue, setPasswordValue] = useState("");
+
+    const { mutate: registerUser } = useRegisterUser();
 
     const {
         register,
@@ -78,32 +78,32 @@ const Register = () => {
     const handleBack = () => setStep((s) => s - 1);
 
     const onSubmit = async (data: RegisterFormData) => {
-        try {
-            const response = await api.post(`${baseUrl}/users/register`, {
+        registerUser(
+            {
                 username: data.fullName,
                 email: data.email,
                 phoneNumber: data.mobile,
                 password: data.password,
-            });
-
-            // store token if returned
-            const token = response?.data?.data?.token;
-            if (token) localStorage.setItem("token", token);
-
-            navigate("/verify-otp", {
-                state: { email: data.email, mobile: data.mobile },
-            });
-            toast.success(
-                "Account created! Please verify your email and phone number.",
-            );
-        } catch (error: any) {
-            toast.dismiss();
-            toast.error(
-                error?.response?.data?.message ||
-                    "Registration failed. Please try again.",
-            );
-            console.log(error);
-        }
+            },
+            {
+                onSuccess: () => {
+                    navigate("/verify-otp", {
+                        state: { email: data.email, mobile: data.mobile },
+                    });
+                    toast.success(
+                        "Account created! Please verify your email and phone number.",
+                    );
+                },
+                onError: (error: any) => {
+                    console.log(error);
+                    toast.dismiss();
+                    toast.error(
+                        error?.response?.data?.message ||
+                            "Registration failed. Please try again.",
+                    );
+                },
+            },
+        );
     };
 
     const stepHeadings = [

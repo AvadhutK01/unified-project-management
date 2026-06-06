@@ -41,6 +41,15 @@ export const useOtpInput = (otp_length: number) => {
     };
 
     const filled = otp.every((d) => d !== "");
+    const reset = () => setOtp(Array(otp_length).fill(""));
 
-    return { otp, refs, filled, handleChange, handleKeyDown, handlePaste };
+    return {
+        otp,
+        refs,
+        filled,
+        handleChange,
+        handleKeyDown,
+        handlePaste,
+        reset,
+    };
 };

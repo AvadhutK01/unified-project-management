@@ -7,18 +7,19 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { api } from "@/lib/axios";
 import { LoginBrandPanel } from "@/features/auth/components/LoginBrandPanel";
 import {
     loginSchema,
     type LoginFormData,
 } from "@/features/auth/schemas/auth.schema";
+import { useLoginUser } from "../hooks/useAuth";
 
 const Login = () => {
     const navigate = useNavigate();
-    const baseUrl = import.meta.env.VITE_PUBLIC_API_BASE_URL;
 
     const [showPassword, setShowPassword] = useState(false);
+
+    const { mutate: loginUser } = useLoginUser();
 
     const {
         register,
@@ -29,39 +30,46 @@ const Login = () => {
     });
 
     const onSubmit = async (data: LoginFormData) => {
-        try {
-            const response = await api.post(`${baseUrl}/users/login`, {
+        loginUser(
+            {
                 email: data.email,
                 password: data.password,
-            });
+            },
+            {
+                onSuccess: (response) => {
+                    const token = response?.data?.token;
 
-            const token = response?.data?.data?.token;
-            if (token) {
-                localStorage.setItem("token", token);
-            }
+                    if (!response?.data?.isVerified) {
+                        navigate("/verify-otp", {
+                            state: {
+                                email: data.email,
+                                mobile: response.data.phoneNumber,
+                            },
+                        });
+                        toast.info(
+                            "Please verify your email and phone number before logging in.",
+                        );
+                        return;
+                    }
 
-            if (!response.data.data.isVerified) {
-                navigate("/verify-otp", {
-                    state: {
-                        email: data.email,
-                        mobile: response.data.data.phoneNumber,
-                    },
-                });
-                toast.info(
-                    "Please verify your email and phone number before logging in.",
-                );
-                return;
-            }
+                    if (token) {
+                        localStorage.setItem("token", token);
+                    }
 
-            navigate("/");
-            toast.success("Login successful!");
-        } catch (error: any) {
-            toast.error(
-                error.response?.data?.message ||
-                    "Login failed. Please try again.",
-            );
-            console.log(error);
-        }
+                    navigate("/");
+                    toast.success("Login successful!");
+                },
+
+                onError: (error: any) => {
+                    console.log(error);
+                    toast.dismiss();
+                    toast.error(
+                        error.response?.data?.message ||
+                            "Login failed. Please try again.",
+                    );
+                },
+            },
+        );
     };
 
     return (
