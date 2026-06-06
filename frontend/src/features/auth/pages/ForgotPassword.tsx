@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { api } from "@/api/axios";
+import { api } from "@/lib/axios";
 
 const OTP_LENGTH = 6;
 

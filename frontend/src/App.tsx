@@ -10,10 +10,12 @@ import Spinner from "./components/common/Spinner";
 import { toast, Toaster } from "sonner";
 import Home from "./pages/Home";
 
-const Login = lazy(() => import("./pages/auth/Login"));
-const Register = lazy(() => import("./pages/auth/Register"));
-const VerifyOtp = lazy(() => import("./pages/auth/VerifyOtp"));
-const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
+const Login = lazy(() => import("./features/auth/pages/Login"));
+const Register = lazy(() => import("./features/auth/pages/Register"));
+const VerifyOtp = lazy(() => import("./features/auth/pages/VerifyOtp"));
+const ForgotPassword = lazy(
+    () => import("./features/auth/pages/ForgotPassword"),
+);
 
 const Loading = () => (
     <div className="flex h-screen items-center justify-center">
@@ -52,7 +54,6 @@ const RootLayout = () => {
             <div className="">
                 <Outlet />
             </div>
-            {/* <BottomNav /> */}
         </>
     );
 };

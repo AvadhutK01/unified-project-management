@@ -2,16 +2,12 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
     Eye,
     EyeOff,
     Layers,
     ArrowRight,
     ArrowLeft,
-    Users,
-    Zap,
-    BarChart3,
     Loader2,
     Check,
 } from "lucide-react";
@@ -19,47 +15,19 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { api } from "@/api/axios";
-
-const registerSchema = z
-    .object({
-        fullName: z
-            .string()
-            .min(2, "Name must be at least 2 characters")
-            .max(60, "Name is too long"),
-        email: z.email("Please enter a valid email address"),
-        mobile: z
-            .string()
-            .regex(/^\+?[1-9]\d{9,14}$/, "Please enter a valid mobile number"),
-        password: z
-            .string()
-            .min(8, "Password must be at least 8 characters")
-            .refine(
-                (v) => /[A-Z]/.test(v),
-                "Must contain at least one uppercase letter",
-            )
-            .refine((v) => /[0-9]/.test(v), "Must contain at least one number"),
-        confirmPassword: z.string(),
-        terms: z.literal(true, "You must accept the terms"),
-    })
-    .refine((data) => data.password === data.confirmPassword, {
-        message: "Passwords do not match",
-        path: ["confirmPassword"],
-    });
-
-type RegisterFormData = z.infer<typeof registerSchema>;
+import { api } from "@/lib/axios";
+import { RegisterBrandPanel } from "@/features/auth/components/RegisterBrandPanel";
+import { StepIndicator } from "@/features/auth/components/StepIndicator";
+import {
+    registerSchema,
+    type RegisterFormData,
+} from "@/features/auth/schemas/auth.schema";
 
 const STEPS = [{ label: "Your info" }, { label: "Security" }];
 
 const STEP_FIELDS: (keyof RegisterFormData)[][] = [
     ["fullName", "email", "mobile"],
     ["password", "confirmPassword", "terms"],
-];
-
-const features = [
-    { Icon: Users, text: "Invite your team in seconds" },
-    { Icon: Zap, text: "Automate repetitive workflows" },
-    { Icon: BarChart3, text: "Track progress with live dashboards" },
 ];
 
 const getStrength = (password: string) => {
@@ -80,140 +48,15 @@ const strengthColors = [
     "bg-green-500",
 ];
 
-const GoogleIcon = () => (
-    <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
-        <path
-            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-            fill="#4285F4"
-        />
-        <path
-            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-            fill="#34A853"
-        />
-        <path
-            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-            fill="#FBBC05"
-        />
-        <path
-            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-            fill="#EA4335"
-        />
-    </svg>
-);
-
-const BrandPanel = () => (
-    <div
-        className="hidden lg:flex lg:w-[45%] flex-col justify-between p-12 relative overflow-hidden"
-        style={{
-            background:
-                "linear-gradient(145deg, #da7756 0%, #c4624a 55%, #a84f3a 100%)",
-        }}
-    >
-        <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute -top-16 -left-16 w-72 h-72 rounded-full border border-white/10" />
-            <div className="absolute top-8 left-8 w-72 h-72 rounded-full border border-white/10" />
-            <div className="absolute -bottom-24 -right-16 w-80 h-80 rounded-full border border-white/10" />
-            <div className="absolute bottom-8 right-8 w-80 h-80 rounded-full border border-white/10" />
-        </div>
-
-        <div className="relative z-10 flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20">
-                <Layers className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-white font-bold text-xl tracking-tight">
-                Unified
-            </span>
-        </div>
-
-        <div className="relative z-10 space-y-10">
-            <div className="space-y-4">
-                <div className="inline-flex items-center gap-2 bg-white/15 border border-white/20 rounded-full px-3.5 py-1.5">
-                    <span className="w-2 h-2 rounded-full bg-green-300 animate-pulse" />
-                    <span className="text-white text-xs font-medium">
-                        Free 14-day trial — no credit card needed
-                    </span>
-                </div>
-                <h1 className="text-[2.6rem] font-bold text-white leading-[1.15] tracking-tight">
-                    Start shipping
-                    <br />
-                    faster today
-                </h1>
-                <p className="text-white/75 text-base leading-relaxed max-w-xs">
-                    Join thousands of teams who use Unified to plan, track, and
-                    deliver their best work.
-                </p>
-            </div>
-
-            <div className="space-y-3">
-                {features.map(({ Icon, text }) => (
-                    <div key={text} className="flex items-center gap-3.5">
-                        <div className="w-8 h-8 bg-white/15 rounded-lg flex items-center justify-center shrink-0 border border-white/10">
-                            <Icon className="w-4 h-4 text-white" />
-                        </div>
-                        <span className="text-white/85 text-sm font-medium">
-                            {text}
-                        </span>
-                    </div>
-                ))}
-            </div>
-        </div>
-    </div>
-);
-
-const StepIndicator = ({ current }: { current: number }) => (
-    <div className="flex items-center gap-0">
-        {STEPS.map((step, i) => {
-            const done = i < current;
-            const active = i === current;
-            return (
-                <div key={step.label} className="flex items-center">
-                    <div className="flex flex-col items-center gap-1">
-                        <div
-                            className={cn(
-                                "w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-all duration-300",
-                                done &&
-                                    "bg-primary border-primary text-primary-foreground",
-                                active &&
-                                    "bg-background border-primary text-primary",
-                                !done &&
-                                    !active &&
-                                    "bg-background border-border text-muted-foreground",
-                            )}
-                        >
-                            {done ? <Check className="w-3.5 h-3.5" /> : i + 1}
-                        </div>
-                        <span
-                            className={cn(
-                                "text-[10px] font-medium whitespace-nowrap",
-                                active
-                                    ? "text-foreground"
-                                    : "text-muted-foreground",
-                            )}
-                        >
-                            {step.label}
-                        </span>
-                    </div>
-                    {i < STEPS.length - 1 && (
-                        <div
-                            className={cn(
-                                "h-0.5 w-12 mb-4 mx-1 transition-colors duration-300",
-                                done ? "bg-primary" : "bg-border",
-                            )}
-                        />
-                    )}
-                </div>
-            );
-        })}
-    </div>
-);
-
 const Register = () => {
+    const navigate = useNavigate();
+
     const baseUrl = import.meta.env.VITE_PUBLIC_API_BASE_URL;
+
     const [step, setStep] = useState(0);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [passwordValue, setPasswordValue] = useState("");
-    const navigate = useNavigate();
 
     const {
         register,
@@ -273,7 +116,7 @@ const Register = () => {
 
     return (
         <div className="flex min-h-screen bg-background">
-            <BrandPanel />
+            <RegisterBrandPanel />
 
             <div className="flex-1 flex flex-col items-center justify-center px-6 py-10">
                 <div className="w-full max-w-105 space-y-6">
@@ -288,7 +131,7 @@ const Register = () => {
                     </div>
 
                     {/* Step indicator */}
-                    <StepIndicator current={step} />
+                    <StepIndicator current={step} steps={STEPS} />
 
                     {/* Heading */}
                     <div className="space-y-1.5">
