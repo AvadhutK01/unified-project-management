@@ -7,13 +7,13 @@ import {
 } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import Spinner from "./components/common/Spinner";
-import { Toaster } from "sonner";
+import { toast, Toaster } from "sonner";
 import Home from "./pages/Home";
 
-const Login = lazy(() => import("./pages/Login"));
-const Register = lazy(() => import("./pages/Register"));
-const VerifyOtp = lazy(() => import("./pages/VerifyOtp"));
-const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const Login = lazy(() => import("./pages/auth/Login"));
+const Register = lazy(() => import("./pages/auth/Register"));
+const VerifyOtp = lazy(() => import("./pages/auth/VerifyOtp"));
+const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
 
 const Loading = () => (
     <div className="flex h-screen items-center justify-center">
@@ -23,6 +23,27 @@ const Loading = () => (
 
 const RouteError = () => {
     return <Navigate to="/" replace />;
+};
+
+const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        toast.error("Please login to continue");
+        return <Navigate to="/login" replace />;
+    }
+
+    return <>{children}</>;
+};
+
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+        return <Navigate to="/" replace />;
+    }
+
+    return <>{children}</>;
 };
 
 const RootLayout = () => {
@@ -45,7 +66,9 @@ const router = createBrowserRouter([
                 path: "/",
                 element: (
                     <Suspense fallback={<Loading />}>
-                        <Home />
+                        <PrivateRoute>
+                            <Home />
+                        </PrivateRoute>
                     </Suspense>
                 ),
             },
@@ -53,7 +76,9 @@ const router = createBrowserRouter([
                 path: "/login",
                 element: (
                     <Suspense fallback={<Loading />}>
-                        <Login />
+                        <PublicRoute>
+                            <Login />
+                        </PublicRoute>
                     </Suspense>
                 ),
             },
@@ -61,7 +86,9 @@ const router = createBrowserRouter([
                 path: "/register",
                 element: (
                     <Suspense fallback={<Loading />}>
-                        <Register />
+                        <PublicRoute>
+                            <Register />
+                        </PublicRoute>
                     </Suspense>
                 ),
             },
@@ -69,7 +96,9 @@ const router = createBrowserRouter([
                 path: "/verify-otp",
                 element: (
                     <Suspense fallback={<Loading />}>
-                        <VerifyOtp />
+                        <PublicRoute>
+                            <VerifyOtp />
+                        </PublicRoute>
                     </Suspense>
                 ),
             },
@@ -77,7 +106,9 @@ const router = createBrowserRouter([
                 path: "/forgot-password",
                 element: (
                     <Suspense fallback={<Loading />}>
-                        <ForgotPassword />
+                        <PublicRoute>
+                            <ForgotPassword />
+                        </PublicRoute>
                     </Suspense>
                 ),
             },
