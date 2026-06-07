@@ -59,7 +59,7 @@ export const getColor = (input: string) => {
  * @param dateString
  * @returns
  */
-export const formatLastActive = (dateString: string) => {
+export const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString(undefined, {
         year: "numeric",

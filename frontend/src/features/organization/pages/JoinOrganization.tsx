@@ -46,7 +46,7 @@ export default function JoinOrganization() {
             <div className="w-full max-w-lg space-y-6">
                 {/* Back */}
                 <button
-                    onClick={() => navigate("/onboarding")}
+                    onClick={() => navigate("/org-setup")}
                     className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                     <ArrowLeft className="size-4" />
@@ -175,7 +175,7 @@ export default function JoinOrganization() {
                 <p className="text-center text-sm text-muted-foreground">
                     Want to start fresh?{" "}
                     <button
-                        onClick={() => navigate("/onboarding/create")}
+                        onClick={() => navigate("/org-setup/create")}
                         className="text-primary hover:underline font-medium"
                     >
                         Create an organization

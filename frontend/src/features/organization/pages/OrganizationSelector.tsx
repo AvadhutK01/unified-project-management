@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { OrganizationCard } from "@/features/organization/components/OrganizationCard";
 import { SectionHeader } from "@/features/organization/components/SectionHeader";
 import { useOrganizationsQuery } from "../hooks/useOrganizations";
-import { getColor, getInitials, formatLastActive } from "@/lib/utils";
+import { getColor, getInitials, formatDate } from "@/lib/utils";
 import { useOrganizationStore } from "@/store/organization.store";
 
 export default function OrganizationSelector() {
@@ -25,7 +25,7 @@ export default function OrganizationSelector() {
                 role: "Member",
                 memberCount: 1,
                 slug: org.slug,
-                lastActive: formatLastActive(org.updatedAt),
+                lastActive: formatDate(org.updatedAt),
             })),
         [organizations],
     );
@@ -62,11 +62,11 @@ export default function OrganizationSelector() {
                     ))}
 
                     <div
-                        onClick={() => navigate("/onboarding/create")}
+                        onClick={() => navigate("/org-setup/create")}
                         role="button"
                         tabIndex={0}
                         onKeyDown={(e) =>
-                            e.key === "Enter" && navigate("/onboarding/create")
+                            e.key === "Enter" && navigate("/org-setup/create")
                         }
                         className="flex flex-col items-center justify-center gap-3 p-5 rounded-xl border-2 border-dashed border-border bg-card cursor-pointer hover:border-primary/50 hover:bg-accent/30 transition-all duration-200 min-h-37 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >

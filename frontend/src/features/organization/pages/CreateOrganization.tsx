@@ -86,7 +86,7 @@ export default function CreateOrganization() {
 
     const handleBack = () => {
         if (step === 0) {
-            navigate("/onboarding");
+            navigate(-1);
         } else {
             setStep((s) => Math.max(s - 1, 0));
             window.scrollTo({ top: 0, behavior: "smooth" });
@@ -105,7 +105,7 @@ export default function CreateOrganization() {
             {
                 onSuccess: (response) => {
                     setActiveOrganization(response);
-                    navigate("/onboarding/success");
+                    navigate("/org-setup/success");
                 },
                 onError: (error: any) => {
                     console.error(error);

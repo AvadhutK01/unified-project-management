@@ -65,7 +65,7 @@ const VerifyOtp = () => {
                         localStorage.setItem("token", response.data.token);
                     }
                     toast.success("Verification successful!");
-                    navigate("/onboarding");
+                    navigate("/org-setup");
                 },
 
                 onError: (error: any) => {

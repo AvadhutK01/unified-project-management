@@ -46,7 +46,7 @@ export default function OrganizationSetup() {
                             <Button
                                 className="w-full"
                                 size="lg"
-                                onClick={() => navigate("/onboarding/create")}
+                                onClick={() => navigate("/org-setup/create")}
                             >
                                 Get Started
                             </Button>
@@ -72,7 +72,7 @@ export default function OrganizationSetup() {
                                 variant="outline"
                                 className="w-full"
                                 size="lg"
-                                onClick={() => navigate("/onboarding/join")}
+                                onClick={() => navigate("/org-setup/join")}
                             >
                                 Join Now
                             </Button>

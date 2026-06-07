@@ -63,3 +63,17 @@ export const createOrganization = async (payload: {
     const { data } = await api.post("/organizations", formData);
     return data.data;
 };
+
+export const updateOrganization = async (
+    id: string,
+    payload: {
+        name: string;
+        slug: string;
+        websiteUrl?: string | null;
+        description?: string | null;
+        status?: string;
+    },
+): Promise<Organization> => {
+    const { data } = await api.put(`/organizations/${id}`, payload);
+    return data.data;
+};

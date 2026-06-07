@@ -2,14 +2,14 @@ import { Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-type BadgeVariant =
-    | "default"
-    | "secondary"
-    | "outline"
-    | "success"
-    | "warning"
-    | "info"
-    | "destructive";
+// type BadgeVariant =
+//     | "default"
+//     | "secondary"
+//     | "outline"
+//     | "success"
+//     | "warning"
+//     | "info"
+//     | "destructive";
 
 interface OrganizationCardProps {
     id: string;
@@ -23,11 +23,11 @@ interface OrganizationCardProps {
     onClick: () => void;
 }
 
-const ROLE_VARIANT: Record<string, BadgeVariant> = {
-    Owner: "default",
-    Admin: "warning",
-    Member: "secondary",
-};
+// const ROLE_VARIANT: Record<string, BadgeVariant> = {
+//     Owner: "default",
+//     Admin: "warning",
+//     Member: "secondary",
+// };
 
 export function OrganizationCard({
     name,

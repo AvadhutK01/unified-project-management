@@ -19,13 +19,13 @@ const OrganizationLoader = () => {
         console.log(data.organizations);
 
         if (organizationCount === 0) {
-            navigate("/onboarding", { replace: true });
+            navigate("/org-setup", { replace: true });
         } else if (organizationCount === 1) {
             const organization = data.organizations?.[0];
             setActiveOrganization(organization);
             navigate(`/${organization?.slug}/dashboard`, { replace: true });
         } else {
-            navigate("/onboarding/select", { replace: true });
+            navigate("/org-setup/select", { replace: true });
         }
     }, [data, isLoading, navigate, setActiveOrganization]);
 

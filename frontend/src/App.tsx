@@ -12,6 +12,7 @@ import { toast, Toaster } from "sonner";
 import Home from "./pages/Home";
 import Dashboard from "./features/dashboard/Dashboard";
 import { useOrganizationStore } from "./store/organization.store";
+import MainLayout from "./layout/MainLayout";
 
 const Login = lazy(() => import("./features/auth/pages/Login"));
 const Register = lazy(() => import("./features/auth/pages/Register"));
@@ -36,6 +37,9 @@ const OrganizationSuccess = lazy(
 );
 const OrganizationLoader = lazy(
     () => import("./features/organization/pages/OrganizationLoader"),
+);
+const Organizations = lazy(
+    () => import("./features/organization/pages/Organizations"),
 );
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -68,11 +72,11 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
 
     const allowedPaths = [
         "/organization-loader",
-        "/onboarding",
-        "/onboarding/create",
-        "/onboarding/join",
-        "/onboarding/select",
-        "/onboarding/success",
+        "/org-setup",
+        "/org-setup/create",
+        "/org-setup/join",
+        "/org-setup/select",
+        "/org-setup/success",
     ];
     const isAllowedPath = allowedPaths.some(
         (path) =>
@@ -172,7 +176,7 @@ const router = createBrowserRouter([
                 ),
             },
             {
-                path: "/onboarding",
+                path: "/org-setup",
                 element: (
                     <Suspense fallback={<Loading />}>
                         <PrivateRoute>
@@ -182,7 +186,7 @@ const router = createBrowserRouter([
                 ),
             },
             {
-                path: "/onboarding/create",
+                path: "/org-setup/create",
                 element: (
                     <Suspense fallback={<Loading />}>
                         <PrivateRoute>
@@ -192,7 +196,7 @@ const router = createBrowserRouter([
                 ),
             },
             {
-                path: "/onboarding/join",
+                path: "/org-setup/join",
                 element: (
                     <Suspense fallback={<Loading />}>
                         <PrivateRoute>
@@ -202,7 +206,7 @@ const router = createBrowserRouter([
                 ),
             },
             {
-                path: "/onboarding/select",
+                path: "/org-setup/select",
                 element: (
                     <Suspense fallback={<Loading />}>
                         <PrivateRoute>
@@ -212,7 +216,7 @@ const router = createBrowserRouter([
                 ),
             },
             {
-                path: "/onboarding/success",
+                path: "/org-setup/success",
                 element: (
                     <Suspense fallback={<Loading />}>
                         <PrivateRoute>
@@ -225,9 +229,23 @@ const router = createBrowserRouter([
                 path: "/:slug/dashboard",
                 element: (
                     <Suspense fallback={<Loading />}>
-                        <PrivateRoute>
-                            <Dashboard />
-                        </PrivateRoute>
+                        <MainLayout>
+                            <PrivateRoute>
+                                <Dashboard />
+                            </PrivateRoute>
+                        </MainLayout>
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/:slug/organizations",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <MainLayout>
+                            <PrivateRoute>
+                                <Organizations />
+                            </PrivateRoute>
+                        </MainLayout>
                     </Suspense>
                 ),
             },
@@ -235,7 +253,9 @@ const router = createBrowserRouter([
                 path: "*",
                 element: (
                     <Suspense fallback={<Loading />}>
-                        <NotFound />
+                        <MainLayout>
+                            <NotFound />
+                        </MainLayout>
                     </Suspense>
                 ),
             },
