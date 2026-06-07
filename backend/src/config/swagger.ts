@@ -4,10 +4,10 @@ import swaggerUi from "swagger-ui-express";
 const swaggerDocument = {
     openapi: "3.0.0",
     info: {
-        title: "User Registration & OTP Verification API",
+        title: "Project Management API",
         version: "1.0.0",
         description:
-            "API documentation for user registration, OTP verification, and resend OTP endpoints.",
+            "API documentation for user authentication, OTP verification, and organization management.",
     },
     servers: [
         {
@@ -15,6 +15,15 @@ const swaggerDocument = {
             description: "Local server",
         },
     ],
+    components: {
+        securitySchemes: {
+            bearerAuth: {
+                type: "http",
+                scheme: "bearer",
+                bearerFormat: "JWT",
+            },
+        },
+    },
     paths: {
         "/users/register": {
             post: {
@@ -392,6 +401,170 @@ const swaggerDocument = {
                     },
                     400: { description: "Bad Request" },
                     404: { description: "User not found" },
+                },
+            },
+        },
+        "/organizations": {
+            post: {
+                summary: "Create a new organization",
+                security: [{ bearerAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "multipart/form-data": {
+                            schema: {
+                                type: "object",
+                                required: ["name", "slug"],
+                                properties: {
+                                    name: { type: "string" },
+                                    slug: { type: "string" },
+                                    logo: { type: "string", format: "binary" },
+                                    websiteUrl: {
+                                        type: "string",
+                                        format: "uri",
+                                    },
+                                    description: { type: "string" },
+                                    status: {
+                                        type: "string",
+                                        enum: ["active", "inactive"],
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    201: { description: "Organization created successfully" },
+                    400: { description: "Bad Request" },
+                    401: { description: "Unauthorized" },
+                },
+            },
+            get: {
+                summary: "Get all organizations",
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        name: "page",
+                        in: "query",
+                        schema: { type: "integer", default: 1 },
+                    },
+                    {
+                        name: "limit",
+                        in: "query",
+                        schema: { type: "integer", default: 10 },
+                    },
+                    { name: "search", in: "query", schema: { type: "string" } },
+                ],
+                responses: {
+                    200: { description: "List of all organizations" },
+                    401: { description: "Unauthorized" },
+                },
+            },
+        },
+        "/organizations/mine": {
+            get: {
+                summary: "Get organizations owned by the authenticated user",
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        name: "page",
+                        in: "query",
+                        schema: { type: "integer", default: 1 },
+                    },
+                    {
+                        name: "limit",
+                        in: "query",
+                        schema: { type: "integer", default: 10 },
+                    },
+                    { name: "search", in: "query", schema: { type: "string" } },
+                ],
+                responses: {
+                    200: { description: "List of user's organizations" },
+                    401: { description: "Unauthorized" },
+                },
+            },
+        },
+        "/organizations/{id}": {
+            get: {
+                summary: "Get an organization by ID",
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        name: "id",
+                        in: "path",
+                        required: true,
+                        schema: { type: "string", format: "uuid" },
+                    },
+                ],
+                responses: {
+                    200: { description: "Organization details" },
+                    401: { description: "Unauthorized" },
+                    404: { description: "Not found" },
+                },
+            },
+            put: {
+                summary: "Update an organization (owner only)",
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        name: "id",
+                        in: "path",
+                        required: true,
+                        schema: { type: "string", format: "uuid" },
+                    },
+                ],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "multipart/form-data": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    name: { type: "string" },
+                                    slug: { type: "string" },
+                                    logo: { type: "string", format: "binary" },
+                                    websiteUrl: {
+                                        type: "string",
+                                        format: "uri",
+                                        nullable: true,
+                                    },
+                                    description: {
+                                        type: "string",
+                                        nullable: true,
+                                    },
+                                    status: {
+                                        type: "string",
+                                        enum: ["active", "inactive"],
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    200: { description: "Organization updated successfully" },
+                    400: { description: "Bad Request" },
+                    401: { description: "Unauthorized" },
+                    403: { description: "Forbidden" },
+                    404: { description: "Not found" },
+                },
+            },
+            delete: {
+                summary: "Delete an organization (owner only)",
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        name: "id",
+                        in: "path",
+                        required: true,
+                        schema: { type: "string", format: "uuid" },
+                    },
+                ],
+                responses: {
+                    200: { description: "Organization deleted successfully" },
+                    401: { description: "Unauthorized" },
+                    403: { description: "Forbidden" },
+                    404: { description: "Not found" },
                 },
             },
         },
