@@ -4,16 +4,40 @@ import {
     Navigate,
     RouterProvider,
     Outlet,
+    useLocation,
 } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import Spinner from "./components/common/Spinner";
-import { Toaster } from "sonner";
+import { toast, Toaster } from "sonner";
 import Home from "./pages/Home";
+import Dashboard from "./features/dashboard/Dashboard";
+import { useOrganizationStore } from "./store/organization.store";
 
-const Login = lazy(() => import("./pages/Login"));
-const Register = lazy(() => import("./pages/Register"));
-const VerifyOtp = lazy(() => import("./pages/VerifyOtp"));
-const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const Login = lazy(() => import("./features/auth/pages/Login"));
+const Register = lazy(() => import("./features/auth/pages/Register"));
+const VerifyOtp = lazy(() => import("./features/auth/pages/VerifyOtp"));
+const ForgotPassword = lazy(
+    () => import("./features/auth/pages/ForgotPassword"),
+);
+const OrganizationSetup = lazy(
+    () => import("./features/organization/pages/OrganizationSetup"),
+);
+const CreateOrganization = lazy(
+    () => import("./features/organization/pages/CreateOrganization"),
+);
+const JoinOrganization = lazy(
+    () => import("./features/organization/pages/JoinOrganization"),
+);
+const OrganizationSelector = lazy(
+    () => import("./features/organization/pages/OrganizationSelector"),
+);
+const OrganizationSuccess = lazy(
+    () => import("./features/organization/pages/OrganizationSuccess"),
+);
+const OrganizationLoader = lazy(
+    () => import("./features/organization/pages/OrganizationLoader"),
+);
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const Loading = () => (
     <div className="flex h-screen items-center justify-center">
@@ -22,7 +46,54 @@ const Loading = () => (
 );
 
 const RouteError = () => {
-    return <Navigate to="/" replace />;
+    return (
+        <Suspense fallback={<Loading />}>
+            <NotFound />
+        </Suspense>
+    );
+};
+
+const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
+    const token = localStorage.getItem("token");
+    const location = useLocation();
+    const activeOrganization = useOrganizationStore(
+        (state) => state.activeOrganization,
+    );
+
+    if (!token) {
+        toast.dismiss();
+        toast.error("Please login to continue");
+        return <Navigate to="/login" replace />;
+    }
+
+    const allowedPaths = [
+        "/organization-loader",
+        "/onboarding",
+        "/onboarding/create",
+        "/onboarding/join",
+        "/onboarding/select",
+        "/onboarding/success",
+    ];
+    const isAllowedPath = allowedPaths.some(
+        (path) =>
+            location.pathname === path || location.pathname.startsWith(path),
+    );
+
+    if (!activeOrganization && !isAllowedPath) {
+        return <Navigate to="/organization-loader" replace />;
+    }
+
+    return <>{children}</>;
+};
+
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+        return <Navigate to="/" replace />;
+    }
+
+    return <>{children}</>;
 };
 
 const RootLayout = () => {
@@ -31,7 +102,6 @@ const RootLayout = () => {
             <div className="">
                 <Outlet />
             </div>
-            {/* <BottomNav /> */}
         </>
     );
 };
@@ -45,7 +115,9 @@ const router = createBrowserRouter([
                 path: "/",
                 element: (
                     <Suspense fallback={<Loading />}>
-                        <Home />
+                        <PrivateRoute>
+                            <Home />
+                        </PrivateRoute>
                     </Suspense>
                 ),
             },
@@ -53,7 +125,9 @@ const router = createBrowserRouter([
                 path: "/login",
                 element: (
                     <Suspense fallback={<Loading />}>
-                        <Login />
+                        <PublicRoute>
+                            <Login />
+                        </PublicRoute>
                     </Suspense>
                 ),
             },
@@ -61,7 +135,9 @@ const router = createBrowserRouter([
                 path: "/register",
                 element: (
                     <Suspense fallback={<Loading />}>
-                        <Register />
+                        <PublicRoute>
+                            <Register />
+                        </PublicRoute>
                     </Suspense>
                 ),
             },
@@ -69,7 +145,9 @@ const router = createBrowserRouter([
                 path: "/verify-otp",
                 element: (
                     <Suspense fallback={<Loading />}>
-                        <VerifyOtp />
+                        <PublicRoute>
+                            <VerifyOtp />
+                        </PublicRoute>
                     </Suspense>
                 ),
             },
@@ -77,13 +155,89 @@ const router = createBrowserRouter([
                 path: "/forgot-password",
                 element: (
                     <Suspense fallback={<Loading />}>
-                        <ForgotPassword />
+                        <PublicRoute>
+                            <ForgotPassword />
+                        </PublicRoute>
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/organization-loader",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <PrivateRoute>
+                            <OrganizationLoader />
+                        </PrivateRoute>
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/onboarding",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <PrivateRoute>
+                            <OrganizationSetup />
+                        </PrivateRoute>
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/onboarding/create",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <PrivateRoute>
+                            <CreateOrganization />
+                        </PrivateRoute>
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/onboarding/join",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <PrivateRoute>
+                            <JoinOrganization />
+                        </PrivateRoute>
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/onboarding/select",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <PrivateRoute>
+                            <OrganizationSelector />
+                        </PrivateRoute>
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/onboarding/success",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <PrivateRoute>
+                            <OrganizationSuccess />
+                        </PrivateRoute>
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/:slug/dashboard",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <PrivateRoute>
+                            <Dashboard />
+                        </PrivateRoute>
                     </Suspense>
                 ),
             },
             {
                 path: "*",
-                element: <Navigate to="/" replace />,
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <NotFound />
+                    </Suspense>
+                ),
             },
         ],
     },

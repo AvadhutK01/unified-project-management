@@ -1,5 +1,12 @@
 import { create } from "zustand";
 
+interface Organization {
+    id: string;
+    name: string;
+    description?: string;
+    slug: string;
+}
+
 interface Store {
     sidebarOpen: boolean;
     toggleSidebar: () => void;
