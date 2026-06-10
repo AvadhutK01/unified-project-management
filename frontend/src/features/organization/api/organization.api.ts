@@ -1,17 +1,5 @@
 import { api } from "@/lib/axios";
-
-export interface Organization {
-    id: string;
-    name: string;
-    slug: string;
-    logoUrl: string | null;
-    ownerUserId: string;
-    websiteUrl: string | null;
-    description: string;
-    status: string;
-    createdAt: string;
-    updatedAt: string;
-}
+import type { Organization } from "../types/organization.types";
 
 export interface OrganizationsResponse {
     status: string;
@@ -76,4 +64,11 @@ export const updateOrganization = async (
 ): Promise<Organization> => {
     const { data } = await api.put(`/organizations/${id}`, payload);
     return data.data;
+};
+
+export const deleteOrganization = async (
+    id: string,
+): Promise<{ message?: string } | Organization> => {
+    const { data } = await api.delete(`/organizations/${id}`);
+    return data;
 };

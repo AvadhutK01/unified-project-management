@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useOrganizationsQuery } from "@/features/organization/hooks/useOrganizations";
 import { useOrganizationStore } from "@/store/organization.store";
+import type { Organization } from "@/features/organization/types/organization.types";
 
 interface User {
     name: string;
@@ -71,12 +72,7 @@ const Header = () => {
     const { data: organizationResponse } = useOrganizationsQuery();
     const organizations = organizationResponse?.data.organizations ?? [];
 
-    const handleSelectOrganization = (organization: {
-        id: string;
-        name: string;
-        slug: string;
-        description?: string;
-    }) => {
+    const handleSelectOrganization = (organization: Organization) => {
         const isOrganizationChanged =
             organization.id !== activeOrganization?.id;
 

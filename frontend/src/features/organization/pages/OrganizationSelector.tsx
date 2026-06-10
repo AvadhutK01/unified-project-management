@@ -26,6 +26,7 @@ export default function OrganizationSelector() {
                 memberCount: 1,
                 slug: org.slug,
                 lastActive: formatDate(org.updatedAt),
+                __original: org,
             })),
         [organizations],
     );
@@ -56,7 +57,11 @@ export default function OrganizationSelector() {
                                 setSelectedId(
                                     selectedId === org.id ? null : org.id,
                                 );
-                                setActiveOrganization(org);
+                                // set the full original organization object in the store
+                                setActiveOrganization(
+                                    (org as unknown as { __original: any })
+                                        .__original,
+                                );
                             }}
                         />
                     ))}

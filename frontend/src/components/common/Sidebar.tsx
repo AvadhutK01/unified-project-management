@@ -33,16 +33,6 @@ interface MenuItemWithSubItems extends MenuItemBase {
 
 type MenuItem = MenuItemWithPath | MenuItemWithSubItems;
 
-const isMenuItemWithPath = (item: MenuItem): item is MenuItemWithPath => {
-    return "path" in item;
-};
-
-const isMenuItemWithSubItems = (
-    item: MenuItem,
-): item is MenuItemWithSubItems => {
-    return "subItems" in item;
-};
-
 const Sidebar = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -63,14 +53,13 @@ const Sidebar = () => {
         },
         {
             icon: Building2,
-            label: "Organization",
-            subItems: [
-                {
-                    label: "Organization Setup",
-                    path: `/${activeOrganization?.slug}/organizations`,
-                },
-                { label: "Roles", path: `/${activeOrganization?.slug}/roles` },
-            ],
+            label: "Organization Setup",
+            path: `/${activeOrganization?.slug}/organization`,
+        },
+        {
+            icon: Building2,
+            label: "Roles",
+            path: `/${activeOrganization?.slug}/roles`,
         },
     ];
 
@@ -96,15 +85,19 @@ const Sidebar = () => {
             // ...secondMenuItems
         ];
         for (const item of allItems) {
-            if (isMenuItemWithSubItems(item)) {
-                const hasActiveSubItem = item.subItems.some(
-                    (sub: SubMenuItem) => pathname.includes(sub.path),
-                );
+            if ("subItems" in item) {
+                const hasActiveSubItem =
+                    (item as unknown as MenuItemWithSubItems).subItems?.some(
+                        (sub: SubMenuItem) => pathname.includes(sub.path),
+                    ) ?? false;
                 if (hasActiveSubItem && !expandedItems.includes(item.label)) {
                     setExpandedItems((prev) => [...prev, item.label]);
                 }
             }
-            if (isMenuItemWithPath(item) && pathname.includes(item.path)) {
+            if (
+                "path" in item &&
+                pathname.includes((item as unknown as MenuItemWithPath).path)
+            ) {
                 setActiveItem(item.label);
             }
         }
@@ -115,13 +108,14 @@ const Sidebar = () => {
         let isActive = activeItem === item.label;
         const isExpanded = expandedItems.includes(item.label);
         const hasSubItems =
-            isMenuItemWithSubItems(item) && item.subItems.length > 0;
+            "subItems" in item &&
+            ((item as MenuItemWithSubItems).subItems?.length ?? 0) > 0;
 
-        // For parent items with sub-items, check if any sub-item is active
-        if (hasSubItems && isMenuItemWithSubItems(item)) {
-            const hasActiveSubItem = item.subItems.some((sub) =>
-                pathname.includes(sub.path),
-            );
+        if (hasSubItems && "subItems" in item) {
+            const hasActiveSubItem =
+                (item as MenuItemWithSubItems).subItems?.some((sub) =>
+                    pathname.includes(sub.path),
+                ) ?? false;
             isActive = isActive || hasActiveSubItem;
         }
 
@@ -129,9 +123,9 @@ const Sidebar = () => {
             if (hasSubItems && sidebarOpen) {
                 e.preventDefault();
                 toggleExpanded(item.label);
-            } else if (isMenuItemWithPath(item)) {
+            } else if ("path" in item) {
                 setActiveItem(item.label);
-                navigate(item.path);
+                navigate((item as unknown as MenuItemWithPath).path);
             }
         };
 
@@ -172,29 +166,31 @@ const Sidebar = () => {
 
                 {sidebarOpen && hasSubItems && isExpanded && (
                     <div className="ml-6 space-y-0.5 border-l border-border pl-2">
-                        {isMenuItemWithSubItems(item) &&
-                            item.subItems.map((subItem: SubMenuItem) => {
-                                const isSubActive = pathname.includes(
-                                    subItem.path,
-                                );
-                                return (
-                                    <button
-                                        key={subItem.label}
-                                        onClick={() => {
-                                            setActiveItem(item.label);
-                                            navigate(subItem.path);
-                                        }}
-                                        className={cn(
-                                            "w-full flex items-center rounded-lg px-3 py-1.5 text-sm transition-colors cursor-pointer",
-                                            isSubActive
-                                                ? "bg-primary/10 text-primary"
-                                                : "text-muted-foreground hover:bg-primary/5",
-                                        )}
-                                    >
-                                        {subItem.label}
-                                    </button>
-                                );
-                            })}
+                        {"subItems" in item &&
+                            (item as MenuItemWithSubItems).subItems?.map(
+                                (subItem: SubMenuItem) => {
+                                    const isSubActive = pathname.includes(
+                                        subItem.path,
+                                    );
+                                    return (
+                                        <button
+                                            key={subItem.label}
+                                            onClick={() => {
+                                                setActiveItem(item.label);
+                                                navigate(subItem.path);
+                                            }}
+                                            className={cn(
+                                                "w-full flex items-center rounded-lg px-3 py-1.5 text-sm transition-colors cursor-pointer",
+                                                isSubActive
+                                                    ? "bg-primary/10 text-primary"
+                                                    : "text-muted-foreground hover:bg-primary/5",
+                                            )}
+                                        >
+                                            {subItem.label}
+                                        </button>
+                                    );
+                                },
+                            )}
                     </div>
                 )}
             </div>
@@ -208,7 +204,6 @@ const Sidebar = () => {
                 sidebarOpen ? "w-64" : "w-16",
             )}
         >
-            {/* Header */}
             <div className="flex h-14 items-center px-3 shrink-0">
                 <div className="flex items-center gap-2 overflow-hidden">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shadow-sm">
@@ -235,7 +230,6 @@ const Sidebar = () => {
                 </Button>
             </div>
 
-            {/* Menu */}
             <div className="px-2 flex-1 overflow-y-auto">
                 <nav className="space-y-1 mt-7">
                     {menuItems.map(renderMenuItem)}

@@ -38,8 +38,8 @@ const OrganizationSuccess = lazy(
 const OrganizationLoader = lazy(
     () => import("./features/organization/pages/OrganizationLoader"),
 );
-const Organizations = lazy(
-    () => import("./features/organization/pages/Organizations"),
+const OrganizationInfo = lazy(
+    () => import("./features/organization/pages/OrganizationInfo"),
 );
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -238,12 +238,12 @@ const router = createBrowserRouter([
                 ),
             },
             {
-                path: "/:slug/organizations",
+                path: "/:slug/organization",
                 element: (
                     <Suspense fallback={<Loading />}>
                         <MainLayout>
                             <PrivateRoute>
-                                <Organizations />
+                                <OrganizationInfo />
                             </PrivateRoute>
                         </MainLayout>
                     </Suspense>

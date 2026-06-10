@@ -4,6 +4,7 @@ import {
     fetchOrganizations,
     updateOrganization,
 } from "../api/organization.api";
+import { deleteOrganization } from "../api/organization.api";
 
 export const useOrganizationsQuery = () => {
     return useQuery({
@@ -29,6 +30,17 @@ export const useUpdateOrganization = () => {
             id: string;
             payload: Parameters<typeof updateOrganization>[1];
         }) => updateOrganization(id, payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["organizations"] });
+        },
+    });
+};
+
+export const useDeleteOrganization = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (id: string) => deleteOrganization(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["organizations"] });
         },

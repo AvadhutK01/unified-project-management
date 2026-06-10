@@ -1,12 +1,6 @@
+import type { Organization } from "@/features/organization/types/organization.types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-
-interface Organization {
-    id: string;
-    name: string;
-    description?: string;
-    slug: string;
-}
 
 interface OrgStore {
     activeOrganization: Organization | null;
