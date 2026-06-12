@@ -17,7 +17,7 @@ import {
     useUpdateOrganization,
     useDeleteOrganization,
 } from "../hooks/useOrganizations";
-import { useConfirm } from "@/components/common/ConfirmProvider";
+import { useConfirm } from "@/providers/ConfirmProvider";
 import { toast } from "sonner";
 import type { OrganizationFormState } from "../types/organization.types";
 

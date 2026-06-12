@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useState } from "react";
-import ConfirmModal from "./ConfirmModal";
+import ConfirmModal from "../components/common/ConfirmModal";
 
 type ConfirmOptions = {
     title?: string;
