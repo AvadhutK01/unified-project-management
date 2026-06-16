@@ -4,12 +4,15 @@ import {
     ChevronLeft,
     ChevronRight,
     Building2,
+    Users,
+    ShieldCheck,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
-import { store } from "@/store/store";
+import { useStore } from "@/store/store";
 import { useOrganizationStore } from "@/store/organization.store";
+import { usePermission } from "@/features/rbac/hooks/usePermission";
 
 interface SubMenuItem {
     label: string;
@@ -19,6 +22,8 @@ interface SubMenuItem {
 interface MenuItemBase {
     icon: React.ComponentType<{ size: number }>;
     label: string;
+    permission?: string;
+    ownerOnly?: boolean;
 }
 
 interface MenuItemWithPath extends MenuItemBase {
@@ -37,15 +42,16 @@ const Sidebar = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const pathname = location.pathname;
-    const sidebarOpen = store((s) => s.sidebarOpen);
-    const toggleSidebar = store((s) => s.toggleSidebar);
+    const sidebarOpen = useStore((s) => s.sidebarOpen);
+    const toggleSidebar = useStore((s) => s.toggleSidebar);
+    const { hasPermission, isOrgOwner } = usePermission();
 
     const { activeOrganization } = useOrganizationStore();
 
     const [activeItem, setActiveItem] = useState("Dashboard");
     const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
-    const menuItems = [
+    const menuItems: MenuItem[] = [
         {
             icon: LayoutDashboard,
             label: "Dashboard",
@@ -55,21 +61,36 @@ const Sidebar = () => {
             icon: Building2,
             label: "Organization Setup",
             path: `/${activeOrganization?.slug}/organization`,
+            ownerOnly: true,
         },
         {
-            icon: Building2,
+            icon: ShieldCheck,
             label: "Roles",
             path: `/${activeOrganization?.slug}/roles`,
+            permission: "roles_list",
+        },
+        {
+            icon: Users,
+            label: "Members",
+            permission: "members_list",
+            subItems: [
+                {
+                    label: "Joined",
+                    path: `/${activeOrganization?.slug}/members/joined`,
+                },
+                {
+                    label: "Invited",
+                    path: `/${activeOrganization?.slug}/members/invited`,
+                },
+            ],
         },
     ];
 
-    // const secondMenuItems = [
-    //     { icon: DollarSign, label: "Finance", path: `finance` },
-    //     { icon: Calendar, label: "Calendar", path: `calendar` },
-    //     { icon: MessageSquare, label: "Messages", path: `messages` },
-    //     { icon: FileText, label: "Files", path: `files` },
-    //     { icon: ChartColumn, label: "Reports", path: `reports` },
-    // ];
+    const visibleMenuItems = menuItems.filter((item) => {
+        if (item.ownerOnly && !isOrgOwner) return false;
+        if (item.permission && !hasPermission(item.permission)) return false;
+        return true;
+    });
 
     const toggleExpanded = (label: string) => {
         setExpandedItems((prev) =>
@@ -80,11 +101,7 @@ const Sidebar = () => {
     };
 
     useEffect(() => {
-        const allItems = [
-            ...menuItems,
-            // ...secondMenuItems
-        ];
-        for (const item of allItems) {
+        for (const item of visibleMenuItems) {
             if ("subItems" in item) {
                 const hasActiveSubItem =
                     (item as unknown as MenuItemWithSubItems).subItems?.some(
@@ -232,12 +249,8 @@ const Sidebar = () => {
 
             <div className="px-2 flex-1 overflow-y-auto">
                 <nav className="space-y-1 mt-7">
-                    {menuItems.map(renderMenuItem)}
+                    {visibleMenuItems.map(renderMenuItem)}
                 </nav>
-
-                {/* <Separator className="bg-sidebar-border my-2" />
-
-                <nav className="space-y-1">{secondMenuItems.map(renderMenuItem)}</nav> */}
             </div>
         </div>
     );

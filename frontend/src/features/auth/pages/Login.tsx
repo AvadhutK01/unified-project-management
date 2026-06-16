@@ -19,12 +19,12 @@ const Login = () => {
 
     const [showPassword, setShowPassword] = useState(false);
 
-    const { mutate: loginUser } = useLoginUser();
+    const { mutate: loginUser, isPending: isSubmitting } = useLoginUser();
 
     const {
         register,
         handleSubmit,
-        formState: { errors, isSubmitting },
+        formState: { errors },
     } = useForm<LoginFormData>({
         resolver: zodResolver(loginSchema),
     });
@@ -56,7 +56,8 @@ const Login = () => {
                         localStorage.setItem("token", token);
                     }
 
-                    navigate("/organization-loader");
+                    // navigate("/organization-loader");
+                    navigate("/org-setup/select", { replace: true });
                     toast.success("Login successful!");
                 },
 

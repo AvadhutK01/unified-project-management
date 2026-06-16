@@ -68,7 +68,7 @@ const EditRole = () => {
             setValue("name", role.name);
             setValue("description", role.description);
 
-            const allAvailablePermissions = rolePermissions?.data?.data ?? [];
+            const allAvailablePermissions = rolePermissions?.data ?? [];
 
             let permissionRows = derivePermissionRowsFromPermissionItems(
                 allAvailablePermissions,

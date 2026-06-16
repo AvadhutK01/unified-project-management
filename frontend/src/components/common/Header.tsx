@@ -3,6 +3,8 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useOrganizationsQuery } from "@/features/organization/hooks/useOrganizations";
 import { useOrganizationStore } from "@/store/organization.store";
+import { useStore } from "@/store/store";
+import { api } from "@/lib/axios";
 import type { Organization } from "@/features/organization/types/organization.types";
 
 interface User {
@@ -68,6 +70,20 @@ const Header = () => {
     );
     const { setActiveOrganization, clearActiveOrganization } =
         useOrganizationStore();
+    const { setPermissions, clearPermissions } = useStore();
+
+    useEffect(() => {
+        if (!activeOrganization?.id) return;
+
+        api.get("/organizations/members/me/role")
+            .then((res) => {
+                const data = res?.data?.data ?? {};
+                const permissions = data.permissions ?? [];
+                const isOrgOwner = data.is_org_owner ?? false;
+                setPermissions(permissions, isOrgOwner);
+            })
+            .catch(() => clearPermissions());
+    }, [activeOrganization?.id, setPermissions, clearPermissions]);
 
     const { data: organizationResponse } = useOrganizationsQuery();
     const organizations = organizationResponse?.data.organizations ?? [];

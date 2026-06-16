@@ -1,11 +1,12 @@
 import { Loading } from "@/components/common/Loading";
 import { PrivateRoute } from "@/components/common/PrivateRoute";
 import { PublicRoute } from "@/components/common/PublicRoute";
-import { RouteError } from "@/components/common/RouteError";
 import { RootLayout } from "@/layout/RootLayout";
 import { lazy, Suspense } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import MainLayout from "@/layout/MainLayout";
+import { ProtectedRoute } from "@/features/rbac/components/ProtectedRoute";
+import { PERMISSIONS } from "@/features/rbac/types/rbac.types";
 
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const Home = lazy(() => import("@/pages/Home"));
@@ -40,11 +41,16 @@ const OrganizationSuccess = lazy(
 const AddRole = lazy(() => import("@/features/role/pages/AddRole"));
 const EditRole = lazy(() => import("@/features/role/pages/EditRole"));
 const Roles = lazy(() => import("@/features/role/pages/Roles"));
+const JoinedMembers = lazy(
+    () => import("@/features/members/pages/JoinedMembers"),
+);
+const InvitedMembers = lazy(
+    () => import("@/features/members/pages/InvitedMembers"),
+);
 
 export const router = createBrowserRouter([
     {
         element: <RootLayout />,
-        errorElement: <RouteError />,
         children: [
             {
                 path: "/",
@@ -186,7 +192,11 @@ export const router = createBrowserRouter([
                     <Suspense fallback={<Loading />}>
                         <MainLayout>
                             <PrivateRoute>
-                                <Roles />
+                                <ProtectedRoute
+                                    permission={PERMISSIONS.ROLES.LIST}
+                                >
+                                    <Roles />
+                                </ProtectedRoute>
                             </PrivateRoute>
                         </MainLayout>
                     </Suspense>
@@ -198,7 +208,11 @@ export const router = createBrowserRouter([
                     <Suspense fallback={<Loading />}>
                         <MainLayout>
                             <PrivateRoute>
-                                <AddRole />
+                                <ProtectedRoute
+                                    permission={PERMISSIONS.ROLES.ADD}
+                                >
+                                    <AddRole />
+                                </ProtectedRoute>
                             </PrivateRoute>
                         </MainLayout>
                     </Suspense>
@@ -210,7 +224,43 @@ export const router = createBrowserRouter([
                     <Suspense fallback={<Loading />}>
                         <MainLayout>
                             <PrivateRoute>
-                                <EditRole />
+                                <ProtectedRoute
+                                    permission={PERMISSIONS.ROLES.EDIT}
+                                >
+                                    <EditRole />
+                                </ProtectedRoute>
+                            </PrivateRoute>
+                        </MainLayout>
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/:slug/members/joined",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <MainLayout>
+                            <PrivateRoute>
+                                <ProtectedRoute
+                                    permission={PERMISSIONS.MEMBERS.LIST}
+                                >
+                                    <JoinedMembers />
+                                </ProtectedRoute>
+                            </PrivateRoute>
+                        </MainLayout>
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/:slug/members/invited",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <MainLayout>
+                            <PrivateRoute>
+                                <ProtectedRoute
+                                    permission={PERMISSIONS.MEMBERS.LIST}
+                                >
+                                    <InvitedMembers />
+                                </ProtectedRoute>
                             </PrivateRoute>
                         </MainLayout>
                     </Suspense>

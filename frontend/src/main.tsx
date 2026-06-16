@@ -4,12 +4,15 @@ import "./index.css";
 import App from "./App.tsx";
 import QueryProvider from "./providers/QueryProvider.tsx";
 import ConfirmProvider from "@/providers/ConfirmProvider.tsx";
+import { AppInitializer } from "@/providers/AppInitializer.tsx";
 
 createRoot(document.getElementById("root")!).render(
     <StrictMode>
         <QueryProvider>
             <ConfirmProvider>
-                <App />
+                <AppInitializer>
+                    <App />
+                </AppInitializer>
             </ConfirmProvider>
         </QueryProvider>
     </StrictMode>,

@@ -47,7 +47,7 @@ const AddRole = () => {
         useState<PermissionRow[]>(INITIAL_PERMISSIONS);
 
     useEffect(() => {
-        const items = rolePermissions?.data?.data ?? [];
+        const items = rolePermissions?.data ?? [];
         setPermissions(derivePermissionRowsFromPermissionItems(items));
     }, [rolePermissions]);
     const [permissionError, setPermissionError] = useState<string | null>(null);

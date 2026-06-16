@@ -3,6 +3,8 @@ import { Pencil, Plus, Search, Shield } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
 import { useFetchRolesQuery } from "../hooks/useRoles";
+import { PermissionGuard } from "@/features/rbac/components/PermissionGuard";
+import { PERMISSIONS } from "@/features/rbac/types/rbac.types";
 
 interface Role {
     id: number;
@@ -15,7 +17,7 @@ const Roles = () => {
     const { slug } = useParams<{ slug: string }>();
     const [search, setSearch] = useState("");
 
-    const { data: roles = [] } = useFetchRolesQuery();
+    const { data: roles = [], isPending: isLoading } = useFetchRolesQuery();
 
     const columns = useMemo<DataTableColumn<Role>[]>(
         () => [
@@ -49,15 +51,17 @@ const Roles = () => {
                 className: "w-24 text-right",
                 render: (role) => (
                     <div className="flex justify-end">
-                        <button
-                            title="Edit role"
-                            onClick={() =>
-                                navigate(`/${slug}/roles/edit/${role.id}`)
-                            }
-                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
-                        >
-                            <Pencil className="w-4 h-4" />
-                        </button>
+                        <PermissionGuard permission={PERMISSIONS.ROLES.EDIT}>
+                            <button
+                                title="Edit role"
+                                onClick={() =>
+                                    navigate(`/${slug}/roles/edit/${role.id}`)
+                                }
+                                className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                            >
+                                <Pencil className="w-4 h-4" />
+                            </button>
+                        </PermissionGuard>
                     </div>
                 ),
             },
@@ -80,13 +84,15 @@ const Roles = () => {
                 </div>
 
                 <div className="py-4 flex justify-between">
-                    <button
-                        onClick={() => navigate(`/${slug}/roles/add`)}
-                        className="inline-flex items-center gap-2 px-4 py-1 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors cursor-pointer"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Add Role
-                    </button>
+                    <PermissionGuard permission={PERMISSIONS.ROLES.ADD}>
+                        <button
+                            onClick={() => navigate(`/${slug}/roles/add`)}
+                            className="inline-flex items-center gap-2 px-4 py-1 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors cursor-pointer"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Add Role
+                        </button>
+                    </PermissionGuard>
                     <div className="relative min-w-xs">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                         <input
@@ -105,48 +111,7 @@ const Roles = () => {
                     getRowId={(r: Role) => r.id}
                     hasActiveFilters={search.length > 0}
                     showDefaultFooter={false}
-                    // renderFooter={() => (
-                    //     <div className="px-6 py-4 flex items-center justify-between gap-4">
-                    //         <p className="text-xs text-muted-foreground">
-                    //             {filtered.length === 0 ? (
-                    //                 'No results'
-                    //             ) : (
-                    //                 <>
-                    //                     Showing{' '}
-                    //                     <span className="font-medium text-foreground">
-                    //                         {start}–{end}
-                    //                     </span>{' '}
-                    //                     of{' '}
-                    //                     <span className="font-medium text-foreground">
-                    //                         {filtered.length}
-                    //                     </span>
-                    //                 </>
-                    //             )}
-                    //         </p>
-                    //         <div className="flex items-center gap-2">
-                    //             <button
-                    //                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    //                 disabled={currentPage === 1}
-                    //                 className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                    //             >
-                    //                 <ChevronLeft className="w-4 h-4" />
-                    //             </button>
-                    //             <span className="text-xs text-muted-foreground px-1">
-                    //                 Page{' '}
-                    //                 <span className="font-medium text-foreground">{currentPage}</span>
-                    //                 {' '}of{' '}
-                    //                 <span className="font-medium text-foreground">{totalPages}</span>
-                    //             </span>
-                    //             <button
-                    //                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    //                 disabled={currentPage === totalPages}
-                    //                 className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                    //             >
-                    //                 <ChevronRight className="w-4 h-4" />
-                    //             </button>
-                    //         </div>
-                    //     </div>
-                    // )}
+                    loading={isLoading}
                 />
             </div>
         </div>
