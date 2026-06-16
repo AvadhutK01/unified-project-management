@@ -9,6 +9,7 @@ const envSchema = z.object({
         .default("development"),
     PORT: z.coerce.number().default(3000),
     DATABASE_URL: z.string().url(),
+    DATABASE_TEST_URL: z.string().url().optional(),
     JWT_SECRET: z.string().default("supersecret"),
     AWS_ACCESS_KEY_ID: z.string().default("mock-key"),
     AWS_SECRET_ACCESS_KEY: z.string().default("mock-secret"),

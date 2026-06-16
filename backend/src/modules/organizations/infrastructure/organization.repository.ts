@@ -1,6 +1,9 @@
 import { db } from "../../../infrastructure/database/client.js";
-import { organizations } from "../../../infrastructure/database/schema/index.js";
-import { eq, count, ilike, and } from "drizzle-orm";
+import {
+    organizations,
+    organizationMembers,
+} from "../../../infrastructure/database/schema/index.js";
+import { eq, count, ilike, and, or, isNull } from "drizzle-orm";
 
 /**
  * Creates a new organization in the database.
@@ -137,12 +140,45 @@ export const findAllOrganizations = async (
 ) => {
     const offset = (page - 1) * limit;
     const filters = [];
-    if (ownerUserId) {
-        filters.push(eq(organizations.ownerUserId, ownerUserId));
-    }
     if (search) {
         filters.push(ilike(organizations.name, `%${search}%`));
     }
+
+    if (ownerUserId) {
+        return db
+            .selectDistinct({
+                id: organizations.id,
+                name: organizations.name,
+                slug: organizations.slug,
+                logoUrl: organizations.logoUrl,
+                ownerUserId: organizations.ownerUserId,
+                websiteUrl: organizations.websiteUrl,
+                description: organizations.description,
+                status: organizations.status,
+                createdAt: organizations.createdAt,
+                updatedAt: organizations.updatedAt,
+            })
+            .from(organizations)
+            .leftJoin(
+                organizationMembers,
+                and(
+                    eq(organizations.id, organizationMembers.organizationId),
+                    isNull(organizationMembers.deletedAt),
+                ),
+            )
+            .where(
+                and(
+                    or(
+                        eq(organizations.ownerUserId, ownerUserId),
+                        eq(organizationMembers.memberId, ownerUserId),
+                    ),
+                    ...filters,
+                ),
+            )
+            .limit(limit)
+            .offset(offset);
+    }
+
     const query = db.select().from(organizations);
     const dynamicQuery =
         filters.length > 0 ? query.where(and(...filters)) : query;
@@ -160,12 +196,33 @@ export const countAllOrganizations = async (
     search?: string,
 ) => {
     const filters = [];
-    if (ownerUserId) {
-        filters.push(eq(organizations.ownerUserId, ownerUserId));
-    }
     if (search) {
         filters.push(ilike(organizations.name, `%${search}%`));
     }
+
+    if (ownerUserId) {
+        const [result] = await db
+            .select({ value: count() })
+            .from(organizations)
+            .leftJoin(
+                organizationMembers,
+                and(
+                    eq(organizations.id, organizationMembers.organizationId),
+                    isNull(organizationMembers.deletedAt),
+                ),
+            )
+            .where(
+                and(
+                    or(
+                        eq(organizations.ownerUserId, ownerUserId),
+                        eq(organizationMembers.memberId, ownerUserId),
+                    ),
+                    ...filters,
+                ),
+            );
+        return Number(result?.value ?? 0);
+    }
+
     const query = db.select({ value: count() }).from(organizations);
     const dynamicQuery =
         filters.length > 0 ? query.where(and(...filters)) : query;

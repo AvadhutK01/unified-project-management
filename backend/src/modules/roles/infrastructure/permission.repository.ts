@@ -60,11 +60,7 @@ export const findPermissionByCodename = async (codename: string) => {
  * @param search Optional search keyword.
  * @returns Array of permission records.
  */
-export const findAllPermissions = async (
-    page: number = 1,
-    limit: number = 10,
-    search?: string,
-) => {
+export const findAllPermissions = async (search?: string) => {
     const filters = [];
     if (search) {
         filters.push(
@@ -77,12 +73,9 @@ export const findAllPermissions = async (
 
     const query = db.select().from(permissions);
     if (filters.length > 0) {
-        return query
-            .where(filters[0])
-            .limit(limit)
-            .offset((page - 1) * limit);
+        return query.where(filters[0]);
     }
-    return query.limit(limit).offset((page - 1) * limit);
+    return query;
 };
 
 /**

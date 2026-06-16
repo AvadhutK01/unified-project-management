@@ -20,7 +20,10 @@ export const handleCreateRole = async (
     next: NextFunction,
 ): Promise<Response | void> => {
     try {
-        const result = await createRole(req.body);
+        const result = await createRole({
+            ...req.body,
+            organizationId: req.orgId as string,
+        });
         return res.status(201).json({ status: "success", data: result });
     } catch (error) {
         next(error);
@@ -39,7 +42,10 @@ export const handleGetRoleById = async (
     next: NextFunction,
 ): Promise<Response | void> => {
     try {
-        const result = await getRoleById(req.params["id"] as string);
+        const result = await getRoleById(
+            req.params["id"] as string,
+            req.orgId as string,
+        );
         return res.status(200).json({ status: "success", data: result });
     } catch (error) {
         next(error);
@@ -62,7 +68,12 @@ export const handleGetAllRoles = async (
         const limit = Number(req.query["limit"] ?? 10);
         const search = (req.query["search"] as string) ?? undefined;
 
-        const result = await getAllRoles(page, limit, search);
+        const result = await getAllRoles(
+            page,
+            limit,
+            search,
+            req.orgId as string,
+        );
         return res.status(200).json({ status: "success", data: result });
     } catch (error) {
         next(error);
@@ -81,7 +92,11 @@ export const handleUpdateRole = async (
     next: NextFunction,
 ): Promise<Response | void> => {
     try {
-        const result = await updateRole(req.params["id"] as string, req.body);
+        const result = await updateRole(
+            req.params["id"] as string,
+            req.body,
+            req.orgId as string,
+        );
         return res.status(200).json({ status: "success", data: result });
     } catch (error) {
         next(error);
@@ -100,7 +115,10 @@ export const handleDeleteRole = async (
     next: NextFunction,
 ): Promise<Response | void> => {
     try {
-        const result = await deleteRole(req.params["id"] as string);
+        const result = await deleteRole(
+            req.params["id"] as string,
+            req.orgId as string,
+        );
         return res.status(200).json({ status: "success", data: result });
     } catch (error) {
         next(error);

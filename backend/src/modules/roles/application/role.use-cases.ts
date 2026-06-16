@@ -19,7 +19,7 @@ import {
 
 /**
  * Creates a new role with associated permissions.
- * @param data Role input data including permission IDs.
+ * @param data Role input data including permission IDs and organization ID.
  * @throws AppError if name already exists or permissions are invalid.
  * @returns The created role record with permissions.
  */
@@ -28,8 +28,9 @@ export const createRole = async (data: {
     description?: string;
     permissionIds?: string[];
     isActive?: boolean;
+    organizationId: string;
 }) => {
-    const existingRole = await findRoleByName(data.name);
+    const existingRole = await findRoleByName(data.name, data.organizationId);
     if (existingRole) {
         throw badRequestError("Role with this name already exists");
     }
@@ -47,6 +48,7 @@ export const createRole = async (data: {
 
     const role = await createRoleRepo({
         name: data.name,
+        organizationId: data.organizationId,
         ...(data.description && { description: data.description }),
         ...(data.isActive !== undefined && { isActive: data.isActive }),
     });
@@ -67,11 +69,12 @@ export const createRole = async (data: {
 /**
  * Retrieves a single role by its ID with its associated permissions.
  * @param id The role UUID.
+ * @param organizationId The organization UUID.
  * @throws AppError if not found.
  * @returns The role record with permissions.
  */
-export const getRoleById = async (id: string) => {
-    const role = await findRoleById(id);
+export const getRoleById = async (id: string, organizationId: string) => {
+    const role = await findRoleById(id, organizationId);
     if (!role) {
         throw notFoundError("Role not found");
     }
@@ -86,16 +89,18 @@ export const getRoleById = async (id: string) => {
  * @param page The page number.
  * @param limit The limit number.
  * @param search Optional search keyword.
+ * @param organizationId The organization UUID.
  * @returns An object containing the data and pagination details.
  */
 export const getAllRoles = async (
     page: number = 1,
     limit: number = 10,
     search?: string,
+    organizationId?: string,
 ) => {
     const [data, total] = await Promise.all([
-        findAllRoles(page, limit, search),
-        countAllRoles(search),
+        findAllRoles(page, limit, search, organizationId),
+        countAllRoles(search, organizationId),
     ]);
 
     const rolesWithPermissions = await Promise.all(
@@ -120,6 +125,7 @@ export const getAllRoles = async (
  * Updates a role and its associated permissions.
  * @param id The role UUID.
  * @param data Partial role data to update including permission IDs.
+ * @param organizationId The organization UUID.
  * @throws AppError if role not found or name is not unique.
  * @returns The updated role record with permissions.
  */
@@ -131,14 +137,15 @@ export const updateRole = async (
         permissionIds?: string[];
         isActive?: boolean;
     },
+    organizationId: string,
 ) => {
-    const role = await findRoleById(id);
+    const role = await findRoleById(id, organizationId);
     if (!role) {
         throw notFoundError("Role not found");
     }
 
     if (data.name && data.name !== role.name) {
-        const existingRole = await findRoleByName(data.name);
+        const existingRole = await findRoleByName(data.name, organizationId);
         if (existingRole) {
             throw badRequestError("Role with this name already exists");
         }
@@ -158,13 +165,17 @@ export const updateRole = async (
         await attachPermissionsToRole(id, data.permissionIds);
     }
 
-    const updated = await updateRoleRepo(id, {
-        ...(data.name !== undefined && { name: data.name }),
-        ...(data.description !== undefined && {
-            description: data.description,
-        }),
-        ...(data.isActive !== undefined && { isActive: data.isActive }),
-    });
+    const updated = await updateRoleRepo(
+        id,
+        {
+            ...(data.name !== undefined && { name: data.name }),
+            ...(data.description !== undefined && {
+                description: data.description,
+            }),
+            ...(data.isActive !== undefined && { isActive: data.isActive }),
+        },
+        organizationId,
+    );
 
     if (!updated) {
         throw internalServerError("Failed to update role");
@@ -178,16 +189,17 @@ export const updateRole = async (
 /**
  * Deletes a role.
  * @param id The role UUID.
+ * @param organizationId The organization UUID.
  * @throws AppError if role not found.
  * @returns The deleted role record.
  */
-export const deleteRole = async (id: string) => {
-    const role = await findRoleById(id);
+export const deleteRole = async (id: string, organizationId: string) => {
+    const role = await findRoleById(id, organizationId);
     if (!role) {
         throw notFoundError("Role not found");
     }
 
-    const deleted = await deleteRoleRepo(id);
+    const deleted = await deleteRoleRepo(id, organizationId);
 
     if (!deleted) {
         throw internalServerError("Failed to delete role");

@@ -331,4 +331,42 @@ describe("Organization Flow Integration Tests", () => {
         expect(errorResult).toBeNull();
         expect(successResult).toBe(true);
     });
+
+    /**
+     * Test retrieving organizations where user is owner or joined member.
+     */
+    it("should fetch organizations owned or joined by the user", async () => {
+        // Create an organization by other user
+        const otherOrg = await createOrganization(
+            {
+                name: `OtherOrg_${Date.now()}`,
+                slug: `other-org-${Date.now()}`,
+            },
+            otherUserId,
+        );
+
+        // Add ownerUser as member of otherOrg
+        const { createMember } =
+            await import("../src/modules/organizations/infrastructure/organization-member.repository.js");
+        const { createRole } =
+            await import("../src/modules/roles/infrastructure/role.repository.js");
+
+        const testRole = await createRole({
+            name: `Joined_Role_${Date.now()}`,
+            organizationId: otherOrg.id,
+        });
+
+        await createMember({
+            organizationId: otherOrg.id,
+            memberId: ownerId,
+            roleId: testRole.id,
+            status: "active",
+        });
+
+        // ownerId should see both the organization they own, and the one they joined
+        const result = await getAllOrganizations(1, 10, ownerId);
+        expect(result.organizations.some((o) => o.id === otherOrg.id)).toBe(
+            true,
+        );
+    });
 });

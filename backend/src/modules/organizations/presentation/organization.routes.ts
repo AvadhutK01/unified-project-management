@@ -15,6 +15,30 @@ import {
     organizationIdParamSchema,
     paginationQuerySchema,
 } from "./organization.validation.js";
+import {
+    handleInviteMembers,
+    handleGetInvitations,
+    handleUpdateInvitationStatus,
+    handleGetOrganizationMembers,
+    handleReInviteMember,
+    handleGetMyMemberRole,
+    handleGetMemberDetails,
+    handleEditMemberDetails,
+    handleDeleteMember,
+    handleRevokeInvitation,
+} from "./organization-member.controller.js";
+import {
+    inviteMembersSchema,
+    updateInvitationStatusSchema,
+    organizationMembersQuerySchema,
+    reInviteMemberSchema,
+    getMemberDetailsSchema,
+    editMemberDetailsSchema,
+    deleteMemberSchema,
+    revokeInvitationSchema,
+} from "./organization-member.validation.js";
+import { requireOrgId } from "../../../shared/middleware/require-org-id.js";
+import { requirePermission } from "../../../shared/middleware/require-permission.js";
 
 import { uploadImage } from "../../../shared/middleware/upload.js";
 
@@ -38,6 +62,77 @@ router.get(
     validateRequest(paginationQuerySchema),
     handleGetMyOrganizations,
 );
+
+router.post(
+    "/members/invite",
+    requireOrgId,
+    requirePermission("members_add"),
+    validateRequest(inviteMembersSchema),
+    handleInviteMembers,
+);
+
+router.get(
+    "/invitations",
+    validateRequest(paginationQuerySchema),
+    handleGetInvitations,
+);
+
+router.put(
+    "/invitations/:id/status",
+    validateRequest(updateInvitationStatusSchema),
+    handleUpdateInvitationStatus,
+);
+
+router.delete(
+    "/invitations/:id",
+    requireOrgId,
+    requirePermission("members_delete"),
+    validateRequest(revokeInvitationSchema),
+    handleRevokeInvitation,
+);
+
+router.get(
+    "/members",
+    requireOrgId,
+    requirePermission("members_list"),
+    validateRequest(organizationMembersQuerySchema),
+    handleGetOrganizationMembers,
+);
+
+router.post(
+    "/members/re-invite",
+    requireOrgId,
+    requirePermission("members_add"),
+    validateRequest(reInviteMemberSchema),
+    handleReInviteMember,
+);
+
+router.get("/members/me/role", requireOrgId, handleGetMyMemberRole);
+
+router.get(
+    "/members/:id",
+    requireOrgId,
+    requirePermission("members_view"),
+    validateRequest(getMemberDetailsSchema),
+    handleGetMemberDetails,
+);
+
+router.put(
+    "/members/:id",
+    requireOrgId,
+    requirePermission("members_edit"),
+    validateRequest(editMemberDetailsSchema),
+    handleEditMemberDetails,
+);
+
+router.delete(
+    "/members/:id",
+    requireOrgId,
+    requirePermission("members_delete"),
+    validateRequest(deleteMemberSchema),
+    handleDeleteMember,
+);
+
 router.get(
     "/:id",
     validateRequest(organizationIdParamSchema),
