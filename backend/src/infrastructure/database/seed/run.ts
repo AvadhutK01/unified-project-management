@@ -1,0 +1,16 @@
+import { seedRolePermissions } from "./role-permissions.seed.js";
+
+/**
+ * Main function to run all database seeders.
+ */
+async function run() {
+    console.log("Start seeding...");
+    await seedRolePermissions();
+    console.log("Seeding finished successfully.");
+    process.exit(0);
+}
+
+run().catch((err) => {
+    console.error("Seeding failed:", err);
+    process.exit(1);
+});

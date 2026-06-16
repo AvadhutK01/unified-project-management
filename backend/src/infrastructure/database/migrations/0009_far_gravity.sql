@@ -1,0 +1,1 @@
+ALTER TABLE "organization_members" ALTER COLUMN "status" SET DEFAULT 'active';
