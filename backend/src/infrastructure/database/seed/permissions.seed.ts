@@ -6,7 +6,6 @@ import { permissions } from "../schema/index.js";
  */
 export const seedPermissions = async () => {
     const allPermissions = [
-        // Role permissions
         {
             name: "Add Role",
             codename: "roles_add",
@@ -32,7 +31,6 @@ export const seedPermissions = async () => {
             codename: "roles_list",
             description: "Permission to view all roles",
         },
-        // Member permissions
         {
             name: "Add Member",
             codename: "members_add",
@@ -57,6 +55,31 @@ export const seedPermissions = async () => {
             name: "List Members",
             codename: "members_list",
             description: "Permission to list organization members",
+        },
+        {
+            name: "Add Project",
+            codename: "project_add",
+            description: "Permission to create a project",
+        },
+        {
+            name: "Edit Project",
+            codename: "project_edit",
+            description: "Permission to edit project details",
+        },
+        {
+            name: "View Project",
+            codename: "project_view",
+            description: "Permission to view a project",
+        },
+        {
+            name: "Delete Project",
+            codename: "project_delete",
+            description: "Permission to delete a project",
+        },
+        {
+            name: "List Projects",
+            codename: "project_list",
+            description: "Permission to list projects",
         },
     ];
 
