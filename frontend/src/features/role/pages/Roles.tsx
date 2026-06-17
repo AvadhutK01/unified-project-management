@@ -3,7 +3,7 @@ import { Pencil, Plus, Search, Shield } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
 import { useFetchRolesQuery } from "../hooks/useRoles";
-import { PermissionGuard } from "@/features/rbac/components/PermissionGuard";
+import { usePermission } from "@/features/rbac/hooks/usePermission";
 import { PERMISSIONS } from "@/features/rbac/types/rbac.types";
 
 interface Role {
@@ -18,6 +18,8 @@ const Roles = () => {
     const [search, setSearch] = useState("");
 
     const { data: roles = [], isPending: isLoading } = useFetchRolesQuery();
+    const { hasPermission } = usePermission();
+    const canEdit = hasPermission(PERMISSIONS.ROLES.EDIT);
 
     const columns = useMemo<DataTableColumn<Role>[]>(
         () => [
@@ -45,28 +47,32 @@ const Roles = () => {
                     </span>
                 ),
             },
-            {
-                key: "actions",
-                label: "Actions",
-                className: "w-24 text-right",
-                render: (role) => (
-                    <div className="flex justify-end">
-                        <PermissionGuard permission={PERMISSIONS.ROLES.EDIT}>
-                            <button
-                                title="Edit role"
-                                onClick={() =>
-                                    navigate(`/${slug}/roles/edit/${role.id}`)
-                                }
-                                className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
-                            >
-                                <Pencil className="w-4 h-4" />
-                            </button>
-                        </PermissionGuard>
-                    </div>
-                ),
-            },
+            ...(canEdit
+                ? [
+                      {
+                          key: "actions" as const,
+                          label: "Actions",
+                          className: "w-24 text-right",
+                          render: (role: Role) => (
+                              <div className="flex justify-end">
+                                  <button
+                                      title="Edit role"
+                                      onClick={() =>
+                                          navigate(
+                                              `/${slug}/roles/edit/${role.id}`,
+                                          )
+                                      }
+                                      className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                                  >
+                                      <Pencil className="w-4 h-4" />
+                                  </button>
+                              </div>
+                          ),
+                      },
+                  ]
+                : []),
         ],
-        [navigate, slug],
+        [navigate, slug, canEdit],
     );
 
     return (
@@ -84,7 +90,7 @@ const Roles = () => {
                 </div>
 
                 <div className="py-4 flex justify-between">
-                    <PermissionGuard permission={PERMISSIONS.ROLES.ADD}>
+                    {hasPermission(PERMISSIONS.ROLES.ADD) && (
                         <button
                             onClick={() => navigate(`/${slug}/roles/add`)}
                             className="inline-flex items-center gap-2 px-4 py-1 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors cursor-pointer"
@@ -92,7 +98,7 @@ const Roles = () => {
                             <Plus className="w-4 h-4" />
                             Add Role
                         </button>
-                    </PermissionGuard>
+                    )}
                     <div className="relative min-w-xs">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                         <input

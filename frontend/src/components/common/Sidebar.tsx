@@ -6,6 +6,7 @@ import {
     Building2,
     Users,
     ShieldCheck,
+    FolderKanbanIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -83,6 +84,12 @@ const Sidebar = () => {
                     path: `/${activeOrganization?.slug}/members/invited`,
                 },
             ],
+        },
+        {
+            icon: FolderKanbanIcon,
+            label: "Projects",
+            path: `/${activeOrganization?.slug}/projects`,
+            permission: "project_list",
         },
     ];
 

@@ -56,13 +56,13 @@ const Register = () => {
     const [showConfirm, setShowConfirm] = useState(false);
     const [passwordValue, setPasswordValue] = useState("");
 
-    const { mutate: registerUser } = useRegisterUser();
+    const { mutate: registerUser, isPending: isSubmitting } = useRegisterUser();
 
     const {
         register,
         handleSubmit,
         trigger,
-        formState: { errors, isSubmitting },
+        formState: { errors },
     } = useForm<RegisterFormData>({
         resolver: zodResolver(registerSchema),
         mode: "onTouched",

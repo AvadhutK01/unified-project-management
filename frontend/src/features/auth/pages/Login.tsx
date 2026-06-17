@@ -54,6 +54,8 @@ const Login = () => {
 
                     if (token) {
                         localStorage.setItem("token", token);
+                        localStorage.setItem("name", response.data.username);
+                        localStorage.setItem("email", response.data.email);
                     }
 
                     // navigate("/organization-loader");

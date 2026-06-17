@@ -27,9 +27,12 @@ const Header = () => {
     const orgButtonRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem("user");
+        const storedUser = {
+            name: localStorage.getItem("name")!,
+            email: localStorage.getItem("email")!,
+        };
         if (storedUser) {
-            setUser(JSON.parse(storedUser));
+            setUser(storedUser);
         }
     }, []);
 

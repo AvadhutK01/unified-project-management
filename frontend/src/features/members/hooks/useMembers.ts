@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+    useInfiniteQuery,
+    useMutation,
+    useQuery,
+    useQueryClient,
+} from "@tanstack/react-query";
 import {
     fetchInvitations,
     fetchMembers,
@@ -25,6 +30,28 @@ export const useMembersQuery = (type: string, page = 1, search = "") => {
     return useQuery({
         queryKey: ["members", type, page, search],
         queryFn: () => fetchMembers({ type, page, search }),
+    });
+};
+
+export const useInfiniteMembersQuery = (type: string, search = "") => {
+    return useInfiniteQuery({
+        queryKey: ["members", type, search],
+        queryFn: ({ pageParam }) =>
+            fetchMembers({
+                type,
+                page: pageParam,
+                search,
+            }),
+
+        initialPageParam: 1,
+
+        getNextPageParam: (lastPage) => {
+            const pagination = lastPage.data.pagination;
+
+            return pagination.page < pagination.totalPages
+                ? pagination.page + 1
+                : undefined;
+        },
     });
 };
 

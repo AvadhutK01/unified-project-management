@@ -1,188 +1,184 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
     Search,
-    UserPlus,
-    UserMinus,
-    Users,
-    ChevronLeft,
-    ChevronRight,
     Eye,
     Edit,
+    Trash2,
+    ChevronLeft,
+    ChevronRight,
+    FolderKanban,
 } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { getColor, getInitials, formatDate, useDebounce } from "@/lib/utils";
-import { InviteMembersModal } from "../components/InviteMembersModal";
-import { EditMemberModal } from "../components/EditMemberModal";
+import { formatDate, useDebounce } from "@/lib/utils";
+import {
+    useProjectsQuery,
+    useDeleteProjectMutation,
+} from "../hooks/useProjects";
 import { toast } from "sonner";
 import { useConfirm } from "@/providers/ConfirmProvider";
-import { useMembersQuery, useRemoveMemberMutation } from "../hooks/useMembers";
-import type { Member } from "@/features/members/types/members.types";
+import ProjectCreateModal from "../components/ProjectCreateModal";
+import ProjectEditModal from "../components/ProjectEditModal";
+import { STATUS_STYLES, STATUS_LABELS } from "../constants/projects.constants";
+import type { Project } from "../types/project.types";
 import { usePermission } from "@/features/rbac/hooks/usePermission";
 import { PERMISSIONS } from "@/features/rbac/types/rbac.types";
 
-const ROLE_STYLES: Record<string, string> = {
-    Admin: "bg-primary/10 text-primary border-primary/20",
-    Member: "bg-secondary text-secondary-foreground",
-    Viewer: "bg-muted text-muted-foreground",
-};
-
-const JoinedMembers = () => {
-    const [members, setMembers] = useState<Member[]>([]);
+const ProjectsListPage = () => {
     const [search, setSearch] = useState("");
-    const debouncedSearch = useDebounce(search, 300);
-    const [modalOpen, setModalOpen] = useState(false);
-    const [editModalOpen, setEditModalOpen] = useState(false);
-    const [selectedMemberId, setSelectedMemberId] = useState<string | null>(
-        null,
-    );
     const [currentPage, setCurrentPage] = useState(1);
-
+    const [editingProject, setEditingProject] = useState<Project | null>(null);
+    const [editModalOpen, setEditModalOpen] = useState(false);
     const confirm = useConfirm();
-    const { mutate: removeMemberMutation } = useRemoveMemberMutation();
     const { hasPermission } = usePermission();
-    const canView = hasPermission(PERMISSIONS.MEMBERS.VIEW);
-    const canEdit = hasPermission(PERMISSIONS.MEMBERS.EDIT);
-    const canDelete = hasPermission(PERMISSIONS.MEMBERS.DELETE);
+    const { mutate: deleteProjectMutation, isPending: isDeleting } =
+        useDeleteProjectMutation();
+    const canView = hasPermission(PERMISSIONS.PROJECTS.VIEW);
+    const canEdit = hasPermission(PERMISSIONS.PROJECTS.EDIT);
+    const canDelete = hasPermission(PERMISSIONS.PROJECTS.DELETE);
     const hasAnyAction = canView || canEdit || canDelete;
 
-    const { data: joinedMembers, isLoading } = useMembersQuery(
-        "joined",
+    const debouncedSearch = useDebounce(search, 300);
+
+    const { data: projectsData, isLoading } = useProjectsQuery(
         currentPage,
         debouncedSearch,
     );
 
-    useEffect(() => {
+    // Reset pagination to page 1 when search text changes
+    useMemo(() => {
         if (currentPage !== 1) {
             setCurrentPage(1);
         }
     }, [debouncedSearch]);
 
-    useEffect(() => {
-        const mappedMembers: Member[] =
-            joinedMembers?.data?.data?.map((item: any) => ({
+    const projects = useMemo<Project[]>(() => {
+        return (
+            projectsData?.data?.data?.map((item: any) => ({
                 id: item.id,
-                name: item.username,
-                email: item.email,
-                role: item.roleName,
-                status:
-                    item.status === "active"
-                        ? "Active"
-                        : item.status === "inactive"
-                          ? "Inactive"
-                          : "On Leave",
-                joinedAt: item.createdAt ?? item.joinedAt ?? "",
-            })) || [];
+                name: item.title,
+                status: item.status,
+                manager: item.clientName ?? "",
+                startDate: item.startDate ?? "",
+                endDate: item.endDate ?? "",
+                logo: item.logoUrl,
+            })) ?? []
+        );
+    }, [projectsData]);
 
-        setMembers(mappedMembers);
-    }, [joinedMembers]);
+    const totalProjects = projectsData?.data?.pagination?.total ?? 0;
+    const totalPages = projectsData?.data?.pagination?.totalPages ?? 1;
+    const safePage = Math.min(currentPage, totalPages);
 
-    const handleRemove = async (member: Member) => {
+    const getImageUrl = (logoPath?: string) => {
+        if (!logoPath) return "";
+        if (logoPath.startsWith("http://") || logoPath.startsWith("https://")) {
+            return logoPath;
+        }
+        const apiBase = import.meta.env.VITE_PUBLIC_API_BASE_URL || "";
+        const rootBase = apiBase.replace("/api/v1", "");
+        return `${rootBase}${logoPath.startsWith("/") ? "" : "/"}${logoPath}`;
+    };
+
+    const handleView = (project: Project) => {
+        toast.info(`Viewing ${project.name}`);
+    };
+
+    const handleEdit = (project: Project) => {
+        setEditingProject(project);
+        setEditModalOpen(true);
+    };
+
+    const handleDelete = async (project: Project) => {
         const confirmed = await confirm({
-            title: `Remove ${member.name}?`,
-            description: `Are you sure you want to remove ${member.name} from the organization? This action cannot be undone.`,
-            confirmText: "Remove",
+            title: `Delete ${project.name}?`,
+            description: `Are you sure you want to delete ${project.name}? This action cannot be undone.`,
+            confirmText: "Delete",
             cancelText: "Cancel",
         });
         if (!confirmed) return;
 
-        removeMemberMutation(member.id, {
+        deleteProjectMutation(project.id, {
             onSuccess: () => {
-                toast.success(`${member.name} removed from organization.`);
+                toast.success(`${project.name} has been deleted.`);
             },
             onError: (error: any) => {
                 toast.error(
                     error?.response?.data?.message ||
-                        `Failed to remove ${member.name}. Please try again.`,
+                        `Failed to delete ${project.name}. Please try again.`,
                 );
             },
         });
     };
 
-    const handleView = (member: Member) => {
-        toast.info(`Viewing ${member.name}'s profile.`);
-    };
-
-    const handleEdit = (member: Member) => {
-        setSelectedMemberId(member.id);
-        setEditModalOpen(true);
-    };
-
-    const columns = useMemo<DataTableColumn<Member>[]>(
+    const columns = useMemo<DataTableColumn<Project>[]>(
         () => [
             {
                 key: "name",
-                label: "Member",
-                render: (member) => {
-                    const color = getColor(member.name);
-                    const initials = getInitials(member.name);
-                    return (
-                        <div className="flex items-center gap-3 min-w-0">
-                            <div
-                                className="size-9 rounded-xl flex items-center justify-center text-white text-xs font-bold shrink-0 select-none"
-                                style={{ backgroundColor: color }}
-                            >
-                                {initials}
-                            </div>
-                            <div className="min-w-0">
-                                <p className="text-sm font-medium text-foreground truncate">
-                                    {member.name}
-                                </p>
-                                <p className="text-xs text-muted-foreground truncate">
-                                    {member.email}
-                                </p>
-                            </div>
+                label: "Project",
+                render: (project) => (
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+                            {project.logo ? (
+                                <img
+                                    src={getImageUrl(project.logo)}
+                                    alt={project.name}
+                                    className="size-full object-cover"
+                                />
+                            ) : (
+                                <FolderKanban className="size-4 text-primary" />
+                            )}
                         </div>
-                    );
-                },
-            },
-            {
-                key: "role",
-                label: "Role",
-                render: (member) => (
-                    <Badge
-                        variant="outline"
-                        className={ROLE_STYLES[member.role] ?? ""}
-                    >
-                        {member.role}
-                    </Badge>
+                        <div className="min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">
+                                {project.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                                {project.manager}
+                            </p>
+                        </div>
+                    </div>
                 ),
             },
             {
                 key: "status",
                 label: "Status",
-                render: (member) => (
-                    <div className="flex items-center gap-1.5">
-                        <span
-                            className="size-1.5 rounded-full shrink-0"
-                            style={{
-                                backgroundColor:
-                                    member.status === "Active"
-                                        ? "#798c5e"
-                                        : "#a1a1aa",
-                            }}
-                        />
-                        <span
-                            className="text-xs font-medium"
-                            style={{
-                                color:
-                                    member.status === "Active"
-                                        ? "#798c5e"
-                                        : "#a1a1aa",
-                            }}
-                        >
-                            {member.status}
-                        </span>
-                    </div>
+                render: (project) => (
+                    <Badge
+                        variant="outline"
+                        className={STATUS_STYLES[project.status] ?? ""}
+                    >
+                        {STATUS_LABELS[project.status] ?? project.status}
+                    </Badge>
                 ),
             },
             {
-                key: "joinedAt",
-                label: "Joined",
-                render: (member) => (
+                key: "manager",
+                label: "Client",
+                className: "hidden md:table-cell",
+                render: (project) => (
                     <span className="text-sm text-muted-foreground">
-                        {formatDate(member.joinedAt)}
+                        {project.manager}
+                    </span>
+                ),
+            },
+            {
+                key: "startDate",
+                label: "Start Date",
+                className: "hidden lg:table-cell",
+                render: (project) => (
+                    <span className="text-sm text-muted-foreground">
+                        {formatDate(project.startDate)}
+                    </span>
+                ),
+            },
+            {
+                key: "endDate",
+                label: "End Date",
+                className: "hidden lg:table-cell",
+                render: (project) => (
+                    <span className="text-sm text-muted-foreground">
+                        {formatDate(project.endDate)}
                     </span>
                 ),
             },
@@ -192,12 +188,12 @@ const JoinedMembers = () => {
                           key: "actions" as const,
                           label: "Actions",
                           className: "w-24 text-right",
-                          render: (member: Member) => (
+                          render: (project: Project) => (
                               <div className="flex items-center justify-end gap-1">
                                   {canView && (
                                       <button
-                                          title={`View ${member.name}`}
-                                          onClick={() => handleView(member)}
+                                          title={`View ${project.name}`}
+                                          onClick={() => handleView(project)}
                                           className="inline-flex items-center justify-center size-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
                                       >
                                           <Eye className="size-4" />
@@ -205,8 +201,8 @@ const JoinedMembers = () => {
                                   )}
                                   {canEdit && (
                                       <button
-                                          title={`Edit ${member.name}`}
-                                          onClick={() => handleEdit(member)}
+                                          title={`Edit ${project.name}`}
+                                          onClick={() => handleEdit(project)}
                                           className="inline-flex items-center justify-center size-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
                                       >
                                           <Edit className="size-4" />
@@ -214,11 +210,11 @@ const JoinedMembers = () => {
                                   )}
                                   {canDelete && (
                                       <button
-                                          title={`Remove ${member.name}`}
-                                          onClick={() => handleRemove(member)}
+                                          title={`Delete ${project.name}`}
+                                          onClick={() => handleDelete(project)}
                                           className="inline-flex items-center justify-center size-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
                                       >
-                                          <UserMinus className="size-4" />
+                                          <Trash2 className="size-4" />
                                       </button>
                                   )}
                               </div>
@@ -230,9 +226,7 @@ const JoinedMembers = () => {
         [hasAnyAction, canView, canEdit, canDelete],
     );
 
-    const activeCount = members.filter((m) => m.status === "Active").length;
-    const totalMembers = joinedMembers?.data?.pagination?.total ?? 0;
-    const totalPages = joinedMembers?.data?.pagination?.totalPages ?? 1;
+    const activeCount = projects.filter((p) => p.status === "started").length;
 
     return (
         <>
@@ -240,25 +234,22 @@ const JoinedMembers = () => {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
                         <h1 className="text-lg font-semibold text-foreground">
-                            Joined Members
+                            Projects
                         </h1>
                         <p className="text-sm text-muted-foreground mt-0.5">
-                            Manage members who are part of this organization.
+                            Manage and monitor all your agency projects.
                         </p>
                     </div>
 
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card border border-border">
-                            <Users className="size-3.5 text-muted-foreground" />
+                            <FolderKanban className="size-3.5 text-muted-foreground" />
                             <span className="text-xs font-medium text-foreground">
-                                {members.length} total
+                                {totalProjects} total
                             </span>
                         </div>
                         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card border border-border">
-                            <span
-                                className="size-1.5 rounded-full"
-                                style={{ backgroundColor: "#798c5e" }}
-                            />
+                            <span className="size-1.5 rounded-full bg-blue-500" />
                             <span className="text-xs font-medium text-foreground">
                                 {activeCount} active
                             </span>
@@ -267,24 +258,18 @@ const JoinedMembers = () => {
                 </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                    {hasPermission(PERMISSIONS.MEMBERS.ADD) && (
-                        <Button
-                            size="sm"
-                            onClick={() => setModalOpen(true)}
-                            className="gap-1.5"
-                        >
-                            <UserPlus className="size-4" />
-                            Invite Members
-                        </Button>
-                    )}
+                    <ProjectCreateModal />
 
                     <div className="relative min-w-xs">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                         <input
                             type="text"
-                            placeholder="Search by name, email or role..."
+                            placeholder="Search..."
                             value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={(e) => {
+                                setSearch(e.target.value);
+                                setCurrentPage(1);
+                            }}
                             className="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-border bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-primary transition"
                         />
                     </div>
@@ -292,21 +277,22 @@ const JoinedMembers = () => {
 
                 <DataTable
                     columns={columns}
-                    data={members}
-                    getRowId={(m) => m.id}
+                    data={projects}
+                    getRowId={(p) => p.id}
                     hasActiveFilters={search.length > 0}
                     loading={isLoading}
                     showDefaultFooter={false}
                     emptyState={
                         <tr>
-                            <td colSpan={hasAnyAction ? 5 : 4}>
+                            <td colSpan={hasAnyAction ? 6 : 5}>
                                 <div className="flex flex-col items-center justify-center py-16 gap-2">
-                                    <Users className="size-8 text-muted-foreground/40" />
+                                    <FolderKanban className="size-8 text-muted-foreground/40" />
                                     <p className="text-sm font-medium text-muted-foreground">
-                                        No members yet
+                                        No projects yet
                                     </p>
                                     <p className="text-xs text-muted-foreground">
-                                        Invite people to grow your team.
+                                        Create your first project to get
+                                        started.
                                     </p>
                                 </div>
                             </td>
@@ -318,20 +304,20 @@ const JoinedMembers = () => {
                     <p className="text-xs text-muted-foreground px-1">
                         Showing{" "}
                         <span className="font-medium text-foreground">
-                            {members.length}
+                            {projects.length}
                         </span>{" "}
                         of{" "}
                         <span className="font-medium text-foreground">
-                            {totalMembers}
+                            {totalProjects}
                         </span>{" "}
-                        member{totalMembers !== 1 ? "s" : ""}
+                        project{totalProjects !== 1 ? "s" : ""}
                     </p>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() =>
                                 setCurrentPage((page) => Math.max(1, page - 1))
                             }
-                            disabled={currentPage === 1}
+                            disabled={safePage === 1}
                             className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                         >
                             <ChevronLeft className="w-4 h-4" />
@@ -339,7 +325,7 @@ const JoinedMembers = () => {
                         <span className="text-xs text-muted-foreground px-2">
                             Page{" "}
                             <span className="font-medium text-foreground">
-                                {currentPage}
+                                {safePage}
                             </span>{" "}
                             of{" "}
                             <span className="font-medium text-foreground">
@@ -352,7 +338,7 @@ const JoinedMembers = () => {
                                     Math.min(totalPages, page + 1),
                                 )
                             }
-                            disabled={currentPage === totalPages}
+                            disabled={safePage === totalPages}
                             className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                         >
                             <ChevronRight className="w-4 h-4" />
@@ -360,21 +346,16 @@ const JoinedMembers = () => {
                     </div>
                 </div>
             </div>
-
-            <InviteMembersModal
-                open={modalOpen}
-                onClose={() => setModalOpen(false)}
-            />
-            <EditMemberModal
+            <ProjectEditModal
+                project={editingProject}
                 open={editModalOpen}
-                memberId={selectedMemberId}
-                onClose={() => {
-                    setEditModalOpen(false);
-                    setSelectedMemberId(null);
+                onOpenChange={(open) => {
+                    setEditModalOpen(open);
+                    if (!open) setEditingProject(null);
                 }}
             />
         </>
     );
 };
 
-export default JoinedMembers;
+export default ProjectsListPage;

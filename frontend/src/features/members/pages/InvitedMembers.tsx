@@ -18,7 +18,7 @@ import {
     useRevokeInvitationMutation,
 } from "../hooks/useMembers";
 import { useConfirm } from "@/providers/ConfirmProvider";
-import { PermissionGuard } from "@/features/rbac/components/PermissionGuard";
+import { usePermission } from "@/features/rbac/hooks/usePermission";
 import { PERMISSIONS } from "@/features/rbac/types/rbac.types";
 
 type InviteStatus = "Pending" | "Accepted" | "Rejected" | "Revoked";
@@ -59,6 +59,8 @@ const InvitedMembers = () => {
     const [invites, setInvites] = useState<InvitedMember[]>([]);
     const confirm = useConfirm();
     const { mutate: revokeInvitationMutation } = useRevokeInvitationMutation();
+    const { hasPermission } = usePermission();
+    const canDelete = hasPermission(PERMISSIONS.MEMBERS.DELETE);
 
     const { data: invitedMembers, isLoading } = useMembersQuery(
         "invited",
@@ -212,30 +214,30 @@ const InvitedMembers = () => {
                     </span>
                 ),
             },
-            {
-                key: "actions",
-                label: "",
-                className: "w-20 text-right",
-                render: (member) => (
-                    <div className="flex items-center justify-center gap-1">
-                        {member.status === "Pending" && (
-                            <PermissionGuard
-                                permission={PERMISSIONS.MEMBERS.DELETE}
-                            >
-                                <button
-                                    title="Revoke invitation"
-                                    onClick={() => handleRevoke(member)}
-                                    className="inline-flex items-center justify-center size-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
-                                >
-                                    <XCircle className="size-4" />
-                                </button>
-                            </PermissionGuard>
-                        )}
-                    </div>
-                ),
-            },
+            ...(canDelete
+                ? [
+                      {
+                          key: "actions" as const,
+                          label: "Actions",
+                          className: "w-20 text-right",
+                          render: (member: InvitedMember) => (
+                              <div className="flex items-center justify-center gap-1">
+                                  {member.status === "Pending" && (
+                                      <button
+                                          title="Revoke invitation"
+                                          onClick={() => handleRevoke(member)}
+                                          className="inline-flex items-center justify-center size-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                                      >
+                                          <XCircle className="size-4" />
+                                      </button>
+                                  )}
+                              </div>
+                          ),
+                      },
+                  ]
+                : []),
         ],
-        [],
+        [canDelete],
     );
 
     const totalInvites = invitedMembers?.data?.pagination?.total ?? 0;
@@ -257,7 +259,7 @@ const InvitedMembers = () => {
                 </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                    <PermissionGuard permission={PERMISSIONS.MEMBERS.ADD}>
+                    {hasPermission(PERMISSIONS.MEMBERS.ADD) && (
                         <Button
                             size="sm"
                             onClick={() => setModalOpen(true)}
@@ -266,7 +268,7 @@ const InvitedMembers = () => {
                             <UserPlus className="size-4" />
                             Invite Members
                         </Button>
-                    </PermissionGuard>
+                    )}
 
                     <div className="relative min-w-xs">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
@@ -289,7 +291,7 @@ const InvitedMembers = () => {
                     showDefaultFooter={false}
                     emptyState={
                         <tr>
-                            <td colSpan={6}>
+                            <td colSpan={canDelete ? 6 : 5}>
                                 <div className="flex flex-col items-center justify-center py-16 gap-2">
                                     <Mail className="size-8 text-muted-foreground/40" />
                                     <p className="text-sm font-medium text-muted-foreground">

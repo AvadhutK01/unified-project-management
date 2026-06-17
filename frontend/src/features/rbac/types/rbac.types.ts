@@ -13,6 +13,13 @@ export const PERMISSIONS = {
         VIEW: "members_view",
         DELETE: "members_delete",
     },
+    PROJECTS: {
+        LIST: "project_list",
+        ADD: "project_add",
+        EDIT: "project_edit",
+        VIEW: "project_view",
+        DELETE: "project_delete",
+    },
 } as const;
 
 export type PermissionCodename = string;

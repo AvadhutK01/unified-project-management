@@ -47,6 +47,9 @@ const JoinedMembers = lazy(
 const InvitedMembers = lazy(
     () => import("@/features/members/pages/InvitedMembers"),
 );
+const ProjectsListPage = lazy(
+    () => import("@/features/projects/pages/ProjectsListPage"),
+);
 
 export const router = createBrowserRouter([
     {
@@ -260,6 +263,22 @@ export const router = createBrowserRouter([
                                     permission={PERMISSIONS.MEMBERS.LIST}
                                 >
                                     <InvitedMembers />
+                                </ProtectedRoute>
+                            </PrivateRoute>
+                        </MainLayout>
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/:slug/projects",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <MainLayout>
+                            <PrivateRoute>
+                                <ProtectedRoute
+                                    permission={PERMISSIONS.PROJECTS.LIST}
+                                >
+                                    <ProjectsListPage />
                                 </ProtectedRoute>
                             </PrivateRoute>
                         </MainLayout>
