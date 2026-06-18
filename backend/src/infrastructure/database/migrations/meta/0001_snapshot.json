@@ -1,7 +1,5 @@
 {
-    "id": "f1a51731-b41a-446a-831b-4dbd29dce77c",
-    "prevId": "93298b1d-2970-4256-b01c-7e9de0005448",
-    "version": "6",
+    "version": "7",
     "dialect": "postgresql",
     "tables": {
         "public.users": {
@@ -79,22 +77,31 @@
             "uniqueConstraints": {
                 "users_email_unique": {
                     "name": "users_email_unique",
-                    "nullsNotDistinct": false,
-                    "columns": ["email"]
+                    "columns": ["email"],
+                    "nullsNotDistinct": false
                 },
                 "users_phone_number_unique": {
                     "name": "users_phone_number_unique",
-                    "nullsNotDistinct": false,
-                    "columns": ["phone_number"]
+                    "columns": ["phone_number"],
+                    "nullsNotDistinct": false
                 }
-            }
+            },
+            "policies": {},
+            "isRLSEnabled": false,
+            "checkConstraints": {}
         }
     },
     "enums": {},
     "schemas": {},
     "_meta": {
-        "columns": {},
         "schemas": {},
-        "tables": {}
-    }
+        "tables": {},
+        "columns": {}
+    },
+    "id": "f1a51731-b41a-446a-831b-4dbd29dce77c",
+    "prevId": "93298b1d-2970-4256-b01c-7e9de0005448",
+    "sequences": {},
+    "policies": {},
+    "views": {},
+    "roles": {}
 }

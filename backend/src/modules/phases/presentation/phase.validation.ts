@@ -1,36 +1,22 @@
 import { z } from "zod";
 
-const projectStatusSchema = z.enum([
+const phaseStatusSchema = z.enum([
     "notstarted",
     "started",
     "onhold",
     "completed",
 ]);
 
-const orgMemberIdsSchema = z
-    .preprocess((val) => {
-        if (typeof val === "string") {
-            try {
-                const parsed = JSON.parse(val);
-                if (Array.isArray(parsed)) {
-                    return parsed;
-                }
-            } catch {
-                if (val.includes(",")) {
-                    return val.split(",").map((item) => item.trim());
-                }
-                return [val];
-            }
-        }
-        return val;
-    }, z.array(z.string().uuid()))
-    .optional();
-
-export const createProjectSchema = z.object({
+/**
+ * Schema for creating a new phase.
+ */
+export const createPhaseSchema = z.object({
     body: z
         .object({
-            title: z.string().min(1).max(255),
+            projectId: z.string().uuid(),
+            name: z.string().min(1).max(255),
             description: z.string().max(2000).optional(),
+            type: z.string().max(255).optional(),
             startDate: z
                 .string()
                 .regex(
@@ -45,10 +31,7 @@ export const createProjectSchema = z.object({
                     "End date must be in YYYY-MM-DD format",
                 )
                 .optional(),
-            clientName: z.string().max(255).optional(),
-            logoUrl: z.string().max(1000).optional(),
-            status: projectStatusSchema.optional(),
-            orgMemberIds: orgMemberIdsSchema,
+            status: phaseStatusSchema.optional(),
         })
         .refine(
             (data) =>
@@ -72,14 +55,18 @@ export const createProjectSchema = z.object({
         ),
 });
 
-export const updateProjectSchema = z.object({
+/**
+ * Schema for updating an existing phase.
+ */
+export const updatePhaseSchema = z.object({
     params: z.object({
         id: z.string().uuid(),
     }),
     body: z
         .object({
-            title: z.string().min(1).max(255).optional(),
+            name: z.string().min(1).max(255).optional(),
             description: z.string().max(2000).nullable().optional(),
+            type: z.string().max(255).nullable().optional(),
             startDate: z
                 .string()
                 .regex(
@@ -96,10 +83,7 @@ export const updateProjectSchema = z.object({
                 )
                 .nullable()
                 .optional(),
-            clientName: z.string().max(255).nullable().optional(),
-            logoUrl: z.string().max(1000).nullable().optional(),
-            status: projectStatusSchema.optional(),
-            orgMemberIds: orgMemberIdsSchema,
+            status: phaseStatusSchema.optional(),
         })
         .refine(
             (data) =>
@@ -123,24 +107,23 @@ export const updateProjectSchema = z.object({
         ),
 });
 
-export const projectIdParamSchema = z.object({
+/**
+ * Schema for phase ID parameter.
+ */
+export const phaseIdParamSchema = z.object({
     params: z.object({
         id: z.string().uuid(),
     }),
 });
 
-export const projectMemberSchema = z.object({
-    params: z.object({
-        id: z.string().uuid(),
-    }),
-    body: z.object({
-        orgMemberId: z.string().uuid(),
-    }),
-});
-
-export const projectMemberParamSchema = z.object({
-    params: z.object({
-        id: z.string().uuid(),
-        orgMemberId: z.string().uuid(),
+/**
+ * Schema for listing phases with pagination and filtering.
+ */
+export const listPhasesQuerySchema = z.object({
+    query: z.object({
+        projectId: z.string().uuid(),
+        page: z.string().regex(/^\d+$/).optional().transform(Number),
+        limit: z.string().regex(/^\d+$/).optional().transform(Number),
+        search: z.string().optional(),
     }),
 });

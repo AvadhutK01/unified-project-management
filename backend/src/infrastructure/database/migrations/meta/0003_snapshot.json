@@ -1,7 +1,5 @@
 {
-    "id": "4d5abbbe-2859-44fb-8f44-5ae5992c43bf",
-    "prevId": "b99f9ec4-3964-4652-8bb0-f57db1575c08",
-    "version": "6",
+    "version": "7",
     "dialect": "postgresql",
     "tables": {
         "public.users": {
@@ -85,15 +83,18 @@
             "uniqueConstraints": {
                 "users_email_unique": {
                     "name": "users_email_unique",
-                    "nullsNotDistinct": false,
-                    "columns": ["email"]
+                    "columns": ["email"],
+                    "nullsNotDistinct": false
                 },
                 "users_phone_number_unique": {
                     "name": "users_phone_number_unique",
-                    "nullsNotDistinct": false,
-                    "columns": ["phone_number"]
+                    "columns": ["phone_number"],
+                    "nullsNotDistinct": false
                 }
-            }
+            },
+            "policies": {},
+            "isRLSEnabled": false,
+            "checkConstraints": {}
         },
         "public.organizations": {
             "name": "organizations",
@@ -170,22 +171,31 @@
             "uniqueConstraints": {
                 "organizations_name_unique": {
                     "name": "organizations_name_unique",
-                    "nullsNotDistinct": false,
-                    "columns": ["name"]
+                    "columns": ["name"],
+                    "nullsNotDistinct": false
                 },
                 "organizations_slug_unique": {
                     "name": "organizations_slug_unique",
-                    "nullsNotDistinct": false,
-                    "columns": ["slug"]
+                    "columns": ["slug"],
+                    "nullsNotDistinct": false
                 }
-            }
+            },
+            "policies": {},
+            "isRLSEnabled": false,
+            "checkConstraints": {}
         }
     },
     "enums": {},
     "schemas": {},
     "_meta": {
-        "columns": {},
         "schemas": {},
-        "tables": {}
-    }
+        "tables": {},
+        "columns": {}
+    },
+    "id": "4d5abbbe-2859-44fb-8f44-5ae5992c43bf",
+    "prevId": "b99f9ec4-3964-4652-8bb0-f57db1575c08",
+    "sequences": {},
+    "policies": {},
+    "views": {},
+    "roles": {}
 }

@@ -1,7 +1,5 @@
 {
-    "id": "b31ebe9b-e97e-47fa-bdd9-c669174db7ed",
-    "prevId": "99112d29-2e95-4765-9a7e-bb01abbfde7f",
-    "version": "6",
+    "version": "7",
     "dialect": "postgresql",
     "tables": {
         "public.users": {
@@ -85,15 +83,18 @@
             "uniqueConstraints": {
                 "users_email_unique": {
                     "name": "users_email_unique",
-                    "nullsNotDistinct": false,
-                    "columns": ["email"]
+                    "columns": ["email"],
+                    "nullsNotDistinct": false
                 },
                 "users_phone_number_unique": {
                     "name": "users_phone_number_unique",
-                    "nullsNotDistinct": false,
-                    "columns": ["phone_number"]
+                    "columns": ["phone_number"],
+                    "nullsNotDistinct": false
                 }
-            }
+            },
+            "policies": {},
+            "isRLSEnabled": false,
+            "checkConstraints": {}
         },
         "public.organizations": {
             "name": "organizations",
@@ -170,15 +171,18 @@
             "uniqueConstraints": {
                 "organizations_name_unique": {
                     "name": "organizations_name_unique",
-                    "nullsNotDistinct": false,
-                    "columns": ["name"]
+                    "columns": ["name"],
+                    "nullsNotDistinct": false
                 },
                 "organizations_slug_unique": {
                     "name": "organizations_slug_unique",
-                    "nullsNotDistinct": false,
-                    "columns": ["slug"]
+                    "columns": ["slug"],
+                    "nullsNotDistinct": false
                 }
-            }
+            },
+            "policies": {},
+            "isRLSEnabled": false,
+            "checkConstraints": {}
         },
         "public.roles": {
             "name": "roles",
@@ -236,21 +240,24 @@
                 "roles_organization_id_organizations_id_fk": {
                     "name": "roles_organization_id_organizations_id_fk",
                     "tableFrom": "roles",
-                    "tableTo": "organizations",
                     "columnsFrom": ["organization_id"],
+                    "tableTo": "organizations",
                     "columnsTo": ["id"],
-                    "onDelete": "no action",
-                    "onUpdate": "no action"
+                    "onUpdate": "no action",
+                    "onDelete": "no action"
                 }
             },
             "compositePrimaryKeys": {},
             "uniqueConstraints": {
                 "roles_org_id_name_key": {
                     "name": "roles_org_id_name_key",
-                    "nullsNotDistinct": false,
-                    "columns": ["organization_id", "name"]
+                    "columns": ["organization_id", "name"],
+                    "nullsNotDistinct": false
                 }
-            }
+            },
+            "policies": {},
+            "isRLSEnabled": false,
+            "checkConstraints": {}
         },
         "public.permissions": {
             "name": "permissions",
@@ -309,15 +316,18 @@
             "uniqueConstraints": {
                 "permissions_name_unique": {
                     "name": "permissions_name_unique",
-                    "nullsNotDistinct": false,
-                    "columns": ["name"]
+                    "columns": ["name"],
+                    "nullsNotDistinct": false
                 },
                 "permissions_codename_unique": {
                     "name": "permissions_codename_unique",
-                    "nullsNotDistinct": false,
-                    "columns": ["codename"]
+                    "columns": ["codename"],
+                    "nullsNotDistinct": false
                 }
-            }
+            },
+            "policies": {},
+            "isRLSEnabled": false,
+            "checkConstraints": {}
         },
         "public.role_permissions": {
             "name": "role_permissions",
@@ -344,14 +354,23 @@
                     "columns": ["role_id", "permission_id"]
                 }
             },
-            "uniqueConstraints": {}
+            "uniqueConstraints": {},
+            "policies": {},
+            "isRLSEnabled": false,
+            "checkConstraints": {}
         }
     },
     "enums": {},
     "schemas": {},
     "_meta": {
-        "columns": {},
         "schemas": {},
-        "tables": {}
-    }
+        "tables": {},
+        "columns": {}
+    },
+    "id": "b31ebe9b-e97e-47fa-bdd9-c669174db7ed",
+    "prevId": "99112d29-2e95-4765-9a7e-bb01abbfde7f",
+    "sequences": {},
+    "policies": {},
+    "views": {},
+    "roles": {}
 }

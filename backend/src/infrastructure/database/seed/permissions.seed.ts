@@ -81,6 +81,31 @@ export const seedPermissions = async () => {
             codename: "project_list",
             description: "Permission to list projects",
         },
+        {
+            name: "Add Phase",
+            codename: "phase_add",
+            description: "Permission to create a phase",
+        },
+        {
+            name: "Edit Phase",
+            codename: "phase_edit",
+            description: "Permission to edit phase details",
+        },
+        {
+            name: "View Phase",
+            codename: "phase_view",
+            description: "Permission to view a phase",
+        },
+        {
+            name: "Delete Phase",
+            codename: "phase_delete",
+            description: "Permission to delete a phase",
+        },
+        {
+            name: "List Phases",
+            codename: "phase_list",
+            description: "Permission to list phases",
+        },
     ];
 
     for (const permission of allPermissions) {

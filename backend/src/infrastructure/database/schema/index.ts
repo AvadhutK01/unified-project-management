@@ -7,3 +7,4 @@ export * from "./organization-invitation.js";
 export * from "./organization-member.js";
 export * from "./project.js";
 export * from "./project-member.js";
+export * from "./phase.js";
