@@ -263,3 +263,41 @@
         @apply font-sans;
     }
 }
+
+.tiptap p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: var(--muted-foreground);
+    pointer-events: none;
+    height: 0;
+}
+
+/* Remove default margins */
+.tiptap p {
+    margin: 0;
+}
+
+.tiptap {
+    @apply prose prose-sm dark:prose-invert max-w-none;
+}
+
+/* Optional: better SaaS look */
+.tiptap h1 {
+    @apply text-lg font-semibold;
+}
+
+.tiptap h2 {
+    @apply text-base font-semibold;
+}
+
+.tiptap p {
+    @apply my-2;
+}
+
+.tiptap ul {
+    @apply list-disc pl-5;
+}
+
+.tiptap ol {
+    @apply list-decimal pl-5;
+}

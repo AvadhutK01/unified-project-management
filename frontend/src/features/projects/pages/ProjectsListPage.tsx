@@ -7,6 +7,7 @@ import {
     ChevronLeft,
     ChevronRight,
     FolderKanban,
+    Layers,
 } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
 import { Badge } from "@/components/ui/badge";
@@ -23,19 +24,24 @@ import { STATUS_STYLES, STATUS_LABELS } from "../constants/projects.constants";
 import type { Project } from "../types/project.types";
 import { usePermission } from "@/features/rbac/hooks/usePermission";
 import { PERMISSIONS } from "@/features/rbac/types/rbac.types";
+import { useNavigate } from "react-router-dom";
 
 const ProjectsListPage = () => {
+    const confirm = useConfirm();
+    const navigate = useNavigate();
+
+    const { hasPermission } = usePermission();
+    const { mutate: deleteProjectMutation } = useDeleteProjectMutation();
+
     const [search, setSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [editingProject, setEditingProject] = useState<Project | null>(null);
     const [editModalOpen, setEditModalOpen] = useState(false);
-    const confirm = useConfirm();
-    const { hasPermission } = usePermission();
-    const { mutate: deleteProjectMutation, isPending: isDeleting } =
-        useDeleteProjectMutation();
+
     const canView = hasPermission(PERMISSIONS.PROJECTS.VIEW);
     const canEdit = hasPermission(PERMISSIONS.PROJECTS.EDIT);
     const canDelete = hasPermission(PERMISSIONS.PROJECTS.DELETE);
+    const hasPhaseAccess = hasPermission(PERMISSIONS.PHASES.LIST);
     const hasAnyAction = canView || canEdit || canDelete;
 
     const debouncedSearch = useDebounce(search, 300);
@@ -189,12 +195,12 @@ const ProjectsListPage = () => {
                           label: "Actions",
                           className: "w-24 text-right",
                           render: (project: Project) => (
-                              <div className="flex items-center justify-end gap-1">
+                              <div className="flex items-center justify-end gap-2">
                                   {canView && (
                                       <button
                                           title={`View ${project.name}`}
                                           onClick={() => handleView(project)}
-                                          className="inline-flex items-center justify-center size-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                                          className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
                                       >
                                           <Eye className="size-4" />
                                       </button>
@@ -203,7 +209,7 @@ const ProjectsListPage = () => {
                                       <button
                                           title={`Edit ${project.name}`}
                                           onClick={() => handleEdit(project)}
-                                          className="inline-flex items-center justify-center size-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                                          className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
                                       >
                                           <Edit className="size-4" />
                                       </button>
@@ -212,9 +218,20 @@ const ProjectsListPage = () => {
                                       <button
                                           title={`Delete ${project.name}`}
                                           onClick={() => handleDelete(project)}
-                                          className="inline-flex items-center justify-center size-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                                          className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
                                       >
                                           <Trash2 className="size-4" />
+                                      </button>
+                                  )}
+                                  {hasPhaseAccess && (
+                                      <button
+                                          title={`Project Phases`}
+                                          onClick={() =>
+                                              navigate(`${project.id}/phases`)
+                                          }
+                                          className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                                      >
+                                          <Layers className="size-4" />
                                       </button>
                                   )}
                               </div>

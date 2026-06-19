@@ -1,3 +1,6 @@
+import { useForm } from "react-hook-form";
+import { useParams } from "react-router-dom";
+import { CalendarIcon, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
@@ -24,12 +27,9 @@ import {
     SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2, Plus } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import RichTextEditor from "@/components/common/RichTextEditor";
-import MultiSelect from "@/components/common/MultiSelect";
 import {
     Form,
     FormControl,
@@ -39,83 +39,50 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import {
-    projectFormSchema,
-    type ProjectFormValues,
-} from "../schema/projects.schemas";
-import { PROJECT_STATUS_OPTIONS } from "../constants/projects.constants";
-import { ProjectImageUploader } from "./ProjectImageUploader";
-import { useInfiniteMembersQuery } from "@/features/members/hooks/useMembers";
-import { useMemo, useState } from "react";
-import { useCreateProjectMutation } from "../hooks/useProjects";
+    phaseFormSchema,
+    PHASE_STATUS_OPTIONS,
+    PHASE_TYPES,
+    type PhaseFormValues,
+} from "../schema/phases.schema";
+import { convertFormToPayload } from "../api/phases.api";
+import { useCreatePhaseMutation } from "../hooks/usePhases";
+import { useState } from "react";
 import { toast } from "sonner";
-import { PermissionGuard } from "@/features/rbac/components/PermissionGuard";
-import { PERMISSIONS } from "@/features/rbac/types/rbac.types";
 
-const ProjectCreateModal = () => {
+const AddPhaseModal = () => {
     const [open, setOpen] = useState(false);
-    const { data: members } = useInfiniteMembersQuery("joined");
-    const { mutate: createProject, isPending: isSubmitting } =
-        useCreateProjectMutation();
+    const { id: projectId } = useParams<{ id: string }>();
+    const { mutate: createPhase, isPending: isSubmitting } =
+        useCreatePhaseMutation();
 
-    const memberOptions = useMemo(
-        () =>
-            members?.pages.flatMap((page) =>
-                page.data.data.map((member: any) => ({
-                    label: `${member.username} · ${member.roleName}`,
-                    value: member.id,
-                })),
-            ) ?? [],
-        [members],
-    );
-
-    const form = useForm<ProjectFormValues>({
-        resolver: zodResolver(projectFormSchema),
+    const form = useForm<PhaseFormValues>({
+        resolver: zodResolver(phaseFormSchema),
         defaultValues: {
-            projectName: "",
+            name: "",
+            type: "New Development",
+            customType: "",
             description: "",
-            client: "",
-            projectTeam: [],
             startDate: new Date(),
             endDate: new Date(),
             status: "notstarted",
-            projectImage: null,
         },
     });
 
-    const onSubmit = (data: ProjectFormValues) => {
-        const formData = new FormData();
-        formData.append("title", data.projectName);
-        formData.append("description", data.description);
-        formData.append("clientName", data.client);
-        formData.append("status", data.status);
-        formData.append(
-            "startDate",
-            data.startDate ? format(data.startDate, "yyyy-MM-dd") : "",
-        );
-        formData.append(
-            "endDate",
-            data.endDate ? format(data.endDate, "yyyy-MM-dd") : "",
-        );
+    const watchType = form.watch("type");
 
-        data.projectTeam.forEach((memberId) => {
-            formData.append("orgMemberIds[]", memberId);
-        });
-
-        if (data.projectImage) {
-            formData.append("logo", data.projectImage);
-        }
-
-        createProject(formData, {
+    const onSubmit = (data: PhaseFormValues) => {
+        if (!projectId) return;
+        const payload = convertFormToPayload(data, projectId);
+        createPhase(payload, {
             onSuccess: () => {
-                toast.success("Project created successfully!");
+                toast.success("Phase created successfully!");
                 setOpen(false);
                 form.reset();
             },
             onError: (error: any) => {
-                console.error(error);
                 toast.error(
                     error?.response?.data?.message ||
-                        "Failed to create project. Please try again.",
+                        "Failed to create phase. Please try again.",
                 );
             },
         });
@@ -131,19 +98,17 @@ const ProjectCreateModal = () => {
                 }
             }}
         >
-            <PermissionGuard permission={PERMISSIONS.PROJECTS.ADD}>
-                <SheetTrigger asChild>
-                    <Button>
-                        <Plus className="size-4" />
-                        New Project
-                    </Button>
-                </SheetTrigger>
-            </PermissionGuard>
+            <SheetTrigger asChild>
+                <Button>
+                    <Plus className="size-4" />
+                    Add Phase
+                </Button>
+            </SheetTrigger>
             <SheetContent showCloseButton={false} className="w-150! max-w-150!">
                 <SheetHeader>
-                    <SheetTitle>Add Project</SheetTitle>
+                    <SheetTitle>Add Phase</SheetTitle>
                     <SheetDescription>
-                        Add a new project to your agency.
+                        Add a new phase to your project.
                     </SheetDescription>
                 </SheetHeader>
                 <div className="grid flex-1 auto-rows-min gap-6 px-4 overflow-y-auto">
@@ -154,35 +119,15 @@ const ProjectCreateModal = () => {
                         >
                             <FormField
                                 control={form.control}
-                                name="projectName"
+                                name="name"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Project Name</FormLabel>
+                                        <FormLabel>Phase Name</FormLabel>
                                         <FormControl>
                                             <Input
                                                 {...field}
-                                                id="projectName"
-                                                placeholder="Enter project name"
+                                                placeholder="Enter phase name"
                                                 className="ring-0!"
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            <FormField
-                                control={form.control}
-                                name="description"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Description</FormLabel>
-                                        <FormControl>
-                                            <RichTextEditor
-                                                value={field.value}
-                                                onChange={field.onChange}
-                                                onBlur={field.onBlur}
-                                                placeholder="Enter project description"
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -193,16 +138,37 @@ const ProjectCreateModal = () => {
                             <div className="flex items-center gap-2 w-full">
                                 <FormField
                                     control={form.control}
-                                    name="client"
+                                    name="type"
                                     render={({ field }) => (
                                         <FormItem className="flex-1">
-                                            <FormLabel>Client</FormLabel>
+                                            <FormLabel>Type</FormLabel>
                                             <FormControl>
-                                                <Input
-                                                    {...field}
-                                                    placeholder="Enter client name"
-                                                    className="ring-0!"
-                                                />
+                                                <Select
+                                                    onValueChange={
+                                                        field.onChange
+                                                    }
+                                                    defaultValue={field.value}
+                                                >
+                                                    <FormControl>
+                                                        <SelectTrigger className="w-full">
+                                                            <SelectValue placeholder="Select type" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        {PHASE_TYPES.map(
+                                                            (option) => (
+                                                                <SelectItem
+                                                                    key={option}
+                                                                    value={
+                                                                        option
+                                                                    }
+                                                                >
+                                                                    {option}
+                                                                </SelectItem>
+                                                            ),
+                                                        )}
+                                                    </SelectContent>
+                                                </Select>
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -228,7 +194,7 @@ const ProjectCreateModal = () => {
                                                         </SelectTrigger>
                                                     </FormControl>
                                                     <SelectContent>
-                                                        {PROJECT_STATUS_OPTIONS.map(
+                                                        {PHASE_STATUS_OPTIONS.map(
                                                             (option) => (
                                                                 <SelectItem
                                                                     key={
@@ -253,17 +219,38 @@ const ProjectCreateModal = () => {
                                 />
                             </div>
 
+                            {watchType === "Custom" && (
+                                <FormField
+                                    control={form.control}
+                                    name="customType"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Custom Type</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    {...field}
+                                                    placeholder="Enter custom type"
+                                                    className="ring-0!"
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            )}
+
                             <FormField
                                 control={form.control}
-                                name="projectTeam"
+                                name="description"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Team Members</FormLabel>
+                                        <FormLabel>Description</FormLabel>
                                         <FormControl>
-                                            <MultiSelect
+                                            <RichTextEditor
                                                 value={field.value}
                                                 onChange={field.onChange}
-                                                options={memberOptions}
+                                                onBlur={field.onBlur}
+                                                placeholder="Enter phase description"
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -278,7 +265,6 @@ const ProjectCreateModal = () => {
                                     render={({ field }) => (
                                         <FormItem className="flex flex-col flex-1">
                                             <FormLabel>Start Date</FormLabel>
-
                                             <Popover>
                                                 <PopoverTrigger asChild>
                                                     <FormControl>
@@ -300,7 +286,6 @@ const ProjectCreateModal = () => {
                                                         </button>
                                                     </FormControl>
                                                 </PopoverTrigger>
-
                                                 <PopoverContent className="w-auto p-0">
                                                     <Calendar
                                                         mode="single"
@@ -323,7 +308,6 @@ const ProjectCreateModal = () => {
                                     render={({ field }) => (
                                         <FormItem className="flex flex-col flex-1">
                                             <FormLabel>End Date</FormLabel>
-
                                             <Popover>
                                                 <PopoverTrigger asChild>
                                                     <FormControl>
@@ -345,7 +329,6 @@ const ProjectCreateModal = () => {
                                                         </button>
                                                     </FormControl>
                                                 </PopoverTrigger>
-
                                                 <PopoverContent className="w-auto p-0">
                                                     <Calendar
                                                         mode="single"
@@ -362,25 +345,6 @@ const ProjectCreateModal = () => {
                                     )}
                                 />
                             </div>
-
-                            <FormField
-                                control={form.control}
-                                name="projectImage"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>
-                                            Project Cover Image
-                                        </FormLabel>
-                                        <FormControl>
-                                            <ProjectImageUploader
-                                                value={field.value}
-                                                onChange={field.onChange}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
 
                             <SheetFooter className="flex flex-row justify-end gap-2 px-0 mt-6">
                                 <SheetClose asChild>
@@ -405,4 +369,4 @@ const ProjectCreateModal = () => {
     );
 };
 
-export default ProjectCreateModal;
+export default AddPhaseModal;

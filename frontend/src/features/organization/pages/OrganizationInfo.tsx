@@ -1,16 +1,22 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useOrganizationStore } from "@/store/organization.store";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import {
+    Edit,
+    Trash2,
+    Globe,
+    Calendar,
+    FileText,
+    Hash,
+    Shield,
+    Building2,
+    ExternalLink,
+    Loader2,
+} from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { OrganizationEditModal } from "../components/OrganizationEditModal";
 import {
@@ -20,6 +26,14 @@ import {
 import { useConfirm } from "@/providers/ConfirmProvider";
 import { toast } from "sonner";
 import type { OrganizationFormState } from "../types/organization.types";
+
+const STATUS_STYLES: Record<string, string> = {
+    active: "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800",
+    pending:
+        "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800",
+    archived:
+        "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800/40 dark:text-gray-400 dark:border-gray-700",
+};
 
 const OrganizationInfo = () => {
     const {
@@ -48,9 +62,10 @@ const OrganizationInfo = () => {
     if (!activeOrganization) {
         return (
             <div className="flex h-screen items-center justify-center">
-                <p className="text-muted-foreground">
-                    No organization selected
-                </p>
+                <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                    <Building2 className="size-10" />
+                    <p>No organization selected</p>
+                </div>
             </div>
         );
     }
@@ -147,15 +162,17 @@ const OrganizationInfo = () => {
         });
     };
 
+    const statusKey = activeOrganization.status?.toLowerCase() ?? "active";
+
     return (
-        <div className="space-y-6 p-4">
+        <div className="space-y-6 p-6">
             {/* Header */}
-            <div className="flex items-start justify-between">
+            <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">
-                        Organization Setup
+                    <h1 className="text-lg font-semibold text-foreground">
+                        Organization
                     </h1>
-                    <p className="text-muted-foreground mt-2">
+                    <p className="text-sm text-muted-foreground mt-0.5">
                         Manage your organization details and settings
                     </p>
                 </div>
@@ -163,17 +180,24 @@ const OrganizationInfo = () => {
                     <Button
                         onClick={openEditModal}
                         variant="outline"
-                        className="gap-2"
+                        size="sm"
+                        className="gap-1.5"
                     >
-                        <Edit className="h-4 w-4" />
+                        <Edit className="size-4" />
                         Edit
                     </Button>
-
                     <Button
                         onClick={handleDelete}
-                        className="gap-2 bg-red-50 text-red-600 hover:bg-red-100"
+                        variant="destructive"
+                        size="sm"
+                        className="gap-1.5"
                         disabled={isDeleting}
                     >
+                        {isDeleting ? (
+                            <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                            <Trash2 className="size-4" />
+                        )}
                         Delete
                     </Button>
                 </div>
@@ -182,99 +206,122 @@ const OrganizationInfo = () => {
             {/* Organization Card */}
             <Card>
                 <CardHeader>
-                    <div className="flex items-start justify-between">
-                        <div className="flex items-start gap-4">
-                            {activeOrganization.logoUrl ? (
-                                <img
-                                    src={activeOrganization.logoUrl}
-                                    alt={`${activeOrganization.name} logo`}
-                                    className="h-20 w-20 rounded-lg object-cover"
-                                />
-                            ) : (
-                                <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-muted text-lg font-semibold text-muted-foreground">
-                                    {activeOrganization.name
-                                        ?.slice(0, 2)
-                                        .toUpperCase()}
-                                </div>
-                            )}
-                            <div>
-                                <CardTitle>{activeOrganization.name}</CardTitle>
-                                <CardDescription className="mt-2">
-                                    <span className="text-xs text-muted-foreground">
-                                        Slug:{" "}
-                                    </span>
-                                    <code className="text-sm font-mono text-foreground">
-                                        {activeOrganization.slug}
-                                    </code>
-                                </CardDescription>
+                    <div className="flex items-center gap-4">
+                        {activeOrganization.logoUrl ? (
+                            <img
+                                src={activeOrganization.logoUrl}
+                                alt={`${activeOrganization.name} logo`}
+                                className="size-14 rounded-xl object-cover"
+                            />
+                        ) : (
+                            <div className="flex size-14 items-center justify-center rounded-xl bg-primary/10 text-lg font-semibold text-primary shrink-0">
+                                {activeOrganization.name
+                                    ?.slice(0, 2)
+                                    .toUpperCase()}
                             </div>
+                        )}
+                        <div className="min-w-0">
+                            <CardTitle className="text-lg truncate">
+                                {activeOrganization.name}
+                            </CardTitle>
+                            <Badge
+                                variant="outline"
+                                className={`mt-1.5 ${STATUS_STYLES[statusKey] ?? ""}`}
+                            >
+                                {activeOrganization.status
+                                    ?.charAt(0)
+                                    .toUpperCase() +
+                                    activeOrganization.status?.slice(1)}
+                            </Badge>
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid gap-4 md:grid-cols-2">
+                <Separator />
+                <CardContent className="pt-6">
+                    <div className="grid gap-6 md:grid-cols-2">
+                        {/* Slug */}
+                        <div className="space-y-1.5">
+                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                <Hash className="size-4" />
+                                <span>Slug</span>
+                            </div>
+                            <code className="text-sm font-mono text-foreground bg-muted px-2 py-1 rounded-md block w-fit">
+                                {activeOrganization.slug}
+                            </code>
+                        </div>
+
+                        {/* Status */}
+                        <div className="space-y-1.5">
+                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                <Shield className="size-4" />
+                                <span>Status</span>
+                            </div>
+                            <Badge
+                                variant="outline"
+                                className={STATUS_STYLES[statusKey] ?? ""}
+                            >
+                                {activeOrganization.status
+                                    ?.charAt(0)
+                                    .toUpperCase() +
+                                    activeOrganization.status?.slice(1)}
+                            </Badge>
+                        </div>
+
                         {/* Description */}
-                        <div>
-                            <label className="text-sm font-medium text-muted-foreground">
-                                Description
-                            </label>
-                            <p className="mt-1 text-sm text-foreground">
+                        <div className="space-y-1.5">
+                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                <FileText className="size-4" />
+                                <span>Description</span>
+                            </div>
+                            <p className="text-sm text-foreground">
                                 {activeOrganization.description ||
                                     "No description provided"}
                             </p>
                         </div>
 
-                        {/* Status */}
-                        <div>
-                            <label className="text-sm font-medium text-muted-foreground">
-                                Status
-                            </label>
-                            <div className="mt-1">
-                                <Badge
-                                    variant={
-                                        activeOrganization.status?.toLowerCase() ===
-                                        "active"
-                                            ? "default"
-                                            : "secondary"
-                                    }
-                                >
-                                    {activeOrganization.status
-                                        ?.charAt(0)
-                                        .toUpperCase() +
-                                        activeOrganization.status?.slice(1)}
-                                </Badge>
-                            </div>
-                        </div>
-
                         {/* Website */}
-                        <div>
-                            <label className="text-sm font-medium text-muted-foreground">
-                                Website
-                            </label>
+                        <div className="space-y-1.5">
+                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                <Globe className="size-4" />
+                                <span>Website</span>
+                            </div>
                             {activeOrganization.websiteUrl ? (
                                 <a
                                     href={activeOrganization.websiteUrl}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="mt-1 text-sm text-primary hover:underline"
+                                    className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
                                 >
                                     {activeOrganization.websiteUrl}
+                                    <ExternalLink className="size-3 shrink-0" />
                                 </a>
                             ) : (
-                                <p className="mt-1 text-sm text-muted-foreground">
+                                <p className="text-sm text-muted-foreground">
                                     No website provided
                                 </p>
                             )}
                         </div>
 
                         {/* Created At */}
-                        <div>
-                            <label className="text-sm font-medium text-muted-foreground">
-                                Created At
-                            </label>
-                            <p className="mt-1 text-sm text-foreground">
+                        <div className="space-y-1.5">
+                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                <Calendar className="size-4" />
+                                <span>Created</span>
+                            </div>
+                            <p className="text-sm text-foreground">
                                 {formatDate(activeOrganization.createdAt)}
                             </p>
+                        </div>
+
+                        {/* Org ID */}
+                        <div className="space-y-1.5">
+                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                <Building2 className="size-4" />
+                                <span>Organization ID</span>
+                            </div>
+                            <code className="text-xs font-mono text-muted-foreground bg-muted px-2 py-1 rounded-md block w-fit">
+                                {activeOrganization.id}
+                            </code>
                         </div>
                     </div>
                 </CardContent>

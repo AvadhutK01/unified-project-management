@@ -261,7 +261,6 @@ const InvitedMembers = () => {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     {hasPermission(PERMISSIONS.MEMBERS.ADD) && (
                         <Button
-                            size="sm"
                             onClick={() => setModalOpen(true)}
                             className="gap-1.5"
                         >

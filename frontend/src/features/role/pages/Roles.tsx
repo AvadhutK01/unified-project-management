@@ -5,6 +5,7 @@ import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
 import { useFetchRolesQuery } from "../hooks/useRoles";
 import { usePermission } from "@/features/rbac/hooks/usePermission";
 import { PERMISSIONS } from "@/features/rbac/types/rbac.types";
+import { Button } from "@/components/ui/button";
 
 interface Role {
     id: number;
@@ -91,13 +92,10 @@ const Roles = () => {
 
                 <div className="py-4 flex justify-between">
                     {hasPermission(PERMISSIONS.ROLES.ADD) && (
-                        <button
-                            onClick={() => navigate(`/${slug}/roles/add`)}
-                            className="inline-flex items-center gap-2 px-4 py-1 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors cursor-pointer"
-                        >
+                        <Button onClick={() => navigate(`/${slug}/roles/add`)}>
                             <Plus className="w-4 h-4" />
                             Add Role
-                        </button>
+                        </Button>
                     )}
                     <div className="relative min-w-xs">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
