@@ -15,9 +15,16 @@ import {
     editMemberDetails,
     removeMember,
     revokeInvitation,
+    getProjectMembersPaginated,
 } from "../src/modules/organizations/application/organization-member.use-cases.js";
+import {
+    createProject,
+    addProjectMember,
+} from "../src/modules/projects/application/project.use-cases.js";
 
 import { getMemberRoleData } from "../src/shared/utils/role-data.js";
+import { db } from "../src/infrastructure/database/client.js";
+import { organizationMembers } from "../src/infrastructure/database/schema/index.js";
 
 describe("Organization Membership and Invitation Integration Tests", () => {
     let ownerId: string;
@@ -345,5 +352,89 @@ describe("Organization Membership and Invitation Integration Tests", () => {
         expect(
             joinedSearchResult.data.some((m) => m.memberId === searchUser.id),
         ).toBe(true);
+    });
+
+    it("should retrieve a paginated list of project members with details", async () => {
+        const uniqueTime = Date.now();
+        const testUserEmail = `testprojmember_${uniqueTime}@example.com`;
+        const testUserPhone = `1111${String(uniqueTime).slice(-6)}`;
+        const testUser = await registerUser({
+            username: `testprojmember_${uniqueTime}`,
+            email: testUserEmail,
+            phoneNumber: testUserPhone,
+            password: "Password@123",
+        });
+        await verifyOtp({
+            email: testUserEmail,
+            phoneNumber: testUserPhone,
+            emailOtp: "123456",
+            phoneOtp: "123456",
+        });
+
+        // Insert new member into organization
+        const [orgMember] = await db
+            .insert(organizationMembers)
+            .values({
+                organizationId: orgId,
+                memberId: testUser.id,
+                roleId: roleId,
+                status: "active",
+            })
+            .returning();
+
+        // Create a project in the organization
+        const project = await createProject({
+            organizationId: orgId,
+            title: `Member_Project_Test_${uniqueTime}`,
+            description: "Test project for members list",
+        });
+
+        await addProjectMember(project.id, orgId, orgMember.id, ownerId);
+
+        // Fetch paginated project members list
+        const projectMembers = await getProjectMembersPaginated(
+            orgId,
+            project.id,
+            1,
+            10,
+        );
+
+        expect(projectMembers.data.length).toBe(1);
+        expect(projectMembers.data[0].memberId).toBe(orgMember.id);
+        expect(projectMembers.data[0].userId).toBe(testUser.id);
+        expect(projectMembers.data[0].name).toBeDefined();
+        expect(projectMembers.data[0].email).toBe(testUserEmail);
+        expect(projectMembers.pagination.total).toBe(1);
+        expect(projectMembers.pagination.page).toBe(1);
+        expect(projectMembers.pagination.limit).toBe(10);
+        expect(projectMembers.pagination.totalPages).toBe(1);
+
+        // Test with search matching
+        const matchingSearch = await getProjectMembersPaginated(
+            orgId,
+            project.id,
+            1,
+            10,
+            testUserEmail,
+        );
+        expect(matchingSearch.data.length).toBe(1);
+
+        // Test with search non-matching
+        const nonMatchingSearch = await getProjectMembersPaginated(
+            orgId,
+            project.id,
+            1,
+            10,
+            "nonexistentemail@example.com",
+        );
+        expect(nonMatchingSearch.data.length).toBe(0);
+
+        // Test with invalid project ID (should throw project not found)
+        await expect(
+            getProjectMembersPaginated(
+                orgId,
+                "00000000-0000-0000-0000-000000000000",
+            ),
+        ).rejects.toThrow("Project not found");
     });
 });

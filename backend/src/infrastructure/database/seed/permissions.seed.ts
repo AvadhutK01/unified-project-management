@@ -106,6 +106,36 @@ export const seedPermissions = async () => {
             codename: "phase_list",
             description: "Permission to list phases",
         },
+        {
+            name: "Add Sprint",
+            codename: "sprint_add",
+            description: "Permission to create a sprint",
+        },
+        {
+            name: "Edit Sprint",
+            codename: "sprint_edit",
+            description: "Permission to update an existing sprint",
+        },
+        {
+            name: "View Sprint",
+            codename: "sprint_view",
+            description: "Permission to view a sprint",
+        },
+        {
+            name: "Delete Sprint",
+            codename: "sprint_delete",
+            description: "Permission to delete a sprint",
+        },
+        {
+            name: "List Sprints",
+            codename: "sprint_list",
+            description: "Permission to view all sprints",
+        },
+        {
+            name: "Update Sprint Status",
+            codename: "sprint_status",
+            description: "Permission to update sprint status",
+        },
     ];
 
     for (const permission of allPermissions) {

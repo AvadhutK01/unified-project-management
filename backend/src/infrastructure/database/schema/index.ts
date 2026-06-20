@@ -8,3 +8,7 @@ export * from "./organization-member.js";
 export * from "./project.js";
 export * from "./project-member.js";
 export * from "./phase.js";
+export * from "./sprint.js";
+export * from "./sprint-activity-log.js";
+export * from "./sprint-discussion.js";
+export * from "./sprint-media.js";

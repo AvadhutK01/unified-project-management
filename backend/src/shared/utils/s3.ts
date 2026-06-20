@@ -16,8 +16,9 @@ const s3Client = new S3Client({
  */
 export const uploadToS3 = async (
     file: Express.Multer.File,
+    folder: string = "logos",
 ): Promise<string> => {
-    const key = `logos/${Date.now()}_${file.originalname}`;
+    const key = `${folder}/${Date.now()}_${file.originalname}`;
     if (env.NODE_ENV === "test" || env.AWS_ACCESS_KEY_ID === "mock-key") {
         return `https://${env.AWS_BUCKET_NAME}.s3.${env.AWS_REGION}.amazonaws.com/${key}`;
     }

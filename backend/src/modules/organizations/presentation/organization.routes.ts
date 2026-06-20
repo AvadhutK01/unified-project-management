@@ -26,6 +26,7 @@ import {
     handleEditMemberDetails,
     handleDeleteMember,
     handleRevokeInvitation,
+    handleGetProjectMembersPaginated,
 } from "./organization-member.controller.js";
 import {
     inviteMembersSchema,
@@ -36,6 +37,7 @@ import {
     editMemberDetailsSchema,
     deleteMemberSchema,
     revokeInvitationSchema,
+    projectMembersQuerySchema,
 } from "./organization-member.validation.js";
 import { requireOrgId } from "../../../shared/middleware/require-org-id.js";
 import { requirePermission } from "../../../shared/middleware/require-permission.js";
@@ -97,6 +99,14 @@ router.get(
     requirePermission("members_list"),
     validateRequest(organizationMembersQuerySchema),
     handleGetOrganizationMembers,
+);
+
+router.get(
+    "/members/project/:projectId",
+    requireOrgId,
+    requirePermission("members_list"),
+    validateRequest(projectMembersQuerySchema),
+    handleGetProjectMembersPaginated,
 );
 
 router.post(

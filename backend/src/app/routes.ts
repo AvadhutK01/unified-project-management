@@ -4,6 +4,7 @@ import { organizationRouter } from "../modules/organizations/presentation/organi
 import { roleRouter } from "../modules/roles/presentation/role.routes.js";
 import { projectRouter } from "../modules/projects/presentation/project.routes.js";
 import { phaseRouter } from "../modules/phases/presentation/phase.routes.js";
+import { sprintRouter } from "../modules/sprints/presentation/sprint.routes.js";
 
 /**
  * Registers application routers on the parent Router.
@@ -16,5 +17,6 @@ export const registerRoutes = (router: Router): Router => {
     router.use("/roles", roleRouter);
     router.use("/projects", projectRouter);
     router.use("/phases", phaseRouter);
+    router.use("/sprints", sprintRouter);
     return router;
 };

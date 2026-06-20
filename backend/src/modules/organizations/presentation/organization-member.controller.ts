@@ -9,6 +9,7 @@ import {
     editMemberDetails,
     removeMember,
     revokeInvitation,
+    getProjectMembersPaginated,
 } from "../application/organization-member.use-cases.js";
 import { getMemberRoleData } from "../../../shared/utils/role-data.js";
 
@@ -232,6 +233,37 @@ export const handleGetMyMemberRole = async (
             req.user?.id as string,
         );
         return res.status(200).json({ status: "success", data: roleData });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Handles fetching paginated project members.
+ * @param req Express request object containing organization ID, project ID, and query parameters.
+ * @param res Express response object.
+ * @param next Express next function.
+ */
+export const handleGetProjectMembersPaginated = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    try {
+        const projectId = req.params["projectId"] as string;
+        const page = Number(req.query["page"] ?? 1);
+        const limit = Number(req.query["limit"] ?? 10);
+        const search = req.query["search"] as string | undefined;
+
+        const result = await getProjectMembersPaginated(
+            req.orgId as string,
+            projectId,
+            page,
+            limit,
+            search,
+        );
+
+        return res.status(200).json({ status: "success", data: result });
     } catch (error) {
         next(error);
     }

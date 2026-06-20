@@ -17,8 +17,11 @@ import {
     findMemberById,
     updateMemberDetails,
     softDeleteMember,
+    findProjectMembersPaginated,
+    countProjectMembersPaginated,
 } from "../infrastructure/organization-member.repository.js";
 import { findOrganizationById } from "../infrastructure/organization.repository.js";
+import { findProjectById } from "../../projects/infrastructure/project.repository.js";
 import { findUserByEmail } from "../../users/infrastructure/user.repository.js";
 import { findRoleByIdRaw } from "../../roles/infrastructure/role.repository.js";
 import {
@@ -344,4 +347,41 @@ export const revokeInvitation = async (invitationId: string) => {
     }
 
     return updateInvitationStatusRepo(invitationId, "revoked");
+};
+
+/**
+ * Retrieves a paginated list of members for a specific project.
+ * @param organizationId The organization UUID.
+ * @param projectId The project UUID.
+ * @param page The page number.
+ * @param limit The limit number.
+ * @param search Optional search term.
+ * @returns Object containing member list and pagination metadata.
+ */
+export const getProjectMembersPaginated = async (
+    organizationId: string,
+    projectId: string,
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+) => {
+    const project = await findProjectById(projectId, organizationId);
+    if (!project) {
+        throw notFoundError("Project not found");
+    }
+
+    const [data, total] = await Promise.all([
+        findProjectMembersPaginated(projectId, page, limit, search),
+        countProjectMembersPaginated(projectId, search),
+    ]);
+
+    return {
+        data,
+        pagination: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+        },
+    };
 };

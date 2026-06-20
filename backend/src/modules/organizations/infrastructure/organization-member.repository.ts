@@ -4,6 +4,7 @@ import {
     organizationInvitations,
     users,
     roles,
+    projectMembers,
 } from "../../../infrastructure/database/schema/index.js";
 import { eq, and, count, or, isNull, ilike } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
@@ -306,4 +307,91 @@ export const softDeleteMember = async (id: string) => {
         )
         .returning();
     return deleted;
+};
+
+/**
+ * Retrieves project members with pagination and optional search filter.
+ * @param projectId The project UUID.
+ * @param page The page number.
+ * @param limit The limit number.
+ * @param search Optional search term.
+ * @returns Array of project members with user and org member information.
+ */
+export const findProjectMembersPaginated = async (
+    projectId: string,
+    page: number,
+    limit: number,
+    search?: string,
+) => {
+    const offset = (page - 1) * limit;
+    const filters = [];
+    if (search) {
+        filters.push(
+            or(
+                ilike(users.username, `%${search}%`),
+                ilike(users.email, `%${search}%`),
+            ),
+        );
+    }
+    return db
+        .select({
+            memberId: organizationMembers.id,
+            userId: users.id,
+            name: users.username,
+            email: users.email,
+        })
+        .from(projectMembers)
+        .innerJoin(
+            organizationMembers,
+            eq(projectMembers.organizationMemberId, organizationMembers.id),
+        )
+        .innerJoin(users, eq(organizationMembers.memberId, users.id))
+        .where(
+            and(
+                eq(projectMembers.projectId, projectId),
+                isNull(projectMembers.deletedAt),
+                isNull(organizationMembers.deletedAt),
+                ...filters,
+            ),
+        )
+        .limit(limit)
+        .offset(offset);
+};
+
+/**
+ * Counts total members in a project matching optional search criteria.
+ * @param projectId The project UUID.
+ * @param search Optional search term.
+ * @returns The total count.
+ */
+export const countProjectMembersPaginated = async (
+    projectId: string,
+    search?: string,
+) => {
+    const filters = [];
+    if (search) {
+        filters.push(
+            or(
+                ilike(users.username, `%${search}%`),
+                ilike(users.email, `%${search}%`),
+            ),
+        );
+    }
+    const [result] = await db
+        .select({ value: count() })
+        .from(projectMembers)
+        .innerJoin(
+            organizationMembers,
+            eq(projectMembers.organizationMemberId, organizationMembers.id),
+        )
+        .innerJoin(users, eq(organizationMembers.memberId, users.id))
+        .where(
+            and(
+                eq(projectMembers.projectId, projectId),
+                isNull(projectMembers.deletedAt),
+                isNull(organizationMembers.deletedAt),
+                ...filters,
+            ),
+        );
+    return Number(result?.value ?? 0);
 };
