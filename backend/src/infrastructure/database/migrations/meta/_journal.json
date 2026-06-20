@@ -127,6 +127,13 @@
             "when": 1781890762967,
             "tag": "0017_equal_frog_thor",
             "breakpoints": true
+        },
+        {
+            "idx": 18,
+            "version": "7",
+            "when": 1781976272932,
+            "tag": "0018_left_thanos",
+            "breakpoints": true
         }
     ]
 }

@@ -1,0 +1,86 @@
+import { db } from "../../../infrastructure/database/client.js";
+import { workitemMedia } from "../../../infrastructure/database/schema/index.js";
+import { eq, and, isNull, count, ilike, SQL } from "drizzle-orm";
+
+export const createWorkitemMedia = async (data: {
+    workitemId: string;
+    memberId: string;
+    name: string;
+    url: string;
+    fileType?: string | null;
+    fileSize?: number | null;
+}) => {
+    const [media] = await db
+        .insert(workitemMedia)
+        .values({
+            workitemId: data.workitemId,
+            memberId: data.memberId,
+            name: data.name,
+            url: data.url,
+            fileType: data.fileType ?? null,
+            fileSize: data.fileSize ?? null,
+        })
+        .returning();
+    return media;
+};
+
+export const findWorkitemMediaById = async (id: string) => {
+    const results = await db
+        .select()
+        .from(workitemMedia)
+        .where(and(eq(workitemMedia.id, id), isNull(workitemMedia.deletedAt)))
+        .limit(1);
+    return results[0] ?? null;
+};
+
+export const findWorkitemMediaPaginated = async (
+    workitemId: string,
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+) => {
+    const filters: SQL[] = [
+        eq(workitemMedia.workitemId, workitemId),
+        isNull(workitemMedia.deletedAt),
+    ];
+
+    if (search) {
+        filters.push(ilike(workitemMedia.name, `%${search}%`) as SQL);
+    }
+
+    return db
+        .select()
+        .from(workitemMedia)
+        .where(and(...filters))
+        .limit(limit)
+        .offset((page - 1) * limit);
+};
+
+export const countWorkitemMedia = async (
+    workitemId: string,
+    search?: string,
+) => {
+    const filters: SQL[] = [
+        eq(workitemMedia.workitemId, workitemId),
+        isNull(workitemMedia.deletedAt),
+    ];
+
+    if (search) {
+        filters.push(ilike(workitemMedia.name, `%${search}%`) as SQL);
+    }
+
+    const results = await db
+        .select({ count: count() })
+        .from(workitemMedia)
+        .where(and(...filters));
+    return results[0]?.count ?? 0;
+};
+
+export const softDeleteWorkitemMedia = async (id: string) => {
+    const [deleted] = await db
+        .update(workitemMedia)
+        .set({ deletedAt: new Date() })
+        .where(and(eq(workitemMedia.id, id), isNull(workitemMedia.deletedAt)))
+        .returning();
+    return deleted ?? null;
+};

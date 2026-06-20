@@ -12,3 +12,7 @@ export * from "./sprint.js";
 export * from "./sprint-activity-log.js";
 export * from "./sprint-discussion.js";
 export * from "./sprint-media.js";
+export * from "./workitem.js";
+export * from "./workitem-discussion.js";
+export * from "./workitem-activity-log.js";
+export * from "./workitem-media.js";
