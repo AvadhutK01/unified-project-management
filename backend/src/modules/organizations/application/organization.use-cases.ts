@@ -16,6 +16,8 @@ import {
     forbiddenError,
     internalServerError,
 } from "../../../shared/errors/app-error.js";
+import { createRole } from "../../roles/infrastructure/role.repository.js";
+import { createMember } from "../infrastructure/organization-member.repository.js";
 
 /**
  * Creates a new organization for the authenticated user.
@@ -49,6 +51,25 @@ export const createOrganization = async (
     if (!org) {
         throw internalServerError("Failed to create organization");
     }
+
+    const ownerRole = await createRole({
+        name: "Owner",
+        organizationId: org.id,
+        description: "Organization Owner",
+        isActive: true,
+    });
+
+    if (!ownerRole) {
+        throw internalServerError("Failed to create owner role");
+    }
+
+    await createMember({
+        organizationId: org.id,
+        memberId: ownerId,
+        roleId: ownerRole.id,
+        status: "active",
+    });
+
     return org;
 };
 

@@ -13,6 +13,7 @@ import {
     notFoundError,
     forbiddenError,
 } from "../../../shared/errors/app-error.js";
+import { createActivityLog } from "../infrastructure/sprint-activity-log.repository.js";
 
 /**
  * Uploads a file to S3 and registers it in sprint media schema.
@@ -47,6 +48,13 @@ export const uploadSprintMedia = async (
         url,
         fileType: file.mimetype,
         fileSize: file.size,
+    });
+
+    await createActivityLog({
+        sprintId,
+        userId,
+        action: "added_attachment",
+        description: "Attached a file",
     });
 
     return media;

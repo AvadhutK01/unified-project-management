@@ -15,6 +15,7 @@ import {
     badRequestError,
     notFoundError,
     internalServerError,
+    forbiddenError,
 } from "../../../shared/errors/app-error.js";
 
 /**
@@ -144,6 +145,10 @@ export const updateRole = async (
         throw notFoundError("Role not found");
     }
 
+    if (role.name === "Owner") {
+        throw forbiddenError("The Owner role cannot be modified.");
+    }
+
     if (data.name && data.name !== role.name) {
         const existingRole = await findRoleByName(data.name, organizationId);
         if (existingRole) {
@@ -197,6 +202,10 @@ export const deleteRole = async (id: string, organizationId: string) => {
     const role = await findRoleById(id, organizationId);
     if (!role) {
         throw notFoundError("Role not found");
+    }
+
+    if (role.name === "Owner") {
+        throw forbiddenError("The Owner role cannot be deleted.");
     }
 
     const deleted = await deleteRoleRepo(id, organizationId);

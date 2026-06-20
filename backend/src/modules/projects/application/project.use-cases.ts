@@ -62,6 +62,7 @@ export const verifyProjectAccess = async (
  */
 export const createProject = async (data: {
     organizationId: string;
+    userId?: string;
     title: string;
     description?: string;
     startDate?: string;
@@ -102,10 +103,30 @@ export const createProject = async (data: {
         throw internalServerError("Failed to create project");
     }
 
-    if (data.orgMemberIds && data.orgMemberIds.length > 0) {
-        for (const orgMemberId of data.orgMemberIds) {
-            await addProjectMemberRepo(project.id, orgMemberId);
+    const orgMemberIdsToMap = new Set<string>(data.orgMemberIds || []);
+
+    const org = await findOrganizationById(data.organizationId);
+    if (org) {
+        const ownerOrgMember = await findMemberByOrgAndUserId(
+            data.organizationId,
+            org.ownerUserId,
+        );
+        if (ownerOrgMember) {
+            orgMemberIdsToMap.add(ownerOrgMember.id);
         }
+        if (data.userId && data.userId !== org.ownerUserId) {
+            const creatorOrgMember = await findMemberByOrgAndUserId(
+                data.organizationId,
+                data.userId,
+            );
+            if (creatorOrgMember) {
+                orgMemberIdsToMap.add(creatorOrgMember.id);
+            }
+        }
+    }
+
+    for (const orgMemberId of orgMemberIdsToMap) {
+        await addProjectMemberRepo(project.id, orgMemberId);
     }
 
     return project;
@@ -244,11 +265,25 @@ export const updateProject = async (
             (m) => m.organizationMemberId,
         );
 
+        // Prevent the organization owner from being removed
+        let ownerOrgMemberId: string | undefined = undefined;
+        const org = await findOrganizationById(organizationId);
+        if (org) {
+            const ownerOrgMember = await findMemberByOrgAndUserId(
+                organizationId,
+                org.ownerUserId,
+            );
+            if (ownerOrgMember) {
+                ownerOrgMemberId = ownerOrgMember.id;
+            }
+        }
+
         const toAdd = data.orgMemberIds.filter(
             (mId) => !existingOrgMemberIds.includes(mId),
         );
         const toRemove = existingOrgMemberIds.filter(
-            (mId) => !data.orgMemberIds!.includes(mId),
+            (mId) =>
+                !data.orgMemberIds!.includes(mId) && mId !== ownerOrgMemberId,
         );
 
         for (const orgMemberId of toAdd) {

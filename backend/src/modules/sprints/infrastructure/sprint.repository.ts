@@ -1,5 +1,10 @@
 import { db } from "../../../infrastructure/database/client.js";
-import { sprints } from "../../../infrastructure/database/schema/index.js";
+import {
+    sprints,
+    phases,
+    projects,
+    organizations,
+} from "../../../infrastructure/database/schema/index.js";
 import { eq, and, ilike, isNull, count, SQL } from "drizzle-orm";
 
 /**
@@ -40,11 +45,28 @@ export const createSprint = async (data: {
  */
 export const findSprintById = async (id: string) => {
     const results = await db
-        .select()
+        .select({
+            sprint: sprints,
+            phaseName: phases.name,
+            projectName: projects.title,
+            organizationName: organizations.name,
+        })
         .from(sprints)
+        .innerJoin(phases, eq(sprints.phaseId, phases.id))
+        .innerJoin(projects, eq(phases.projectId, projects.id))
+        .innerJoin(organizations, eq(projects.organizationId, organizations.id))
         .where(and(eq(sprints.id, id), isNull(sprints.deletedAt)))
         .limit(1);
-    return results[0] ?? null;
+
+    if (results.length === 0) return null;
+
+    const row = results[0]!;
+    return {
+        ...row.sprint,
+        phaseName: row.phaseName,
+        projectName: row.projectName,
+        organizationName: row.organizationName,
+    };
 };
 
 /**

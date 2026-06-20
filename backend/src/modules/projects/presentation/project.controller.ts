@@ -25,6 +25,7 @@ export const handleCreateProject = async (
             ...req.body,
             logoUrl,
             organizationId: req.orgId as string,
+            userId: req.user?.id as string,
         });
         return res.status(201).json({ status: "success", data: result });
     } catch (error) {

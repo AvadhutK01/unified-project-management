@@ -19,6 +19,7 @@ import {
     notFoundError,
     forbiddenError,
 } from "../../../shared/errors/app-error.js";
+import { createActivityLog } from "../infrastructure/sprint-activity-log.repository.js";
 
 /**
  * Creates a new sprint discussion comment and tags members.
@@ -63,6 +64,13 @@ export const createSprintDiscussion = async (
     if (taggedMemberIds.length > 0) {
         tags = await addDiscussionTags(discussion.id, taggedMemberIds);
     }
+
+    await createActivityLog({
+        sprintId,
+        userId,
+        action: "added_comment",
+        description: "Added a comment",
+    });
 
     return {
         ...discussion,
