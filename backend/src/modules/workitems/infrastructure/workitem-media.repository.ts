@@ -1,5 +1,9 @@
 import { db } from "../../../infrastructure/database/client.js";
-import { workitemMedia } from "../../../infrastructure/database/schema/index.js";
+import {
+    workitemMedia,
+    organizationMembers,
+    users,
+} from "../../../infrastructure/database/schema/index.js";
 import { eq, and, isNull, count, ilike, SQL } from "drizzle-orm";
 
 export const createWorkitemMedia = async (data: {
@@ -49,8 +53,26 @@ export const findWorkitemMediaPaginated = async (
     }
 
     return db
-        .select()
+        .select({
+            id: workitemMedia.id,
+            workitemId: workitemMedia.workitemId,
+            memberId: workitemMedia.memberId,
+            name: workitemMedia.name,
+            url: workitemMedia.url,
+            fileType: workitemMedia.fileType,
+            fileSize: workitemMedia.fileSize,
+            createdAt: workitemMedia.createdAt,
+            updatedAt: workitemMedia.updatedAt,
+            deletedAt: workitemMedia.deletedAt,
+            uploaderName: users.username,
+            uploaderEmail: users.email,
+        })
         .from(workitemMedia)
+        .innerJoin(
+            organizationMembers,
+            eq(workitemMedia.memberId, organizationMembers.id),
+        )
+        .innerJoin(users, eq(organizationMembers.memberId, users.id))
         .where(and(...filters))
         .limit(limit)
         .offset((page - 1) * limit);

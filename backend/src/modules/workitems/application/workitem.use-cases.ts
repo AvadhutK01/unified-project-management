@@ -20,6 +20,8 @@ import {
     internalServerError,
 } from "../../../shared/errors/app-error.js";
 import { verifyProjectAccess } from "../../projects/application/project.use-cases.js";
+import { findProjectById } from "../../projects/infrastructure/project.repository.js";
+import { findOrganizationById } from "../../organizations/infrastructure/organization.repository.js";
 
 const generateUpdateDescription = (oldWorkitem: any, data: any): string => {
     const changes: string[] = [];
@@ -74,6 +76,30 @@ const generateUpdateDescription = (oldWorkitem: any, data: any): string => {
             `Updated type from '${oldWorkitem.workitemType}' to '${data.workitemType}'`,
         );
     }
+    if (
+        data.originalEstimation !== undefined &&
+        data.originalEstimation !== oldWorkitem.originalEstimation
+    ) {
+        changes.push(
+            `Updated original estimation from ${oldWorkitem.originalEstimation} to ${data.originalEstimation}`,
+        );
+    }
+    if (
+        data.remaining !== undefined &&
+        data.remaining !== oldWorkitem.remaining
+    ) {
+        changes.push(
+            `Updated remaining estimation from ${oldWorkitem.remaining} to ${data.remaining}`,
+        );
+    }
+    if (
+        data.completed !== undefined &&
+        data.completed !== oldWorkitem.completed
+    ) {
+        changes.push(
+            `Updated completed estimation from ${oldWorkitem.completed} to ${data.completed}`,
+        );
+    }
     return changes.length > 0 ? changes.join(". ") + "." : "No changes made.";
 };
 
@@ -86,6 +112,9 @@ export const createWorkitem = async (data: {
     priority?: number;
     acceptanceCriteria?: string;
     workitemType: "task" | "bug";
+    originalEstimation?: number;
+    remaining?: number;
+    completed?: number;
     organizationId: string;
     userId: string;
 }) => {
@@ -123,6 +152,11 @@ export const createWorkitem = async (data: {
         ...(data.acceptanceCriteria !== undefined && {
             acceptanceCriteria: data.acceptanceCriteria,
         }),
+        ...(data.originalEstimation !== undefined && {
+            originalEstimation: data.originalEstimation,
+        }),
+        ...(data.remaining !== undefined && { remaining: data.remaining }),
+        ...(data.completed !== undefined && { completed: data.completed }),
         workitemType: data.workitemType,
     });
 
@@ -162,7 +196,19 @@ export const getWorkitemById = async (
 
     await verifyProjectAccess(phase.projectId, organizationId, userId);
 
-    return workitem;
+    const project = await findProjectById(phase.projectId, organizationId);
+    const org = await findOrganizationById(organizationId);
+
+    return {
+        ...workitem,
+        sprintTitle: sprint.title,
+        phaseId: phase.id,
+        phaseTitle: phase.name,
+        projectId: phase.projectId,
+        projectTitle: project?.title,
+        organizationId: organizationId,
+        organizationName: org?.name,
+    };
 };
 
 export const getAllWorkitems = async (
@@ -219,6 +265,9 @@ export const updateWorkitem = async (
         priority?: number;
         acceptanceCriteria?: string | null;
         workitemType?: "task" | "bug";
+        originalEstimation?: number | null;
+        remaining?: number | null;
+        completed?: number | null;
     },
 ) => {
     const workitem = await findWorkitemById(id);

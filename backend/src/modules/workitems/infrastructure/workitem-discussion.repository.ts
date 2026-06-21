@@ -69,8 +69,23 @@ export const findDiscussionsPaginated = async (
     limit: number = 10,
 ) => {
     return db
-        .select()
+        .select({
+            id: workitemDiscussions.id,
+            workitemId: workitemDiscussions.workitemId,
+            memberId: workitemDiscussions.memberId,
+            comment: workitemDiscussions.comment,
+            createdAt: workitemDiscussions.createdAt,
+            updatedAt: workitemDiscussions.updatedAt,
+            deletedAt: workitemDiscussions.deletedAt,
+            authorName: users.username,
+            authorEmail: users.email,
+        })
         .from(workitemDiscussions)
+        .innerJoin(
+            organizationMembers,
+            eq(workitemDiscussions.memberId, organizationMembers.id),
+        )
+        .innerJoin(users, eq(organizationMembers.memberId, users.id))
         .where(
             and(
                 eq(workitemDiscussions.workitemId, workitemId),

@@ -1,5 +1,8 @@
 import { db } from "../../../infrastructure/database/client.js";
-import { workitemActivityLogs } from "../../../infrastructure/database/schema/index.js";
+import {
+    workitemActivityLogs,
+    users,
+} from "../../../infrastructure/database/schema/index.js";
 import { eq, desc, count } from "drizzle-orm";
 
 export const createActivityLog = async (data: {
@@ -26,8 +29,20 @@ export const findActivityLogsByWorkitemId = async (
     limit: number = 10,
 ) => {
     return db
-        .select()
+        .select({
+            id: workitemActivityLogs.id,
+            workitemId: workitemActivityLogs.workitemId,
+            action: workitemActivityLogs.action,
+            description: workitemActivityLogs.description,
+            createdAt: workitemActivityLogs.createdAt,
+            user: {
+                id: users.id,
+                username: users.username,
+                email: users.email,
+            },
+        })
         .from(workitemActivityLogs)
+        .innerJoin(users, eq(workitemActivityLogs.userId, users.id))
         .where(eq(workitemActivityLogs.workitemId, workitemId))
         .orderBy(desc(workitemActivityLogs.createdAt))
         .limit(limit)

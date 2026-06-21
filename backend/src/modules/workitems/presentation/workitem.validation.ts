@@ -12,6 +12,9 @@ export const createWorkitemSchema = z.object({
         acceptanceCriteria: z.string().optional(),
         workitemType: z.enum(["task", "bug"]),
         sprintId: z.string().uuid("Invalid sprint ID"),
+        originalEstimation: z.number().optional(),
+        remaining: z.number().optional(),
+        completed: z.number().optional(),
     }),
 });
 
@@ -33,6 +36,9 @@ export const updateWorkitemSchema = z.object({
         priority: z.number().int().min(1).max(5).optional(),
         acceptanceCriteria: z.string().nullable().optional(),
         workitemType: z.enum(["task", "bug"]).optional(),
+        originalEstimation: z.number().nullable().optional(),
+        remaining: z.number().nullable().optional(),
+        completed: z.number().nullable().optional(),
     }),
 });
 

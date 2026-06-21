@@ -6,6 +6,7 @@ import {
     integer,
     timestamp,
     pgEnum,
+    doublePrecision,
 } from "drizzle-orm/pg-core";
 import { sprints } from "./sprint.js";
 import { projectMembers } from "./project-member.js";
@@ -33,6 +34,9 @@ export const workitems = pgTable("workitems", {
     priority: integer("priority").default(2).notNull(),
     acceptanceCriteria: text("acceptance_criteria"),
     workitemType: workitemTypeEnum("workitem_type").notNull(),
+    originalEstimation: doublePrecision("original_estimation"),
+    remaining: doublePrecision("remaining"),
+    completed: doublePrecision("completed"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
     deletedAt: timestamp("deleted_at"),

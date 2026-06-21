@@ -160,6 +160,9 @@ describe("Workitem Flow Integration Tests", () => {
             description: "Task description",
             workitemType: "task",
             priority: 3,
+            originalEstimation: 10.5,
+            remaining: 5.5,
+            completed: 5.0,
         });
 
         expect(workitem.id).toBeDefined();
@@ -168,6 +171,9 @@ describe("Workitem Flow Integration Tests", () => {
         expect(workitem.workitemType).toBe("task");
         expect(workitem.status).toBe("new");
         expect(workitem.priority).toBe(3);
+        expect(workitem.originalEstimation).toBe(10.5);
+        expect(workitem.remaining).toBe(5.5);
+        expect(workitem.completed).toBe(5.0);
 
         createdWorkitemId = workitem.id;
     });
@@ -194,6 +200,13 @@ describe("Workitem Flow Integration Tests", () => {
 
         expect(workitem.id).toBe(createdWorkitemId);
         expect(workitem.title).toBe("Test Task");
+        expect(workitem.sprintTitle).toBe("WI Sprint");
+        expect(workitem.phaseId).toBe(phaseId);
+        expect(workitem.phaseTitle).toBe("WI phase");
+        expect(workitem.projectId).toBe(projectId);
+        expect(workitem.projectTitle).toBe(`WI Test Project ${uniqueTime}`);
+        expect(workitem.organizationId).toBe(organizationId);
+        expect(workitem.organizationName).toBe(`Org_WI_${uniqueTime}`);
     });
 
     it("should list all workitems for a sprint", async () => {
@@ -217,12 +230,17 @@ describe("Workitem Flow Integration Tests", () => {
             {
                 title: "Updated Task",
                 priority: 1,
+                remaining: 2.5,
+                completed: 8.0,
             },
         );
 
         expect(updated.id).toBe(createdWorkitemId);
         expect(updated.title).toBe("Updated Task");
         expect(updated.priority).toBe(1);
+        expect(updated.remaining).toBe(2.5);
+        expect(updated.completed).toBe(8.0);
+        expect(updated.originalEstimation).toBe(10.5);
     });
 
     it("should update workitem status", async () => {

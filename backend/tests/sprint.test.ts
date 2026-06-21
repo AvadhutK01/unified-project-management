@@ -248,6 +248,12 @@ describe("Sprint Flow Integration Tests", () => {
 
         expect(sprint.id).toBe(createdSprintId);
         expect(sprint.title).toBe("Sprint One");
+        expect(sprint.projectId).toBe(projectId);
+        expect(sprint.projectTitle).toBe(`Sprint Test Project ${uniqueTime}`);
+        expect(sprint.phaseId).toBe(phaseId);
+        expect(sprint.phaseTitle).toBe("Sprint phase");
+        expect(sprint.organizationId).toBe(organizationId);
+        expect(sprint.organizationName).toBe(`Org_Sprint_${uniqueTime}`);
     });
 
     it("should reject getSprintById for a user without project access", async () => {

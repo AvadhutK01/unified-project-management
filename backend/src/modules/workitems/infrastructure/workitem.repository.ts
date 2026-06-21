@@ -17,6 +17,9 @@ export const createWorkitem = async (data: {
     priority?: number;
     acceptanceCriteria?: string | null;
     workitemType: "task" | "bug";
+    originalEstimation?: number | null;
+    remaining?: number | null;
+    completed?: number | null;
 }) => {
     const [workitem] = await db
         .insert(workitems)
@@ -29,6 +32,9 @@ export const createWorkitem = async (data: {
             priority: data.priority ?? 2,
             acceptanceCriteria: data.acceptanceCriteria ?? null,
             workitemType: data.workitemType,
+            originalEstimation: data.originalEstimation ?? null,
+            remaining: data.remaining ?? null,
+            completed: data.completed ?? null,
         })
         .returning();
     return workitem;
@@ -119,6 +125,9 @@ export const updateWorkitem = async (
         priority?: number;
         acceptanceCriteria?: string | null;
         workitemType?: "task" | "bug";
+        originalEstimation?: number | null;
+        remaining?: number | null;
+        completed?: number | null;
     },
 ) => {
     const updates: Record<string, unknown> = { updatedAt: new Date() };
@@ -131,6 +140,10 @@ export const updateWorkitem = async (
         updates.acceptanceCriteria = data.acceptanceCriteria;
     if (data.workitemType !== undefined)
         updates.workitemType = data.workitemType;
+    if (data.originalEstimation !== undefined)
+        updates.originalEstimation = data.originalEstimation;
+    if (data.remaining !== undefined) updates.remaining = data.remaining;
+    if (data.completed !== undefined) updates.completed = data.completed;
 
     const [updated] = await db
         .update(workitems)

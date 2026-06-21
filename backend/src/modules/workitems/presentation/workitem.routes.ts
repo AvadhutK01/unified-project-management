@@ -67,7 +67,6 @@ router.delete(
     handleDeleteWorkitem,
 );
 
-// Workitem Discussions endpoints
 router.post(
     "/:id/discussions",
     validateRequest(createWorkitemDiscussionSchema),
@@ -92,14 +91,12 @@ router.delete(
     handleDeleteWorkitemDiscussion,
 );
 
-// Workitem Activity Logs endpoint
 router.get(
     "/:id/activities",
     validateRequest(workitemIdParamSchema),
     handleGetWorkitemActivities,
 );
 
-// Workitem Media endpoints
 router.post(
     "/:id/media",
     validateRequest(workitemIdParamSchema),

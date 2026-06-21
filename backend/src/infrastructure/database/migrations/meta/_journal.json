@@ -134,6 +134,13 @@
             "when": 1781976272932,
             "tag": "0018_left_thanos",
             "breakpoints": true
+        },
+        {
+            "idx": 19,
+            "version": "7",
+            "when": 1782027366674,
+            "tag": "0019_concerned_bloodscream",
+            "breakpoints": true
         }
     ]
 }

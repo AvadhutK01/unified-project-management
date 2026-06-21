@@ -19,6 +19,8 @@ import {
     internalServerError,
 } from "../../../shared/errors/app-error.js";
 import { verifyProjectAccess } from "../../projects/application/project.use-cases.js";
+import { findProjectById } from "../../projects/infrastructure/project.repository.js";
+import { findOrganizationById } from "../../organizations/infrastructure/organization.repository.js";
 
 /**
  * Generates automated update description comparing old and new values.
@@ -169,7 +171,17 @@ export const getSprintById = async (
 
     await verifyProjectAccess(phase.projectId, organizationId, userId);
 
-    return sprint;
+    const project = await findProjectById(phase.projectId, organizationId);
+    const org = await findOrganizationById(organizationId);
+
+    return {
+        ...sprint,
+        phaseTitle: phase.name,
+        projectId: phase.projectId,
+        projectTitle: project?.title,
+        organizationId: organizationId,
+        organizationName: org?.name,
+    };
 };
 
 /**
