@@ -20,7 +20,7 @@ import { StepIndicator } from "@/features/auth/components/StepIndicator";
 import {
     registerSchema,
     type RegisterFormData,
-} from "@/features/auth/schemas/auth.schema";
+} from "@/features/auth/schema/auth.schema";
 import { useRegisterUser } from "../hooks/useAuth";
 
 const STEPS = [{ label: "Your info" }, { label: "Security" }];

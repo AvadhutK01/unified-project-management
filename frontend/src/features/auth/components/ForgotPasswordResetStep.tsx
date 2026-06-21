@@ -7,7 +7,7 @@ import { ArrowRight, Eye, EyeOff, KeyRound, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { resetSchema, type ResetFormData } from "../schemas/auth.schema";
+import { resetSchema, type ResetFormData } from "../schema/auth.schema";
 
 export const ForgotPasswordResetStep = ({
     token,

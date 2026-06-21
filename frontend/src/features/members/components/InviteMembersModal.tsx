@@ -15,7 +15,7 @@ import {
     useInviteMembersMutation,
     useReInviteMembersMutation,
 } from "@/features/members/hooks/useMembers";
-import { inviteMembersSchema } from "@/features/members/schemas/members.schema";
+import { inviteMembersSchema } from "@/features/members/schema/members.schema";
 import type {
     InviteEntry,
     InviteEntryErrors,

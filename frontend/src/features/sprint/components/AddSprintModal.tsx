@@ -39,50 +39,49 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import {
-    phaseFormSchema,
-    PHASE_STATUS_OPTIONS,
-    PHASE_TYPES,
-    type PhaseFormValues,
-} from "../schema/phases.schema";
-import { convertFormToPayload } from "../utils/phase.utils";
-import { useCreatePhaseMutation } from "../hooks/usePhases";
+    sprintFormSchema,
+    type SprintFormValues,
+} from "../schema/sprint.schema";
+import { convertFormToPayload } from "../utils/sprint.utils";
+import { useCreateSprintMutation } from "../hooks/useSprints";
 import { useState } from "react";
 import { toast } from "sonner";
+import type { SprintItem, AddSprintModalProps } from "../types/sprint.types";
+import { SPRINT_STATUS_OPTIONS } from "../constants/sprint.constants";
 
-const AddPhaseModal = () => {
+const AddSprintModal = ({ onAddSprint, canAdd }: AddSprintModalProps) => {
     const [open, setOpen] = useState(false);
-    const { id: projectId } = useParams<{ id: string }>();
-    const { mutate: createPhase, isPending: isSubmitting } =
-        useCreatePhaseMutation();
+    const { phaseId } = useParams<{ phaseId: string }>();
+    const { mutate: createSprint, isPending: isSubmitting } =
+        useCreateSprintMutation();
 
-    const form = useForm<PhaseFormValues>({
-        resolver: zodResolver(phaseFormSchema),
+    const form = useForm<SprintFormValues>({
+        resolver: zodResolver(sprintFormSchema),
         defaultValues: {
-            name: "",
-            type: "New Development",
-            customType: "",
+            title: "",
             description: "",
+            acceptanceCriteria: "",
+            status: "new",
             startDate: new Date(),
             endDate: new Date(),
-            status: "notstarted",
+            sequence: 0,
         },
     });
 
-    const watchType = form.watch("type");
-
-    const onSubmit = (data: PhaseFormValues) => {
-        if (!projectId) return;
-        const payload = convertFormToPayload(data, projectId);
-        createPhase(payload, {
-            onSuccess: () => {
-                toast.success("Phase created successfully!");
+    const onSubmit = (data: SprintFormValues) => {
+        if (!phaseId) return;
+        const payload = convertFormToPayload(data, phaseId);
+        createSprint(payload, {
+            onSuccess: (res) => {
+                onAddSprint(res as SprintItem);
+                toast.success("Sprint created successfully!");
                 setOpen(false);
                 form.reset();
             },
             onError: (error: any) => {
                 toast.error(
                     error?.response?.data?.message ||
-                        "Failed to create phase. Please try again.",
+                        "Failed to create sprint. Please try again.",
                 );
             },
         });
@@ -99,158 +98,37 @@ const AddPhaseModal = () => {
             }}
         >
             <SheetTrigger asChild>
-                <Button>
-                    <Plus className="size-4" />
-                    Add Phase
-                </Button>
+                {canAdd && (
+                    <Button>
+                        <Plus className="size-4" />
+                        Add Sprint
+                    </Button>
+                )}
             </SheetTrigger>
             <SheetContent showCloseButton={false} className="w-150! max-w-150!">
                 <SheetHeader>
-                    <SheetTitle>Add Phase</SheetTitle>
+                    <SheetTitle>Add Sprint</SheetTitle>
                     <SheetDescription>
-                        Add a new phase to your project.
+                        Add a new sprint to track iteration work.
                     </SheetDescription>
                 </SheetHeader>
                 <div className="grid flex-1 auto-rows-min gap-6 px-4 overflow-y-auto">
                     <Form {...form}>
                         <form
                             onSubmit={form.handleSubmit(onSubmit)}
-                            className="space-y-4"
+                            className="space-y-5"
                         >
                             <FormField
                                 control={form.control}
-                                name="name"
+                                name="title"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Phase Name</FormLabel>
+                                        <FormLabel>Sprint Title</FormLabel>
                                         <FormControl>
                                             <Input
                                                 {...field}
-                                                placeholder="Enter phase name"
+                                                placeholder="Enter sprint title"
                                                 className="ring-0!"
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            <div className="flex items-center gap-2 w-full">
-                                <FormField
-                                    control={form.control}
-                                    name="type"
-                                    render={({ field }) => (
-                                        <FormItem className="flex-1">
-                                            <FormLabel>Type</FormLabel>
-                                            <FormControl>
-                                                <Select
-                                                    onValueChange={
-                                                        field.onChange
-                                                    }
-                                                    defaultValue={field.value}
-                                                >
-                                                    <FormControl>
-                                                        <SelectTrigger className="w-full">
-                                                            <SelectValue placeholder="Select type" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        {PHASE_TYPES.map(
-                                                            (option) => (
-                                                                <SelectItem
-                                                                    key={option}
-                                                                    value={
-                                                                        option
-                                                                    }
-                                                                >
-                                                                    {option}
-                                                                </SelectItem>
-                                                            ),
-                                                        )}
-                                                    </SelectContent>
-                                                </Select>
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                <FormField
-                                    control={form.control}
-                                    name="status"
-                                    render={({ field }) => (
-                                        <FormItem className="flex-1">
-                                            <FormLabel>Status</FormLabel>
-                                            <FormControl>
-                                                <Select
-                                                    onValueChange={
-                                                        field.onChange
-                                                    }
-                                                    defaultValue={field.value}
-                                                >
-                                                    <FormControl>
-                                                        <SelectTrigger className="w-full">
-                                                            <SelectValue placeholder="Select status" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        {PHASE_STATUS_OPTIONS.map(
-                                                            (option) => (
-                                                                <SelectItem
-                                                                    key={
-                                                                        option.value
-                                                                    }
-                                                                    value={
-                                                                        option.value
-                                                                    }
-                                                                >
-                                                                    {
-                                                                        option.label
-                                                                    }
-                                                                </SelectItem>
-                                                            ),
-                                                        )}
-                                                    </SelectContent>
-                                                </Select>
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-
-                            {watchType === "Custom" && (
-                                <FormField
-                                    control={form.control}
-                                    name="customType"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Custom Type</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    {...field}
-                                                    placeholder="Enter custom type"
-                                                    className="ring-0!"
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            )}
-
-                            <FormField
-                                control={form.control}
-                                name="description"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Description</FormLabel>
-                                        <FormControl>
-                                            <RichTextEditor
-                                                value={field.value}
-                                                onChange={field.onChange}
-                                                onBlur={field.onBlur}
-                                                placeholder="Enter phase description"
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -346,6 +224,122 @@ const AddPhaseModal = () => {
                                 />
                             </div>
 
+                            <FormField
+                                control={form.control}
+                                name="description"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Description</FormLabel>
+                                        <FormControl>
+                                            <RichTextEditor
+                                                value={field.value}
+                                                onChange={field.onChange}
+                                                onBlur={field.onBlur}
+                                                placeholder="Enter sprint description"
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="acceptanceCriteria"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>
+                                            Acceptance Criteria
+                                        </FormLabel>
+                                        <FormControl>
+                                            <RichTextEditor
+                                                value={field.value}
+                                                onChange={field.onChange}
+                                                onBlur={field.onBlur}
+                                                placeholder="Enter acceptance criteria"
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <div className="flex items-center gap-2 w-full">
+                                <FormField
+                                    control={form.control}
+                                    name="status"
+                                    render={({ field }) => (
+                                        <FormItem className="flex-1">
+                                            <FormLabel>Status</FormLabel>
+                                            <FormControl>
+                                                <Select
+                                                    onValueChange={
+                                                        field.onChange
+                                                    }
+                                                    defaultValue={field.value}
+                                                >
+                                                    <FormControl>
+                                                        <SelectTrigger className="w-full">
+                                                            <SelectValue placeholder="Select status" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        {SPRINT_STATUS_OPTIONS.map(
+                                                            (option) => (
+                                                                <SelectItem
+                                                                    key={
+                                                                        option.value
+                                                                    }
+                                                                    value={
+                                                                        option.value
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        option.label
+                                                                    }
+                                                                </SelectItem>
+                                                            ),
+                                                        )}
+                                                    </SelectContent>
+                                                </Select>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    control={form.control}
+                                    name="sequence"
+                                    render={({ field }) => (
+                                        <FormItem className="flex-1">
+                                            <FormLabel>Sequence</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    type="number"
+                                                    name={field.name}
+                                                    value={field.value}
+                                                    onBlur={field.onBlur}
+                                                    ref={field.ref}
+                                                    onChange={(e) => {
+                                                        const val =
+                                                            e.target.value;
+                                                        field.onChange(
+                                                            val === ""
+                                                                ? 0
+                                                                : Number(val),
+                                                        );
+                                                    }}
+                                                    placeholder="Enter sequence number"
+                                                    className="ring-0!"
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
                             <SheetFooter className="flex flex-row justify-end gap-2 px-0 mt-6">
                                 <SheetClose asChild>
                                     <Button variant="outline">Close</Button>
@@ -353,11 +347,11 @@ const AddPhaseModal = () => {
                                 <Button type="submit" disabled={isSubmitting}>
                                     {isSubmitting ? (
                                         <>
-                                            <Loader2 className="h-4 w-4 mr-2" />
+                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                             Saving...
                                         </>
                                     ) : (
-                                        "Save changes"
+                                        "Save Sprint"
                                     )}
                                 </Button>
                             </SheetFooter>
@@ -369,4 +363,4 @@ const AddPhaseModal = () => {
     );
 };
 
-export default AddPhaseModal;
+export default AddSprintModal;

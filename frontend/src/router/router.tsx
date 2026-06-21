@@ -16,7 +16,7 @@ const ForgotPassword = lazy(
 const Login = lazy(() => import("@/features/auth/pages/Login"));
 const Register = lazy(() => import("@/features/auth/pages/Register"));
 const VerifyOtp = lazy(() => import("@/features/auth/pages/VerifyOtp"));
-const Dashboard = lazy(() => import("@/features/dashboard/Dashboard"));
+const Dashboard = lazy(() => import("@/features/dashboard/pages/Dashboard"));
 const CreateOrganization = lazy(
     () => import("@/features/organization/pages/CreateOrganization"),
 );
@@ -51,6 +51,10 @@ const ProjectsListPage = lazy(
     () => import("@/features/projects/pages/ProjectsListPage"),
 );
 const Phases = lazy(() => import("@/features/phases/pages/Phases"));
+const SprintPage = lazy(() => import("@/features/sprint/pages/SprintPage"));
+const SprintDetailsPage = lazy(
+    () => import("@/features/sprint/pages/SprintDetailsPage"),
+);
 
 export const router = createBrowserRouter([
     {
@@ -296,6 +300,38 @@ export const router = createBrowserRouter([
                                     permission={PERMISSIONS.PROJECTS.LIST}
                                 >
                                     <Phases />
+                                </ProtectedRoute>
+                            </PrivateRoute>
+                        </MainLayout>
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/:slug/projects/:id/phases/:phaseId/sprints",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <MainLayout>
+                            <PrivateRoute>
+                                <ProtectedRoute
+                                    permission={PERMISSIONS.SPRINT.LIST}
+                                >
+                                    <SprintPage />
+                                </ProtectedRoute>
+                            </PrivateRoute>
+                        </MainLayout>
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/:slug/projects/:id/phases/:phaseId/sprints/:sprintId",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <MainLayout>
+                            <PrivateRoute>
+                                <ProtectedRoute
+                                    permission={PERMISSIONS.SPRINT.VIEW}
+                                >
+                                    <SprintDetailsPage />
                                 </ProtectedRoute>
                             </PrivateRoute>
                         </MainLayout>

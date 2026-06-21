@@ -4,6 +4,7 @@ import {
     updatePhase,
     deletePhase,
     fetchPhases,
+    fetchPhaseById,
 } from "../api/phases.api";
 
 export const usePhasesQuery = (projectId: string | undefined, search = "") => {
@@ -11,6 +12,14 @@ export const usePhasesQuery = (projectId: string | undefined, search = "") => {
         queryKey: ["phases", projectId, search],
         queryFn: () => fetchPhases({ projectId: projectId!, search }),
         enabled: !!projectId,
+    });
+};
+
+export const usePhaseByIdQuery = (phaseId: string | undefined) => {
+    return useQuery({
+        queryKey: ["phase", phaseId],
+        queryFn: () => fetchPhaseById(phaseId!),
+        enabled: !!phaseId,
     });
 };
 
