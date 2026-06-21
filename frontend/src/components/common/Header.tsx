@@ -1,11 +1,7 @@
-import { Bell, ChevronDown } from "lucide-react";
+import { Bell } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useOrganizationsQuery } from "@/features/organization/hooks/useOrganizations";
 import { useOrganizationStore } from "@/store/organization.store";
-import { useStore } from "@/store/store";
-import { api } from "@/lib/axios";
-import type { Organization } from "@/features/organization/types/organization.types";
 
 interface User {
     name: string;
@@ -68,41 +64,7 @@ const Header = () => {
         };
     }, [showProfilePanel, showOrgDropdown]);
 
-    const activeOrganization = useOrganizationStore(
-        (state) => state.activeOrganization,
-    );
-    const { setActiveOrganization, clearActiveOrganization } =
-        useOrganizationStore();
-    const { setPermissions, clearPermissions } = useStore();
-
-    useEffect(() => {
-        if (!activeOrganization?.id) return;
-
-        api.get("/organizations/members/me/role")
-            .then((res) => {
-                const data = res?.data?.data ?? {};
-                const permissions = data.permissions ?? [];
-                const isOrgOwner = data.is_org_owner ?? false;
-                setPermissions(permissions, isOrgOwner);
-            })
-            .catch(() => clearPermissions());
-    }, [activeOrganization?.id, setPermissions, clearPermissions]);
-
-    const { data: organizationResponse } = useOrganizationsQuery();
-    const organizations = organizationResponse?.data.organizations ?? [];
-
-    const handleSelectOrganization = (organization: Organization) => {
-        const isOrganizationChanged =
-            organization.id !== activeOrganization?.id;
-
-        setActiveOrganization(organization);
-        setShowOrgDropdown(false);
-        navigate(`/${organization.slug}/dashboard`);
-
-        if (isOrganizationChanged) {
-            window.location.reload();
-        }
-    };
+    const { clearActiveOrganization } = useOrganizationStore();
 
     const handleLogout = async () => {
         clearActiveOrganization();
@@ -112,70 +74,11 @@ const Header = () => {
 
     return (
         <div className="bg-card h-16 pr-4 pl-6 flex items-center justify-end shadow-sm border-b dark:border-gray-700">
-            {/* Right side - Actions and Profile */}
             <div className="flex items-center gap-2">
-                {/* Organization selector */}
-                <div className="relative" ref={orgButtonRef}>
-                    <button
-                        type="button"
-                        onClick={() => setShowOrgDropdown((value) => !value)}
-                        className="inline-flex items-center gap-2 bg-card px-3 py-2 text-sm text-foreground cursor-pointer group"
-                    >
-                        <span className="truncate max-w-40 text-sm text-foreground group-hover:text-primary">
-                            {activeOrganization?.name || "Select organization"}
-                        </span>
-                        <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
-                    </button>
-                    {showOrgDropdown && (
-                        <div
-                            ref={orgDropdownRef}
-                            className="absolute right-0 top-full w-40 overflow-hidden rounded-md border border-border bg-card shadow-lg z-50"
-                        >
-                            <div className="max-h-72 overflow-y-auto">
-                                {organizations.length === 0 ? (
-                                    <div className="p-4 text-sm text-muted-foreground">
-                                        No organizations found
-                                    </div>
-                                ) : (
-                                    organizations.map((organization) => {
-                                        const isActive =
-                                            organization.id ===
-                                            activeOrganization?.id;
-                                        return (
-                                            <button
-                                                key={organization.id}
-                                                type="button"
-                                                onClick={() =>
-                                                    handleSelectOrganization(
-                                                        organization,
-                                                    )
-                                                }
-                                                className={`w-full px-4 py-3 text-left text-sm transition-colors ${
-                                                    isActive
-                                                        ? "bg-primary/10 text-primary"
-                                                        : "text-foreground hover:bg-muted/70"
-                                                }`}
-                                            >
-                                                <div
-                                                    className={`font-medium ${isActive ? "text-primary" : ""}`}
-                                                >
-                                                    {organization.name}
-                                                </div>
-                                            </button>
-                                        );
-                                    })
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Notification button */}
                 <button className="w-10 h-10 flex items-center justify-center transition-colors cursor-pointer">
                     <Bell className="w-5 h-5 text-foreground" />
                 </button>
 
-                {/* User Profile */}
                 <div className="relative" ref={profileButtonRef}>
                     <button
                         onClick={() => setShowProfilePanel(!showProfilePanel)}
@@ -194,13 +97,11 @@ const Header = () => {
                         </span>
                     </button>
 
-                    {/* Profile Dropdown Panel */}
                     {showProfilePanel && (
                         <div
                             ref={profilePanelRef}
                             className="absolute right-0 top-full mt-2 w-64 bg-card rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
                         >
-                            {/* Profile Header */}
                             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                                 <div className="flex items-center gap-3">
                                     <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-linear-to-br from-primary/15 to-accent/15 text-primary text-xs font-bold hover:from-primary/25 hover:to-accent/25 transition-all duration-200 ring-1 ring-primary/10">
@@ -228,7 +129,6 @@ const Header = () => {
                                 </div>
                             </div>
 
-                            {/* Menu Options */}
                             <div className="py-2">
                                 <button
                                     className="w-full cursor-pointer px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-3"
@@ -281,32 +181,8 @@ const Header = () => {
                                     </svg>
                                     <span>Settings</span>
                                 </button>
-
-                                {/* <button
-                                    onClick={() => {
-                                        router.push("/profile");
-                                        setShowProfilePanel(false);
-                                    }}
-                                    className="w-full cursor-pointer px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-3"
-                                >
-                                    <svg
-                                        className="w-4 h-4"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                        />
-                                    </svg>
-                                    <span>Help & Support</span>
-                                </button> */}
                             </div>
 
-                            {/* Logout Button */}
                             <div className="border-t border-gray-200 dark:border-gray-700 p-2">
                                 <button
                                     onClick={handleLogout}

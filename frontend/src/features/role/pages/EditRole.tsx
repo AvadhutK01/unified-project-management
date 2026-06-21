@@ -10,15 +10,15 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
-import { roleSchema, type RoleFormValues } from "../schemas/roleSchema";
+import { roleSchema, type RoleFormValues } from "../schema/roleSchema";
 import type { PermissionField } from "../types/role";
-import type { PermissionRow } from "../helpers/permissionHelpers";
+import type { PermissionRow } from "../utils/permissionHelpers";
 import {
     collectPermissionGraph,
     derivePermissionRowsFromPermissionItems,
     permissionDependencies,
     permissionDependents,
-} from "../helpers/permissionHelpers";
+} from "../utils/permissionHelpers";
 import {
     useFetchRoleByIdQuery,
     useFetchRolePermissionsQuery,

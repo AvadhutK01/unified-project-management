@@ -11,7 +11,7 @@ import { LoginBrandPanel } from "@/features/auth/components/LoginBrandPanel";
 import {
     loginSchema,
     type LoginFormData,
-} from "@/features/auth/schemas/auth.schema";
+} from "@/features/auth/schema/auth.schema";
 import { useLoginUser } from "../hooks/useAuth";
 
 const Login = () => {

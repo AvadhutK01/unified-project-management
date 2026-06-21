@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
-import { Edit, Eye, Search, Trash2 } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Edit, Eye, ListTodo, Search, Trash2 } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { useDebounce } from "@/lib/utils";
@@ -22,6 +22,7 @@ const Phases = () => {
     const [editPhase, setEditPhase] = useState<Phase | null>(null);
     const [editModalOpen, setEditModalOpen] = useState(false);
 
+    const navigate = useNavigate();
     const confirm = useConfirm();
     const { mutate: deletePhaseMutation } = useDeletePhaseMutation();
     const { hasPermission } = usePermission();
@@ -29,6 +30,7 @@ const Phases = () => {
     const canView = hasPermission(PERMISSIONS.PHASES.VIEW);
     const canEdit = hasPermission(PERMISSIONS.PHASES.EDIT);
     const canDelete = hasPermission(PERMISSIONS.PHASES.DELETE);
+    const hasSprintAccess = hasPermission(PERMISSIONS.SPRINT.LIST);
     const hasAnyAction = canView || canEdit || canDelete;
 
     const debouncedSearch = useDebounce(search, 300);
@@ -128,6 +130,17 @@ const Phases = () => {
                                           <Trash2 className="size-4" />
                                       </button>
                                   )}
+                                  {hasSprintAccess && (
+                                      <button
+                                          title={`Sprint of ${phase.name}`}
+                                          onClick={() =>
+                                              navigate(`${phase.id}/sprints`)
+                                          }
+                                          className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                                      >
+                                          <ListTodo className="size-4" />
+                                      </button>
+                                  )}
                               </div>
                           ),
                       },
@@ -138,8 +151,8 @@ const Phases = () => {
     );
 
     return (
-        <div className="p-6">
-            <div className="mb-6">
+        <div className="p-6 space-y-6">
+            <div>
                 <h1 className="text-lg font-semibold text-foreground">
                     Phases
                 </h1>

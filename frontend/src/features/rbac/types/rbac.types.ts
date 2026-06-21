@@ -27,6 +27,13 @@ export const PERMISSIONS = {
         VIEW: "phase_view",
         DELETE: "phase_delete",
     },
+    SPRINT: {
+        LIST: "sprint_list",
+        ADD: "sprint_add",
+        EDIT: "sprint_edit",
+        VIEW: "sprint_view",
+        DELETE: "sprint_delete",
+    },
 } as const;
 
 export type PermissionCodename = string;
