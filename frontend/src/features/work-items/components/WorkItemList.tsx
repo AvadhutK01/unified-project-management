@@ -1,0 +1,185 @@
+import { useMemo } from "react";
+import { Link } from "react-router-dom";
+import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
+import { Trash2, Bug, Edit, Eye, ListTodo } from "lucide-react";
+import { type WorkItem, type WorkItemListProps } from "../types/workitem.types";
+import { TYPE_LABELS, TYPE_STYLES } from "../constants/workitem.constants";
+import { formatHours } from "../utils/workitem.utils";
+import StatusSelectCell from "./StatusSelectCell";
+
+const WorkItemList = ({
+    workItems,
+    pendingWorkItemId,
+    onEditRequest,
+    onStatusChange,
+    onDeleteRequest,
+    projectMembers,
+    canEdit,
+    canDelete,
+    canView,
+}: WorkItemListProps) => {
+    const hasAnyAction = canEdit || canDelete || canView;
+
+    const columns = useMemo<DataTableColumn<WorkItem>[]>(
+        () => [
+            {
+                key: "title",
+                label: "Title",
+                render: (item) => (
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                            {item.type === "bug" ? (
+                                <Bug className="size-4 text-rose-500" />
+                            ) : (
+                                <ListTodo className="size-4 text-indigo-500" />
+                            )}
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">
+                                {item.title}
+                            </p>
+                        </div>
+                    </div>
+                ),
+            },
+            {
+                key: "type",
+                label: "Type",
+                render: (item) => (
+                    <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${TYPE_STYLES[item.type]}`}
+                    >
+                        {TYPE_LABELS[item.type]}
+                    </span>
+                ),
+            },
+            {
+                key: "status",
+                label: "Status",
+                render: (item) => (
+                    <StatusSelectCell
+                        workItem={item}
+                        pendingWorkItemId={pendingWorkItemId}
+                        onStatusChange={onStatusChange}
+                    />
+                ),
+            },
+            {
+                key: "originalEstimation",
+                label: "Est.",
+                render: (item) => (
+                    <span className="text-sm text-muted-foreground">
+                        {formatHours(item.originalEstimation ?? 0)}
+                    </span>
+                ),
+            },
+            {
+                key: "remaining",
+                label: "Rem.",
+                render: (item) => (
+                    <span className="text-sm text-muted-foreground">
+                        {formatHours(item.remaining ?? 0)}
+                    </span>
+                ),
+            },
+            {
+                key: "completed",
+                label: "Completed",
+                render: (item) => (
+                    <span className="text-sm text-muted-foreground">
+                        {item.completed !== undefined
+                            ? formatHours(item.completed)
+                            : "-"}
+                    </span>
+                ),
+            },
+            {
+                key: "assignedTo",
+                label: "Assigned To",
+                render: (item) => {
+                    const member = projectMembers?.find(
+                        (m) => m.id === item.assignedTo,
+                    );
+                    return (
+                        <span className="text-sm text-muted-foreground">
+                            {member ? member.name : "-"}
+                        </span>
+                    );
+                },
+            },
+            ...(hasAnyAction
+                ? [
+                      {
+                          key: "actions" as const,
+                          label: "Actions",
+                          className: "w-24 text-right",
+                          render: (item: WorkItem) => (
+                              <div className="flex items-center justify-end gap-2">
+                                  {canView && (
+                                      <Link
+                                          to={`${item.id}`}
+                                          className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer p-1"
+                                      >
+                                          <Eye className="size-4" />
+                                      </Link>
+                                  )}
+                                  {canEdit && (
+                                      <button
+                                          onClick={() => onEditRequest?.(item)}
+                                          className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                                      >
+                                          <Edit className="size-4" />
+                                      </button>
+                                  )}
+                                  {canDelete && (
+                                      <button
+                                          onClick={() =>
+                                              onDeleteRequest?.(item)
+                                          }
+                                          className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                                      >
+                                          <Trash2 className="size-4" />
+                                      </button>
+                                  )}
+                              </div>
+                          ),
+                      },
+                  ]
+                : []),
+        ],
+        [
+            onEditRequest,
+            onStatusChange,
+            onDeleteRequest,
+            projectMembers,
+            pendingWorkItemId,
+            canEdit,
+            canDelete,
+            canView,
+            hasAnyAction,
+        ],
+    );
+
+    return (
+        <DataTable
+            columns={columns}
+            data={workItems}
+            getRowId={(s) => s.id}
+            showDefaultFooter={false}
+            emptyState={
+                <tr>
+                    <td colSpan={columns.length + (hasAnyAction ? 1 : 0)}>
+                        <div className="flex flex-col items-center justify-center py-16 gap-2">
+                            <ListTodo className="size-8 text-muted-foreground/40" />
+                            <p className="text-sm font-medium text-muted-foreground">
+                                No work items yet
+                            </p>
+                        </div>
+                    </td>
+                </tr>
+            }
+        />
+    );
+};
+
+export default WorkItemList;

@@ -5,6 +5,7 @@ import {
     deleteProject,
     fetchProjects,
     fetchProjectById,
+    fetchProjectMembers,
 } from "../api/projects.api";
 
 export const useCreateProjectMutation = () => {
@@ -52,5 +53,13 @@ export const useProjectsQuery = (page = 1, search = "") => {
     return useQuery({
         queryKey: ["projects", page, search],
         queryFn: () => fetchProjects({ page, search }),
+    });
+};
+
+export const useProjectMembersQuery = (projectId: string | undefined) => {
+    return useQuery({
+        queryKey: ["project-members", projectId],
+        queryFn: () => fetchProjectMembers(projectId!),
+        enabled: !!projectId,
     });
 };

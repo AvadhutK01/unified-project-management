@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
-import { Trash2, ListTodo, Edit, Eye } from "lucide-react";
+import { Trash2, ListTodo, Edit, Eye, ListChecks } from "lucide-react";
 import { type SprintItem, type SprintListProps } from "../types/sprint.types";
 import StatusSelectCell from "./StatusSelectCell";
 import { useNavigate } from "react-router-dom";
@@ -97,6 +97,15 @@ const SprintList = ({
                                           <Trash2 className="size-4" />
                                       </button>
                                   )}
+                                  <button
+                                      onClick={() =>
+                                          navigate(`${sprint.id}/work-items`)
+                                      }
+                                      className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-indigo-500 hover:bg-indigo-500/10 transition-colors cursor-pointer"
+                                      title="Work Items"
+                                  >
+                                      <ListChecks className="size-4" />
+                                  </button>
                               </div>
                           ),
                       },

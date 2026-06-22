@@ -55,6 +55,10 @@ const SprintPage = lazy(() => import("@/features/sprint/pages/SprintPage"));
 const SprintDetailsPage = lazy(
     () => import("@/features/sprint/pages/SprintDetailsPage"),
 );
+const WorkItems = lazy(() => import("@/features/work-items/pages/WorkItems"));
+const WorkItemDetailsPage = lazy(
+    () => import("@/features/work-items/pages/WorkItemDetailsPage"),
+);
 
 export const router = createBrowserRouter([
     {
@@ -333,6 +337,30 @@ export const router = createBrowserRouter([
                                 >
                                     <SprintDetailsPage />
                                 </ProtectedRoute>
+                            </PrivateRoute>
+                        </MainLayout>
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/:slug/projects/:id/phases/:phaseId/sprints/:sprintId/work-items",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <MainLayout>
+                            <PrivateRoute>
+                                <WorkItems />
+                            </PrivateRoute>
+                        </MainLayout>
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/:slug/projects/:id/phases/:phaseId/sprints/:sprintId/work-items/:workItemId",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <MainLayout>
+                            <PrivateRoute>
+                                <WorkItemDetailsPage />
                             </PrivateRoute>
                         </MainLayout>
                     </Suspense>

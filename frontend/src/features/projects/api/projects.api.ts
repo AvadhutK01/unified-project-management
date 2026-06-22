@@ -44,3 +44,10 @@ export const fetchProjects = async ({
     const { data } = await api.get(`/projects?${params.toString()}`);
     return data;
 };
+
+export const fetchProjectMembers = async (projectId: string) => {
+    const { data } = await api.get(
+        `/organizations/members/project/${projectId}`,
+    );
+    return data;
+};

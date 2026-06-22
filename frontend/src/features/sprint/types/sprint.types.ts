@@ -26,6 +26,8 @@ export interface SprintItem {
     title: string;
     description: string;
     acceptanceCriteria: string;
+    projectTitle: string;
+    phaseTitle: string;
     status: SprintStatus;
     startDate?: string;
     endDate?: string;
