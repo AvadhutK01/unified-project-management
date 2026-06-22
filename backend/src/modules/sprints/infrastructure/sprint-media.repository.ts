@@ -4,7 +4,7 @@ import {
     organizationMembers,
     users,
 } from "../../../infrastructure/database/schema/index.js";
-import { eq, and, isNull, ilike, count, SQL } from "drizzle-orm";
+import { eq, and, isNull, ilike, count, SQL, desc } from "drizzle-orm";
 
 /**
  * Creates a new sprint media attachment record.
@@ -82,6 +82,7 @@ export const findSprintMediaPaginated = async (
         )
         .innerJoin(users, eq(organizationMembers.memberId, users.id))
         .where(and(...filters))
+        .orderBy(desc(sprintMedia.updatedAt))
         .limit(limit)
         .offset(offset);
 };

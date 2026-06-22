@@ -44,6 +44,10 @@ export const organizationMembersQuerySchema = z.object({
             }),
         }),
         search: z.string().optional(),
+        isForProject: z
+            .string()
+            .transform((val) => val === "true")
+            .optional(),
     }),
 });
 

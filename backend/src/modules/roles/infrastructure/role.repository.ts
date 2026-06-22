@@ -4,7 +4,7 @@ import {
     rolePermissions,
     permissions,
 } from "../../../infrastructure/database/schema/index.js";
-import { eq, count, and, or, ilike, ne } from "drizzle-orm";
+import { eq, count, and, or, ilike, ne, desc } from "drizzle-orm";
 
 /**
  * Creates a new role in the database.
@@ -93,10 +93,14 @@ export const findAllRoles = async (
     if (filters.length > 0) {
         return query
             .where(and(...filters))
+            .orderBy(desc(roles.updatedAt))
             .limit(limit)
             .offset((page - 1) * limit);
     }
-    return query.limit(limit).offset((page - 1) * limit);
+    return query
+        .orderBy(desc(roles.updatedAt))
+        .limit(limit)
+        .offset((page - 1) * limit);
 };
 
 /**

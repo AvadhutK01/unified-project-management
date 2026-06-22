@@ -6,7 +6,17 @@ import {
     roles,
     projectMembers,
 } from "../../../infrastructure/database/schema/index.js";
-import { eq, and, count, or, isNull, ilike } from "drizzle-orm";
+import {
+    eq,
+    and,
+    count,
+    or,
+    isNull,
+    ilike,
+    desc,
+    notInArray,
+    SQL,
+} from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 /**
@@ -68,16 +78,20 @@ export const findOrganizationMembers = async (
     page: number,
     limit: number,
     search?: string,
+    excludeUserIds?: string[],
 ) => {
     const offset = (page - 1) * limit;
-    const filters = [];
+    const filters: SQL[] = [];
     if (search) {
         filters.push(
             or(
                 ilike(users.username, `%${search}%`),
                 ilike(users.email, `%${search}%`),
-            ),
+            ) as SQL,
         );
+    }
+    if (excludeUserIds && excludeUserIds.length > 0) {
+        filters.push(notInArray(users.id, excludeUserIds));
     }
     return db
         .select({
@@ -102,6 +116,7 @@ export const findOrganizationMembers = async (
                 ...filters,
             ),
         )
+        .orderBy(desc(organizationMembers.updatedAt))
         .limit(limit)
         .offset(offset);
 };
@@ -114,15 +129,19 @@ export const findOrganizationMembers = async (
 export const countOrganizationMembers = async (
     organizationId: string,
     search?: string,
+    excludeUserIds?: string[],
 ) => {
-    const filters = [];
+    const filters: SQL[] = [];
     if (search) {
         filters.push(
             or(
                 ilike(users.username, `%${search}%`),
                 ilike(users.email, `%${search}%`),
-            ),
+            ) as SQL,
         );
+    }
+    if (excludeUserIds && excludeUserIds.length > 0) {
+        filters.push(notInArray(users.id, excludeUserIds));
     }
     const [result] = await db
         .select({ value: count() })
@@ -191,6 +210,7 @@ export const findOrganizationInvitations = async (
                 ...filters,
             ),
         )
+        .orderBy(desc(organizationInvitations.updatedAt))
         .limit(limit)
         .offset(offset);
 };
@@ -354,6 +374,7 @@ export const findProjectMembersPaginated = async (
                 ...filters,
             ),
         )
+        .orderBy(desc(organizationMembers.updatedAt))
         .limit(limit)
         .offset(offset);
 };

@@ -5,7 +5,7 @@ import {
     organizationMembers,
     users,
 } from "../../../infrastructure/database/schema/index.js";
-import { eq, and, isNull, inArray, count } from "drizzle-orm";
+import { eq, and, isNull, inArray, count, desc } from "drizzle-orm";
 
 /**
  * Creates a new sprint discussion comment.
@@ -103,6 +103,7 @@ export const findDiscussionsPaginated = async (
                 isNull(sprintDiscussions.deletedAt),
             ),
         )
+        .orderBy(desc(sprintDiscussions.updatedAt))
         .limit(limit)
         .offset(offset);
 };

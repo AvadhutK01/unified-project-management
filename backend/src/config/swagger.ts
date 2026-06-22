@@ -740,6 +740,13 @@ const swaggerDocument = {
                         schema: { type: "string" },
                         description: "Search keyword for username or email",
                     },
+                    {
+                        name: "isForProject",
+                        in: "query",
+                        schema: { type: "boolean" },
+                        description:
+                            "Whether to exclude the organization owner and current user",
+                    },
                 ],
                 responses: {
                     200: { description: "List of members or invited users" },

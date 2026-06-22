@@ -4,7 +4,7 @@ import {
     projectMembers,
     organizationMembers,
 } from "../../../infrastructure/database/schema/index.js";
-import { eq, and, or, ilike, isNull, count, SQL } from "drizzle-orm";
+import { eq, and, or, ilike, isNull, count, SQL, desc } from "drizzle-orm";
 
 /**
  * Creates a new project in the database.
@@ -136,6 +136,7 @@ export const findAllProjects = async (
                     isNull(organizationMembers.deletedAt),
                 ),
             )
+            .orderBy(desc(projects.updatedAt))
             .limit(limit)
             .offset((page - 1) * limit);
     }
@@ -144,6 +145,7 @@ export const findAllProjects = async (
         .select()
         .from(projects)
         .where(and(...filters))
+        .orderBy(desc(projects.updatedAt))
         .limit(limit)
         .offset((page - 1) * limit);
 };

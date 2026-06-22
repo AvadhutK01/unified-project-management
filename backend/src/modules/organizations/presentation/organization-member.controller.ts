@@ -100,12 +100,15 @@ export const handleGetOrganizationMembers = async (
         const limit = Number(req.query["limit"] ?? 10);
         const type = req.query["type"] as "invited" | "joined";
         const search = req.query["search"] as string | undefined;
+        const isForProject = req.query["isForProject"] as boolean | undefined;
         const result = await getOrganizationMembersList(
             req.orgId as string,
+            req.user?.id as string,
             type,
             page,
             limit,
             search,
+            isForProject,
         );
         return res.status(200).json({ status: "success", data: result });
     } catch (error) {

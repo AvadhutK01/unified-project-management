@@ -3,7 +3,7 @@ import {
     organizations,
     organizationMembers,
 } from "../../../infrastructure/database/schema/index.js";
-import { eq, count, ilike, and, or, isNull } from "drizzle-orm";
+import { eq, count, ilike, and, or, isNull, desc } from "drizzle-orm";
 
 /**
  * Creates a new organization in the database.
@@ -99,6 +99,7 @@ export const findOrganizationsByOwner = async (
         .select()
         .from(organizations)
         .where(and(...filters))
+        .orderBy(desc(organizations.updatedAt))
         .limit(limit)
         .offset(offset);
 };
@@ -175,6 +176,7 @@ export const findAllOrganizations = async (
                     ...filters,
                 ),
             )
+            .orderBy(desc(organizations.updatedAt))
             .limit(limit)
             .offset(offset);
     }
@@ -182,7 +184,10 @@ export const findAllOrganizations = async (
     const query = db.select().from(organizations);
     const dynamicQuery =
         filters.length > 0 ? query.where(and(...filters)) : query;
-    return dynamicQuery.limit(limit).offset(offset);
+    return dynamicQuery
+        .orderBy(desc(organizations.updatedAt))
+        .limit(limit)
+        .offset(offset);
 };
 
 /**

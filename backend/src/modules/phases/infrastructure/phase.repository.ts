@@ -1,6 +1,6 @@
 import { db } from "../../../infrastructure/database/client.js";
 import { phases } from "../../../infrastructure/database/schema/index.js";
-import { eq, and, ilike, isNull, count, SQL } from "drizzle-orm";
+import { eq, and, ilike, isNull, count, SQL, desc } from "drizzle-orm";
 
 /**
  * Creates a new phase in the database.
@@ -72,6 +72,7 @@ export const findAllPhases = async (
         .select()
         .from(phases)
         .where(and(...filters))
+        .orderBy(desc(phases.updatedAt))
         .limit(limit)
         .offset((page - 1) * limit);
 };

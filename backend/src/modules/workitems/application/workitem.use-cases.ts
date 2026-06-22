@@ -22,6 +22,7 @@ import {
 import { verifyProjectAccess } from "../../projects/application/project.use-cases.js";
 import { findProjectById } from "../../projects/infrastructure/project.repository.js";
 import { findOrganizationById } from "../../organizations/infrastructure/organization.repository.js";
+import { validateWorkitemTransition } from "../../../shared/utils/status-transitions.js";
 
 const generateUpdateDescription = (oldWorkitem: any, data: any): string => {
     const changes: string[] = [];
@@ -218,6 +219,7 @@ export const getAllWorkitems = async (
     page: number = 1,
     limit: number = 10,
     search?: string,
+    status?: string,
 ) => {
     const sprint = await findSprintById(sprintId);
     if (!sprint) {
@@ -232,8 +234,8 @@ export const getAllWorkitems = async (
     await verifyProjectAccess(phase.projectId, organizationId, userId);
 
     const [data, total] = await Promise.all([
-        findAllWorkitems(sprintId, page, limit, search),
-        countAllWorkitems(sprintId, search),
+        findAllWorkitems(sprintId, page, limit, search, status),
+        countAllWorkitems(sprintId, search, status),
     ]);
 
     return {
@@ -296,6 +298,10 @@ export const updateWorkitem = async (
         );
     }
 
+    if (data.status && data.status !== workitem.status) {
+        validateWorkitemTransition(workitem.status as string, data.status);
+    }
+
     const description = generateUpdateDescription(workitem, data);
 
     const updated = await updateWorkitemRepo(id, data);
@@ -341,6 +347,10 @@ export const updateWorkitemStatus = async (
     }
 
     await verifyProjectAccess(phase.projectId, organizationId, userId);
+
+    if (status !== workitem.status) {
+        validateWorkitemTransition(workitem.status as string, status);
+    }
 
     const oldStatus = workitem.status;
 

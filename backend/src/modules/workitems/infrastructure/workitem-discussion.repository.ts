@@ -92,7 +92,7 @@ export const findDiscussionsPaginated = async (
                 isNull(workitemDiscussions.deletedAt),
             ),
         )
-        .orderBy(desc(workitemDiscussions.createdAt))
+        .orderBy(desc(workitemDiscussions.updatedAt))
         .limit(limit)
         .offset((page - 1) * limit);
 };

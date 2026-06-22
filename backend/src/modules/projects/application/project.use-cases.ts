@@ -19,6 +19,7 @@ import {
 } from "../../../shared/errors/app-error.js";
 import { findOrganizationById } from "../../organizations/infrastructure/organization.repository.js";
 import { findMemberByOrgAndUserId } from "../../organizations/infrastructure/organization-member.repository.js";
+import { validateProjectTransition } from "../../../shared/utils/status-transitions.js";
 
 /**
  * Verifies if a user has access to a project (is org owner or mapped project member).
@@ -242,6 +243,10 @@ export const updateProject = async (
     const resolvedEnd = data.endDate ?? project.endDate;
     if (resolvedStart && resolvedEnd && resolvedStart > resolvedEnd) {
         throw badRequestError("Start date must be before or equal to end date");
+    }
+
+    if (data.status && data.status !== project.status) {
+        validateProjectTransition(project.status as string, data.status);
     }
 
     const updated = await updateProjectRepo(id, organizationId, {

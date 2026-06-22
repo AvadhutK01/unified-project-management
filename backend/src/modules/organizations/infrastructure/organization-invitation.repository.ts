@@ -5,7 +5,7 @@ import {
     users,
     organizations,
 } from "../../../infrastructure/database/schema/index.js";
-import { eq, and, count } from "drizzle-orm";
+import { eq, and, count, desc } from "drizzle-orm";
 
 /**
  * Creates a new organization invitation.
@@ -126,6 +126,7 @@ export const findInvitationsForUser = async (
                 eq(organizationInvitations.status, "pending"),
             ),
         )
+        .orderBy(desc(organizationInvitations.updatedAt))
         .limit(limit)
         .offset(offset);
 };

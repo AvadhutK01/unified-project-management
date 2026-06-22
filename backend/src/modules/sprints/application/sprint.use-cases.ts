@@ -21,6 +21,7 @@ import {
 import { verifyProjectAccess } from "../../projects/application/project.use-cases.js";
 import { findProjectById } from "../../projects/infrastructure/project.repository.js";
 import { findOrganizationById } from "../../organizations/infrastructure/organization.repository.js";
+import { validateSprintTransition } from "../../../shared/utils/status-transitions.js";
 
 /**
  * Generates automated update description comparing old and new values.
@@ -201,6 +202,7 @@ export const getAllSprints = async (
     page: number = 1,
     limit: number = 10,
     search?: string,
+    status?: string,
 ) => {
     const phase = await findPhaseById(phaseId);
     if (!phase) {
@@ -210,8 +212,8 @@ export const getAllSprints = async (
     await verifyProjectAccess(phase.projectId, organizationId, userId);
 
     const [data, total] = await Promise.all([
-        findAllSprints(phaseId, page, limit, search),
-        countAllSprints(phaseId, search),
+        findAllSprints(phaseId, page, limit, search, status),
+        countAllSprints(phaseId, search, status),
     ]);
 
     return {
@@ -265,6 +267,10 @@ export const updateSprint = async (
         throw badRequestError("Start date must be before or equal to end date");
     }
 
+    if (data.status && data.status !== sprint.status) {
+        validateSprintTransition(sprint.status as string, data.status);
+    }
+
     const description = generateUpdateDescription(sprint, data);
 
     const updated = await updateSprintRepo(id, data);
@@ -307,6 +313,10 @@ export const updateSprintStatus = async (
     }
 
     await verifyProjectAccess(phase.projectId, organizationId, userId);
+
+    if (status !== sprint.status) {
+        validateSprintTransition(sprint.status as string, status);
+    }
 
     const oldStatus = sprint.status;
 

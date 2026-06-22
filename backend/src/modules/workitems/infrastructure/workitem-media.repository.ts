@@ -4,7 +4,7 @@ import {
     organizationMembers,
     users,
 } from "../../../infrastructure/database/schema/index.js";
-import { eq, and, isNull, count, ilike, SQL } from "drizzle-orm";
+import { eq, and, isNull, count, ilike, SQL, desc } from "drizzle-orm";
 
 export const createWorkitemMedia = async (data: {
     workitemId: string;
@@ -74,6 +74,7 @@ export const findWorkitemMediaPaginated = async (
         )
         .innerJoin(users, eq(organizationMembers.memberId, users.id))
         .where(and(...filters))
+        .orderBy(desc(workitemMedia.updatedAt))
         .limit(limit)
         .offset((page - 1) * limit);
 };

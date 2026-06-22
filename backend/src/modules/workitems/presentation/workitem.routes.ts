@@ -29,6 +29,7 @@ import {
     updateWorkitemDiscussionSchema,
     workitemDiscussionIdParamSchema,
     workitemDiscussionsQuerySchema,
+    workitemActivitiesQuerySchema,
     workitemMediaQuerySchema,
     workitemMediaIdParamSchema,
 } from "./workitem.validation.js";
@@ -93,7 +94,7 @@ router.delete(
 
 router.get(
     "/:id/activities",
-    validateRequest(workitemIdParamSchema),
+    validateRequest(workitemActivitiesQuerySchema),
     handleGetWorkitemActivities,
 );
 

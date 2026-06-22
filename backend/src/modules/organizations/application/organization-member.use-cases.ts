@@ -185,15 +185,35 @@ export const updateInvitationStatus = async (
  */
 export const getOrganizationMembersList = async (
     organizationId: string,
+    userId: string,
     type: "invited" | "joined",
     page: number = 1,
     limit: number = 10,
     search?: string,
+    isForProject?: boolean,
 ) => {
+    let excludeUserIds: string[] = [];
+
+    if (isForProject) {
+        const org = await findOrganizationById(organizationId);
+        if (org) {
+            excludeUserIds.push(org.ownerUserId);
+        }
+        if (userId && !excludeUserIds.includes(userId)) {
+            excludeUserIds.push(userId);
+        }
+    }
+
     if (type === "joined") {
         const [data, total] = await Promise.all([
-            findOrganizationMembers(organizationId, page, limit, search),
-            countOrganizationMembers(organizationId, search),
+            findOrganizationMembers(
+                organizationId,
+                page,
+                limit,
+                search,
+                excludeUserIds,
+            ),
+            countOrganizationMembers(organizationId, search, excludeUserIds),
         ]);
 
         return {

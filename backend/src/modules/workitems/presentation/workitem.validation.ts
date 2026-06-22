@@ -64,6 +64,9 @@ export const getWorkitemsQuerySchema = z.object({
         page: z.string().regex(/^\d+$/).optional().transform(Number),
         limit: z.string().regex(/^\d+$/).optional().transform(Number),
         search: z.string().optional(),
+        status: z
+            .enum(["new", "active", "resolved", "closed", "removed", "onhold"])
+            .optional(),
     }),
 });
 
@@ -100,6 +103,16 @@ export const workitemDiscussionIdParamSchema = z.object({
 });
 
 export const workitemDiscussionsQuerySchema = z.object({
+    params: z.object({
+        id: z.string().uuid("Invalid workitem ID"),
+    }),
+    query: z.object({
+        page: z.string().regex(/^\d+$/).optional().transform(Number),
+        limit: z.string().regex(/^\d+$/).optional().transform(Number),
+    }),
+});
+
+export const workitemActivitiesQuerySchema = z.object({
     params: z.object({
         id: z.string().uuid("Invalid workitem ID"),
     }),

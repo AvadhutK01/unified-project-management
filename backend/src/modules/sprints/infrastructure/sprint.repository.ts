@@ -5,7 +5,7 @@ import {
     projects,
     organizations,
 } from "../../../infrastructure/database/schema/index.js";
-import { eq, and, ilike, isNull, count, SQL } from "drizzle-orm";
+import { eq, and, ilike, isNull, count, SQL, desc } from "drizzle-orm";
 
 /**
  * Creates a new sprint in the database.
@@ -63,9 +63,6 @@ export const findSprintById = async (id: string) => {
     const row = results[0]!;
     return {
         ...row.sprint,
-        phaseName: row.phaseName,
-        projectName: row.projectName,
-        organizationName: row.organizationName,
     };
 };
 
@@ -82,6 +79,7 @@ export const findAllSprints = async (
     page: number = 1,
     limit: number = 10,
     search?: string,
+    status?: string,
 ) => {
     const filters: SQL[] = [
         eq(sprints.phaseId, phaseId),
@@ -91,11 +89,20 @@ export const findAllSprints = async (
     if (search) {
         filters.push(ilike(sprints.title, `%${search}%`) as SQL);
     }
+    if (status) {
+        filters.push(
+            eq(
+                sprints.status,
+                status as "new" | "active" | "onhold" | "removed" | "closed",
+            ),
+        );
+    }
 
     return db
         .select()
         .from(sprints)
         .where(and(...filters))
+        .orderBy(desc(sprints.updatedAt))
         .limit(limit)
         .offset((page - 1) * limit);
 };
@@ -106,7 +113,11 @@ export const findAllSprints = async (
  * @param search Optional search keyword.
  * @returns Total count.
  */
-export const countAllSprints = async (phaseId: string, search?: string) => {
+export const countAllSprints = async (
+    phaseId: string,
+    search?: string,
+    status?: string,
+) => {
     const filters: SQL[] = [
         eq(sprints.phaseId, phaseId),
         isNull(sprints.deletedAt),
@@ -114,6 +125,14 @@ export const countAllSprints = async (phaseId: string, search?: string) => {
 
     if (search) {
         filters.push(ilike(sprints.title, `%${search}%`) as SQL);
+    }
+    if (status) {
+        filters.push(
+            eq(
+                sprints.status,
+                status as "new" | "active" | "onhold" | "removed" | "closed",
+            ),
+        );
     }
 
     const results = await db

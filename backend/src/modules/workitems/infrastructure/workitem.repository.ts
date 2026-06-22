@@ -5,8 +5,11 @@ import {
     phases,
     projects,
     organizations,
+    projectMembers,
+    organizationMembers,
+    users,
 } from "../../../infrastructure/database/schema/index.js";
-import { eq, and, ilike, isNull, count, SQL } from "drizzle-orm";
+import { eq, and, ilike, isNull, count, SQL, desc } from "drizzle-orm";
 
 export const createWorkitem = async (data: {
     sprintId: string;
@@ -48,12 +51,20 @@ export const findWorkitemById = async (id: string) => {
             phaseName: phases.name,
             projectName: projects.title,
             organizationName: organizations.name,
+            assignedToName: users.username,
+            assignedToEmail: users.email,
         })
         .from(workitems)
         .innerJoin(sprints, eq(workitems.sprintId, sprints.id))
         .innerJoin(phases, eq(sprints.phaseId, phases.id))
         .innerJoin(projects, eq(phases.projectId, projects.id))
         .innerJoin(organizations, eq(projects.organizationId, organizations.id))
+        .leftJoin(projectMembers, eq(workitems.assignedTo, projectMembers.id))
+        .leftJoin(
+            organizationMembers,
+            eq(projectMembers.organizationMemberId, organizationMembers.id),
+        )
+        .leftJoin(users, eq(organizationMembers.memberId, users.id))
         .where(and(eq(workitems.id, id), isNull(workitems.deletedAt)))
         .limit(1);
 
@@ -62,10 +73,8 @@ export const findWorkitemById = async (id: string) => {
     const row = results[0]!;
     return {
         ...row.workitem,
-        sprintName: row.sprintName,
-        phaseName: row.phaseName,
-        projectName: row.projectName,
-        organizationName: row.organizationName,
+        assignedToName: row.assignedToName,
+        assignedToEmail: row.assignedToEmail,
     };
 };
 
@@ -74,6 +83,7 @@ export const findAllWorkitems = async (
     page: number = 1,
     limit: number = 10,
     search?: string,
+    status?: string,
 ) => {
     const filters: SQL[] = [
         eq(workitems.sprintId, sprintId),
@@ -83,16 +93,35 @@ export const findAllWorkitems = async (
     if (search) {
         filters.push(ilike(workitems.title, `%${search}%`) as SQL);
     }
+    if (status) {
+        filters.push(
+            eq(
+                workitems.status,
+                status as
+                    | "new"
+                    | "active"
+                    | "resolved"
+                    | "closed"
+                    | "removed"
+                    | "onhold",
+            ),
+        );
+    }
 
     return db
         .select()
         .from(workitems)
         .where(and(...filters))
+        .orderBy(desc(workitems.updatedAt))
         .limit(limit)
         .offset((page - 1) * limit);
 };
 
-export const countAllWorkitems = async (sprintId: string, search?: string) => {
+export const countAllWorkitems = async (
+    sprintId: string,
+    search?: string,
+    status?: string,
+) => {
     const filters: SQL[] = [
         eq(workitems.sprintId, sprintId),
         isNull(workitems.deletedAt),
@@ -100,6 +129,20 @@ export const countAllWorkitems = async (sprintId: string, search?: string) => {
 
     if (search) {
         filters.push(ilike(workitems.title, `%${search}%`) as SQL);
+    }
+    if (status) {
+        filters.push(
+            eq(
+                workitems.status,
+                status as
+                    | "new"
+                    | "active"
+                    | "resolved"
+                    | "closed"
+                    | "removed"
+                    | "onhold",
+            ),
+        );
     }
 
     const results = await db
