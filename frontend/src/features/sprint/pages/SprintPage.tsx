@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useCallback, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
+    ChevronLeft,
     ChevronRight,
     Loader2,
     LayoutList,
@@ -26,12 +27,38 @@ import { cn } from "@/lib/utils";
 
 const SprintPage = () => {
     const { view, setView } = useSprintViewStore();
+    const [searchParams, setSearchParams] = useSearchParams();
     const {
         slug,
         id: projectId,
         phaseId,
     } = useParams<{ slug: string; id: string; phaseId: string }>();
-    const { data: sprintsData = [], isLoading } = useSprintsQuery(phaseId);
+
+    const currentPage = Math.max(1, Number(searchParams.get("page")) || 1);
+
+    const setPage = useCallback(
+        (pageOrUpdater: number | ((prev: number) => number)) => {
+            setSearchParams((prev) => {
+                const next =
+                    typeof pageOrUpdater === "function"
+                        ? pageOrUpdater(currentPage)
+                        : pageOrUpdater;
+                const nextParams = new URLSearchParams(prev);
+                if (next <= 1) {
+                    nextParams.delete("page");
+                } else {
+                    nextParams.set("page", String(next));
+                }
+                return nextParams;
+            });
+        },
+        [setSearchParams, currentPage],
+    );
+
+    const { data: sprintsData = [], isLoading } = useSprintsQuery(
+        phaseId,
+        currentPage,
+    );
     const { mutate: updateSprintStatus, mutateAsync: updateSprintStatusAsync } =
         useUpdateSprintMutation();
     const [pendingSprintId, setPendingSprintId] = useState<string | null>(null);
@@ -62,8 +89,12 @@ const SprintPage = () => {
         (s: SprintItem) => s.status === "closed",
     ).length;
 
+    const totalSprints = sprintsData?.data?.pagination?.total ?? 0;
+    const totalPages = sprintsData?.data?.pagination?.totalPages ?? 0;
+    const safePage = Math.min(currentPage, totalPages || 1);
+
     return (
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-5">
             {/* Breadcrumbs */}
             <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <Link
@@ -215,36 +246,89 @@ const SprintPage = () => {
                         <Loader2 className="size-6 animate-spin text-muted-foreground" />
                     </div>
                 ) : view === "list" ? (
-                    <SprintList
-                        sprints={sprints}
-                        pendingSprintId={pendingSprintId}
-                        canView={canView}
-                        canEdit={canEdit}
-                        canDelete={canDelete}
-                        onEditRequest={(sprint) => setEditingSprint(sprint)}
-                        onStatusChange={(sprint, newStatus) => {
-                            setPendingSprintId(sprint.id);
-                            updateSprintStatus(
-                                {
-                                    id: sprint.id,
-                                    payload: {
-                                        title: sprint.title,
-                                        description: sprint.description,
-                                        acceptanceCriteria:
-                                            sprint.acceptanceCriteria,
-                                        status: newStatus as SprintItem["status"],
-                                        startDate: sprint.startDate ?? "",
-                                        endDate: sprint.endDate ?? "",
-                                        sequence: sprint.sequence ?? 0,
+                    <>
+                        <SprintList
+                            sprints={sprints}
+                            pendingSprintId={pendingSprintId}
+                            canView={canView}
+                            canEdit={canEdit}
+                            canDelete={canDelete}
+                            onEditRequest={(sprint) => setEditingSprint(sprint)}
+                            onStatusChange={(sprint, newStatus) => {
+                                setPendingSprintId(sprint.id);
+                                updateSprintStatus(
+                                    {
+                                        id: sprint.id,
+                                        payload: {
+                                            title: sprint.title,
+                                            description: sprint.description,
+                                            acceptanceCriteria:
+                                                sprint.acceptanceCriteria,
+                                            status: newStatus as SprintItem["status"],
+                                            startDate: sprint.startDate ?? "",
+                                            endDate: sprint.endDate ?? "",
+                                            sequence: sprint.sequence ?? 0,
+                                        },
                                     },
-                                },
-                                { onSettled: () => setPendingSprintId(null) },
-                            );
-                        }}
-                    />
+                                    {
+                                        onSettled: () =>
+                                            setPendingSprintId(null),
+                                    },
+                                );
+                            }}
+                        />
+
+                        {totalPages > 0 && (
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-4">
+                                <p className="text-xs text-muted-foreground px-1">
+                                    Showing{" "}
+                                    <span className="font-medium text-foreground">
+                                        {sprints.length}
+                                    </span>{" "}
+                                    of{" "}
+                                    <span className="font-medium text-foreground">
+                                        {totalSprints}
+                                    </span>{" "}
+                                    sprint{totalSprints !== 1 ? "s" : ""}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() =>
+                                            setPage((p) => Math.max(1, p - 1))
+                                        }
+                                        disabled={safePage === 1}
+                                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                                    >
+                                        <ChevronLeft className="w-4 h-4" />
+                                    </button>
+                                    <span className="text-xs text-muted-foreground px-2">
+                                        Page{" "}
+                                        <span className="font-medium text-foreground">
+                                            {safePage}
+                                        </span>{" "}
+                                        of{" "}
+                                        <span className="font-medium text-foreground">
+                                            {totalPages}
+                                        </span>
+                                    </span>
+                                    <button
+                                        onClick={() =>
+                                            setPage((p) =>
+                                                Math.min(totalPages, p + 1),
+                                            )
+                                        }
+                                        disabled={safePage === totalPages}
+                                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                                    >
+                                        <ChevronRight className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </>
                 ) : (
                     <SprintKanbanBoard
-                        sprints={sprints}
+                        phaseId={phaseId}
                         canView={canView}
                         canEdit={canEdit}
                         onEditRequest={(sprint) => setEditingSprint(sprint)}

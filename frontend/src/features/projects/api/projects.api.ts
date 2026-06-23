@@ -35,6 +35,7 @@ export const fetchProjects = async ({
 } = {}) => {
     const params = new URLSearchParams({
         page: String(page),
+        limit: "10",
     });
 
     if (search) {

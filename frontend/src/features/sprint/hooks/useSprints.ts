@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+    useInfiniteQuery,
+    useMutation,
+    useQuery,
+    useQueryClient,
+} from "@tanstack/react-query";
 import {
     createSprint,
     fetchSprints,
@@ -14,10 +19,10 @@ import {
     deleteSprintMedia,
 } from "../api/sprint.api";
 
-export const useSprintsQuery = (phaseId: string | undefined) => {
+export const useSprintsQuery = (phaseId: string | undefined, page = 1) => {
     return useQuery({
-        queryKey: ["sprints", phaseId],
-        queryFn: () => fetchSprints({ phaseId: phaseId! }),
+        queryKey: ["sprints", phaseId, page],
+        queryFn: () => fetchSprints({ phaseId: phaseId!, page }),
         enabled: !!phaseId,
     });
 };
@@ -28,6 +33,7 @@ export const useUpdateSprintMutation = () => {
         mutationFn: updateSprint,
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ["sprints"] });
+            queryClient.invalidateQueries({ queryKey: ["sprints-kanban"] });
             queryClient.invalidateQueries({
                 queryKey: ["sprint", variables.id],
             });
@@ -44,6 +50,7 @@ export const useCreateSprintMutation = () => {
         mutationFn: createSprint,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["sprints"] });
+            queryClient.invalidateQueries({ queryKey: ["sprints-kanban"] });
         },
     });
 };
@@ -62,30 +69,47 @@ export const useDeleteSprintMutation = () => {
         mutationFn: deleteSprint,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["sprints"] });
+            queryClient.invalidateQueries({ queryKey: ["sprints-kanban"] });
         },
     });
 };
 
-export const useSprintActivitiesQuery = (
+export const useSprintActivitiesInfiniteQuery = (
     sprintId: string | undefined,
-    page = 1,
     limit = 50,
 ) => {
-    return useQuery({
-        queryKey: ["sprint-activities", sprintId, page, limit],
-        queryFn: () => fetchSprintActivities(sprintId!, page, limit),
+    return useInfiniteQuery({
+        queryKey: ["sprint-activities", sprintId],
+        queryFn: ({ pageParam }) =>
+            fetchSprintActivities(sprintId!, pageParam, limit),
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) => {
+            const pagination = lastPage?.data?.pagination;
+            if (!pagination || pagination.page >= pagination.totalPages) {
+                return undefined;
+            }
+            return pagination.page + 1;
+        },
         enabled: !!sprintId,
     });
 };
 
-export const useSprintDiscussionsQuery = (
+export const useSprintDiscussionsInfiniteQuery = (
     sprintId: string | undefined,
-    page = 1,
     limit = 50,
 ) => {
-    return useQuery({
-        queryKey: ["sprint-discussions", sprintId, page, limit],
-        queryFn: () => fetchSprintDiscussions(sprintId!, page, limit),
+    return useInfiniteQuery({
+        queryKey: ["sprint-discussions", sprintId],
+        queryFn: ({ pageParam }) =>
+            fetchSprintDiscussions(sprintId!, pageParam, limit),
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) => {
+            const pagination = lastPage?.data?.pagination;
+            if (!pagination || pagination.page >= pagination.totalPages) {
+                return undefined;
+            }
+            return pagination.page + 1;
+        },
         enabled: !!sprintId,
     });
 };
@@ -120,14 +144,22 @@ export const useDeleteSprintDiscussionMutation = () => {
     });
 };
 
-export const useSprintMediaQuery = (
+export const useSprintMediaInfiniteQuery = (
     sprintId: string | undefined,
-    page = 1,
     limit = 50,
 ) => {
-    return useQuery({
-        queryKey: ["sprint-media", sprintId, page, limit],
-        queryFn: () => fetchSprintMedia(sprintId!, page, limit),
+    return useInfiniteQuery({
+        queryKey: ["sprint-media", sprintId],
+        queryFn: ({ pageParam }) =>
+            fetchSprintMedia(sprintId!, pageParam, limit),
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) => {
+            const pagination = lastPage?.data?.pagination;
+            if (!pagination || pagination.page >= pagination.totalPages) {
+                return undefined;
+            }
+            return pagination.page + 1;
+        },
         enabled: !!sprintId,
     });
 };

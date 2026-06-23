@@ -14,11 +14,32 @@ import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { WORK_ITEM_STATUSES } from "../constants/workitem.constants";
 import { type WorkItem, type WorkItemStatus } from "../types/workitem.types";
 import { getItemId, parseItemId, parseColumnId } from "../utils/kanban-utils";
+import { useWorkItemsKanban } from "../hooks/useWorkItemsKanban";
 import KanbanColumn from "./KanbanColumn";
 import DragOverlayCard from "./DragOverlayCard";
 
+const WORK_ITEM_TRANSITIONS: Record<string, string[]> = {
+    new: ["active", "removed"],
+    active: ["resolved", "closed", "onhold", "removed"],
+    onhold: ["active", "closed", "removed"],
+    resolved: ["active", "closed", "removed"],
+    closed: [],
+    removed: [],
+};
+
+function isValidWorkItemTransition(
+    from: string,
+    to: string,
+    type?: string,
+): boolean {
+    if (from === to) return true;
+    if (!WORK_ITEM_TRANSITIONS[from]?.includes(to)) return false;
+    if (type === "task" && to === "resolved") return false;
+    return true;
+}
+
 interface WorkItemKanbanBoardProps {
-    workItems: WorkItem[];
+    sprintId?: string;
     onEditRequest?: (workItem: WorkItem) => void;
     onStatusChange?: (
         workItem: WorkItem,
@@ -30,19 +51,21 @@ interface WorkItemKanbanBoardProps {
 }
 
 const WorkItemKanbanBoard = ({
-    workItems,
+    sprintId,
     onEditRequest,
     onStatusChange,
     canView,
     canEdit,
 }: WorkItemKanbanBoardProps) => {
-    const [items, setItems] = useState<WorkItem[]>(workItems);
+    const { itemsByStatus, loading, hasMore, loadMore } =
+        useWorkItemsKanban(sprintId);
+    const [items, setItems] = useState<WorkItem[]>([]);
     const [activeId, setActiveId] = useState<string | null>(null);
     const [overId, setOverId] = useState<string | null>(null);
 
     useEffect(() => {
-        setItems(workItems);
-    }, [workItems]);
+        setItems(Object.values(itemsByStatus).flat());
+    }, [itemsByStatus]);
 
     const grouped = useMemo(() => {
         const map: Record<WorkItemStatus, WorkItem[]> = {
@@ -118,6 +141,15 @@ const WorkItemKanbanBoard = ({
             if (activeIndex === -1) return;
 
             const activeItem = prevItems[activeIndex];
+
+            if (
+                !isValidWorkItemTransition(
+                    fromStatus,
+                    toStatus,
+                    activeItem.type,
+                )
+            )
+                return;
             const updatedItem = { ...activeItem, status: toStatus };
 
             const remainingItems = prevItems.filter(
@@ -184,7 +216,22 @@ const WorkItemKanbanBoard = ({
                 setOverId(null);
             }}
             onDragOver={(event: DragOverEvent) => {
-                setOverId(event.over?.id as string | null);
+                const over = event.over;
+                if (!over || !activeId) {
+                    setOverId(null);
+                    return;
+                }
+                const fromStatus = findContainer(activeId);
+                const toStatus = findContainer(over.id as string);
+                if (
+                    fromStatus &&
+                    toStatus &&
+                    isValidWorkItemTransition(fromStatus, toStatus)
+                ) {
+                    setOverId(over.id as string);
+                } else {
+                    setOverId(null);
+                }
             }}
             onDragEnd={handleDragEnd}
             onDragCancel={() => {
@@ -206,6 +253,9 @@ const WorkItemKanbanBoard = ({
                             onEditRequest={onEditRequest}
                             canView={canView}
                             canEdit={canEdit}
+                            loading={loading[status]}
+                            hasMore={hasMore[status]}
+                            onLoadMore={() => loadMore(status)}
                         />
                     ))}
                 </div>

@@ -7,12 +7,18 @@ import type {
 export const fetchPhases = async ({
     projectId,
     search = "",
+    page = 1,
+    limit = 10,
 }: {
     projectId: string;
     search?: string;
+    page?: number;
+    limit?: number;
 }) => {
     const params = new URLSearchParams({ projectId });
     if (search) params.set("search", search);
+    params.set("page", String(page));
+    params.set("limit", String(limit));
     const { data } = await api.get(`/phases?${params.toString()}`);
     return data;
 };

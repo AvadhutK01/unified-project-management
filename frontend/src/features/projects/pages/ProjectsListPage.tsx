@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
     Search,
     Eye,
@@ -24,17 +24,38 @@ import { STATUS_STYLES, STATUS_LABELS } from "../constants/projects.constants";
 import type { Project } from "../types/project.types";
 import { usePermission } from "@/features/rbac/hooks/usePermission";
 import { PERMISSIONS } from "@/features/rbac/types/rbac.types";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const ProjectsListPage = () => {
     const confirm = useConfirm();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     const { hasPermission } = usePermission();
     const { mutate: deleteProjectMutation } = useDeleteProjectMutation();
 
+    const currentPage = Math.max(1, Number(searchParams.get("page")) || 1);
+
+    const setPage = useCallback(
+        (pageOrUpdater: number | ((prev: number) => number)) => {
+            setSearchParams((prev) => {
+                const next =
+                    typeof pageOrUpdater === "function"
+                        ? pageOrUpdater(currentPage)
+                        : pageOrUpdater;
+                const nextParams = new URLSearchParams(prev);
+                if (next <= 1) {
+                    nextParams.delete("page");
+                } else {
+                    nextParams.set("page", String(next));
+                }
+                return nextParams;
+            });
+        },
+        [setSearchParams, currentPage],
+    );
+
     const [search, setSearch] = useState("");
-    const [currentPage, setCurrentPage] = useState(1);
     const [editingProject, setEditingProject] = useState<Project | null>(null);
     const [editModalOpen, setEditModalOpen] = useState(false);
 
@@ -50,13 +71,6 @@ const ProjectsListPage = () => {
         currentPage,
         debouncedSearch,
     );
-
-    // Reset pagination to page 1 when search text changes
-    useMemo(() => {
-        if (currentPage !== 1) {
-            setCurrentPage(1);
-        }
-    }, [debouncedSearch]);
 
     const projects = useMemo<Project[]>(() => {
         return (
@@ -285,7 +299,11 @@ const ProjectsListPage = () => {
                             value={search}
                             onChange={(e) => {
                                 setSearch(e.target.value);
-                                setCurrentPage(1);
+                                setSearchParams((prev) => {
+                                    const next = new URLSearchParams(prev);
+                                    next.delete("page");
+                                    return next;
+                                });
                             }}
                             className="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-border bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-primary transition"
                         />
@@ -331,9 +349,7 @@ const ProjectsListPage = () => {
                     </p>
                     <div className="flex items-center gap-2">
                         <button
-                            onClick={() =>
-                                setCurrentPage((page) => Math.max(1, page - 1))
-                            }
+                            onClick={() => setPage((p) => Math.max(1, p - 1))}
                             disabled={safePage === 1}
                             className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                         >
@@ -351,9 +367,7 @@ const ProjectsListPage = () => {
                         </span>
                         <button
                             onClick={() =>
-                                setCurrentPage((page) =>
-                                    Math.min(totalPages, page + 1),
-                                )
+                                setPage((p) => Math.min(totalPages, p + 1))
                             }
                             disabled={safePage === totalPages}
                             className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"

@@ -1,7 +1,15 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
-import { Trash2, Bug, Edit, Eye, ListTodo } from "lucide-react";
+import {
+    Trash2,
+    Bug,
+    Edit,
+    Eye,
+    ListTodo,
+    ChevronLeft,
+    ChevronRight,
+} from "lucide-react";
 import { type WorkItem, type WorkItemListProps } from "../types/workitem.types";
 import { TYPE_LABELS, TYPE_STYLES } from "../constants/workitem.constants";
 import { formatHours } from "../utils/workitem.utils";
@@ -17,6 +25,11 @@ const WorkItemList = ({
     canEdit,
     canDelete,
     canView,
+    currentPage = 1,
+    totalPages = 0,
+    totalItems = 0,
+    onPageChange,
+    isLoading,
 }: WorkItemListProps) => {
     const hasAnyAction = canEdit || canDelete || canView;
 
@@ -160,25 +173,76 @@ const WorkItemList = ({
         ],
     );
 
+    const safePage = Math.min(currentPage, totalPages || 1);
+
     return (
-        <DataTable
-            columns={columns}
-            data={workItems}
-            getRowId={(s) => s.id}
-            showDefaultFooter={false}
-            emptyState={
-                <tr>
-                    <td colSpan={columns.length + (hasAnyAction ? 1 : 0)}>
-                        <div className="flex flex-col items-center justify-center py-16 gap-2">
-                            <ListTodo className="size-8 text-muted-foreground/40" />
-                            <p className="text-sm font-medium text-muted-foreground">
-                                No work items yet
-                            </p>
-                        </div>
-                    </td>
-                </tr>
-            }
-        />
+        <>
+            <DataTable
+                columns={columns}
+                data={workItems}
+                getRowId={(s) => s.id}
+                showDefaultFooter={false}
+                loading={isLoading}
+                emptyState={
+                    <tr>
+                        <td colSpan={columns.length + (hasAnyAction ? 1 : 0)}>
+                            <div className="flex flex-col items-center justify-center py-16 gap-2">
+                                <ListTodo className="size-8 text-muted-foreground/40" />
+                                <p className="text-sm font-medium text-muted-foreground">
+                                    No work items yet
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            />
+
+            {totalPages > 0 && onPageChange && (
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-4">
+                    <p className="text-xs text-muted-foreground px-1">
+                        Showing{" "}
+                        <span className="font-medium text-foreground">
+                            {workItems.length}
+                        </span>{" "}
+                        of{" "}
+                        <span className="font-medium text-foreground">
+                            {totalItems}
+                        </span>{" "}
+                        work item{totalItems !== 1 ? "s" : ""}
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() =>
+                                onPageChange((p) => Math.max(1, p - 1))
+                            }
+                            disabled={safePage === 1}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <span className="text-xs text-muted-foreground px-2">
+                            Page{" "}
+                            <span className="font-medium text-foreground">
+                                {safePage}
+                            </span>{" "}
+                            of{" "}
+                            <span className="font-medium text-foreground">
+                                {totalPages}
+                            </span>
+                        </span>
+                        <button
+                            onClick={() =>
+                                onPageChange((p) => Math.min(totalPages, p + 1))
+                            }
+                            disabled={safePage === totalPages}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                        >
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
+        </>
     );
 };
 

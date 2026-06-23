@@ -12,11 +12,11 @@ import {
     useSprintQuery,
     useUpdateSprintMutation,
     useDeleteSprintMutation,
-    useSprintActivitiesQuery,
-    useSprintDiscussionsQuery,
+    useSprintActivitiesInfiniteQuery,
+    useSprintDiscussionsInfiniteQuery,
     useCreateSprintDiscussionMutation,
     useDeleteSprintDiscussionMutation,
-    useSprintMediaQuery,
+    useSprintMediaInfiniteQuery,
     useUploadSprintMediaMutation,
     useDeleteSprintMediaMutation,
 } from "../hooks/useSprints";
@@ -61,12 +61,27 @@ const SprintDetailsPage = () => {
     } = useSprintQuery(sprintId);
     const { data: projectRes } = useProjectByIdQuery(projectId);
     const { data: phaseRes } = usePhaseByIdQuery(phaseId);
-    const { data: discussionsRes, isLoading: isCommentsLoading } =
-        useSprintDiscussionsQuery(sprintId);
-    const { data: mediaRes, isLoading: isMediaLoading } =
-        useSprintMediaQuery(sprintId);
-    const { data: activitiesRes, isLoading: isActivitiesLoading } =
-        useSprintActivitiesQuery(sprintId);
+    const {
+        data: discussionsData,
+        isLoading: isCommentsLoading,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+    } = useSprintDiscussionsInfiniteQuery(sprintId);
+    const {
+        data: mediaData,
+        isLoading: isMediaLoading,
+        fetchNextPage: fetchNextMediaPage,
+        hasNextPage: hasNextMediaPage,
+        isFetchingNextPage: isFetchingNextMediaPage,
+    } = useSprintMediaInfiniteQuery(sprintId);
+    const {
+        data: activitiesData,
+        isLoading: isActivitiesLoading,
+        fetchNextPage: fetchNextActivitiesPage,
+        hasNextPage: hasNextActivitiesPage,
+        isFetchingNextPage: isFetchingNextActivitiesPage,
+    } = useSprintActivitiesInfiniteQuery(sprintId);
 
     // Mutations
     const { mutate: updateSprintStatus } = useUpdateSprintMutation();
@@ -80,9 +95,12 @@ const SprintDetailsPage = () => {
     const sprint = sprintRes?.data ?? null;
     const project = projectRes?.data ?? null;
     const phaseName = phaseRes?.data?.name;
-    const discussions = discussionsRes?.data?.data ?? [];
-    const mediaList = mediaRes?.data?.data ?? [];
-    const activities = activitiesRes?.data?.data ?? [];
+    const discussions =
+        discussionsData?.pages.flatMap((p) => p?.data?.data ?? []) ?? [];
+    const mediaList =
+        mediaData?.pages.flatMap((p) => p?.data?.data ?? []) ?? [];
+    const activities =
+        activitiesData?.pages.flatMap((p) => p?.data?.data ?? []) ?? [];
 
     const currentUserEmail = localStorage.getItem("email") || "";
 
@@ -328,6 +346,9 @@ const SprintDetailsPage = () => {
                                 isSubmittingComment={isSubmittingComment}
                                 onAddComment={handleAddComment}
                                 onDeleteComment={handleDeleteComment}
+                                fetchNextPage={fetchNextPage}
+                                hasNextPage={hasNextPage}
+                                isFetchingNextPage={isFetchingNextPage}
                             />
                         </TabsContent>
 
@@ -343,6 +364,9 @@ const SprintDetailsPage = () => {
                                 fileInputRef={fileInputRef}
                                 onFileUpload={handleFileUpload}
                                 onDeleteMedia={handleDeleteMedia}
+                                fetchNextPage={fetchNextMediaPage}
+                                hasNextPage={hasNextMediaPage}
+                                isFetchingNextPage={isFetchingNextMediaPage}
                             />
                         </TabsContent>
 
@@ -353,6 +377,11 @@ const SprintDetailsPage = () => {
                             <SprintActivitiesTab
                                 activities={activities}
                                 isActivitiesLoading={isActivitiesLoading}
+                                fetchNextPage={fetchNextActivitiesPage}
+                                hasNextPage={hasNextActivitiesPage}
+                                isFetchingNextPage={
+                                    isFetchingNextActivitiesPage
+                                }
                             />
                         </TabsContent>
                     </Tabs>

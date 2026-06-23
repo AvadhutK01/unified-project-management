@@ -5,7 +5,7 @@ import type {
     WorkItem,
 } from "../types/workitem.types";
 
-const mapWorkItem = (item: any): WorkItem => ({
+export const mapWorkItem = (item: any): WorkItem => ({
     id: item.id,
     title: item.title,
     description: item.description || "",
@@ -26,10 +26,23 @@ const mapWorkItem = (item: any): WorkItem => ({
     organizationName: item.organizationName || null,
 });
 
-export const fetchWorkItems = async ({ sprintId }: { sprintId: string }) => {
-    const params = new URLSearchParams({ sprintId, page: "1", limit: "100" });
+export const fetchWorkItems = async ({
+    sprintId,
+    page = 1,
+    limit = 10,
+    status,
+}: {
+    sprintId: string;
+    page?: number;
+    limit?: number;
+    status?: string;
+}) => {
+    const params = new URLSearchParams({ sprintId });
+    params.set("page", String(page));
+    params.set("limit", String(limit));
+    if (status) params.set("status", status);
     const { data } = await api.get(`/workitems?${params.toString()}`);
-    return data.data.data.map(mapWorkItem);
+    return data;
 };
 
 export const createWorkItem = async (payload: CreateWorkItemPayload) => {
@@ -98,8 +111,14 @@ export const updateWorkItemStatus = async ({
     return mapWorkItem(data.data);
 };
 
-export const fetchWorkItemDiscussions = async (id: string) => {
-    const { data } = await api.get(`/workitems/${id}/discussions`);
+export const fetchWorkItemDiscussions = async (
+    id: string,
+    page = 1,
+    limit = 50,
+) => {
+    const { data } = await api.get(`/workitems/${id}/discussions`, {
+        params: { page, limit },
+    });
     return data;
 };
 
@@ -129,13 +148,21 @@ export const deleteWorkItemDiscussion = async ({
     return data;
 };
 
-export const fetchWorkItemActivities = async (id: string) => {
-    const { data } = await api.get(`/workitems/${id}/activities`);
+export const fetchWorkItemActivities = async (
+    id: string,
+    page = 1,
+    limit = 50,
+) => {
+    const { data } = await api.get(`/workitems/${id}/activities`, {
+        params: { page, limit },
+    });
     return data;
 };
 
-export const fetchWorkItemMedia = async (id: string) => {
-    const { data } = await api.get(`/workitems/${id}/media`);
+export const fetchWorkItemMedia = async (id: string, page = 1, limit = 50) => {
+    const { data } = await api.get(`/workitems/${id}/media`, {
+        params: { page, limit },
+    });
     return data;
 };
 

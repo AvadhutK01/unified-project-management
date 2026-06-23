@@ -93,6 +93,15 @@ const AddWorkItemModal = ({ onAddWorkItem, canAdd }: AddWorkItemModalProps) => {
         },
     });
 
+    const selectedType = form.watch("type");
+    const statusOptions = useMemo(
+        () =>
+            selectedType === "task"
+                ? WORK_ITEM_STATUS_OPTIONS.filter((o) => o.value !== "resolved")
+                : WORK_ITEM_STATUS_OPTIONS,
+        [selectedType],
+    );
+
     const onSubmit = (data: WorkItemFormValues) => {
         if (!sprintId) return;
         const payload = convertFormToPayload(data, sprintId);
@@ -173,6 +182,17 @@ const AddWorkItemModal = ({ onAddWorkItem, canAdd }: AddWorkItemModalProps) => {
                                                     onValueChange={(val) => {
                                                         if (val === "") return;
                                                         field.onChange(val);
+                                                        if (
+                                                            val === "task" &&
+                                                            form.getValues(
+                                                                "status",
+                                                            ) === "resolved"
+                                                        ) {
+                                                            form.setValue(
+                                                                "status",
+                                                                "new",
+                                                            );
+                                                        }
                                                     }}
                                                     defaultValue={field.value}
                                                 >
@@ -226,7 +246,7 @@ const AddWorkItemModal = ({ onAddWorkItem, canAdd }: AddWorkItemModalProps) => {
                                                         </SelectTrigger>
                                                     </FormControl>
                                                     <SelectContent>
-                                                        {WORK_ITEM_STATUS_OPTIONS.map(
+                                                        {statusOptions.map(
                                                             (option) => (
                                                                 <SelectItem
                                                                     key={

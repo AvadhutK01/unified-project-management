@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useMemo, useCallback } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
 import {
     LayoutList,
     Columns3,
@@ -10,6 +10,7 @@ import {
     Bug,
 } from "lucide-react";
 import { type WorkItem } from "../types/workitem.types";
+import { mapWorkItem } from "../api/workitem.api";
 import WorkItemList from "../components/WorkItemList";
 import WorkItemKanbanBoard from "../components/WorkItemKanbanBoard";
 import AddWorkItemModal from "../components/AddWorkItemModal";
@@ -34,7 +35,41 @@ const WorkItems = () => {
         id: string;
         sprintId: string;
     }>();
-    const { data: workItems = [] } = useWorkItemsQuery(sprintId);
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    const currentPage = Math.max(1, Number(searchParams.get("page")) || 1);
+
+    const setPage = useCallback(
+        (pageOrUpdater: number | ((prev: number) => number)) => {
+            setSearchParams((prev) => {
+                const next =
+                    typeof pageOrUpdater === "function"
+                        ? pageOrUpdater(currentPage)
+                        : pageOrUpdater;
+                const nextParams = new URLSearchParams(prev);
+                if (next <= 1) {
+                    nextParams.delete("page");
+                } else {
+                    nextParams.set("page", String(next));
+                }
+                return nextParams;
+            });
+        },
+        [setSearchParams, currentPage],
+    );
+
+    const { data: workItemsResponse, isPending: isLoading } = useWorkItemsQuery(
+        sprintId,
+        currentPage,
+    );
+
+    const workItems = useMemo(() => {
+        return (workItemsResponse?.data?.data ?? []).map(mapWorkItem);
+    }, [workItemsResponse]);
+
+    const totalItems =
+        workItemsResponse?.data?.pagination?.total ?? workItems.length;
+    const totalPages = workItemsResponse?.data?.pagination?.totalPages ?? 0;
     const { mutate: updateStatus } = useUpdateWorkItemStatusMutation();
     const { mutate: deleteWorkItem } = useDeleteWorkItemMutation();
 
@@ -110,7 +145,6 @@ const WorkItems = () => {
         });
     };
 
-    const totalItems = workItems.length;
     const activeItems = workItems.filter(
         (w: WorkItem) => w.status === "active",
     ).length;
@@ -271,10 +305,15 @@ const WorkItems = () => {
                         }
                         onStatusChange={handleStatusChange}
                         onDeleteRequest={handleDeleteRequest}
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={totalItems}
+                        onPageChange={setPage}
+                        isLoading={isLoading}
                     />
                 ) : (
                     <WorkItemKanbanBoard
-                        workItems={workItems}
+                        sprintId={sprintId}
                         canView={canView}
                         canEdit={canEdit}
                         onEditRequest={(workItem) =>

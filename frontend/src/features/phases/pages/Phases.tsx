@@ -1,6 +1,14 @@
-import { useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { Edit, Eye, ListTodo, Search, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import {
+    ChevronLeft,
+    ChevronRight,
+    Edit,
+    Eye,
+    ListTodo,
+    Search,
+    Trash2,
+} from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { useDebounce } from "@/lib/utils";
@@ -18,9 +26,31 @@ import {
 
 const Phases = () => {
     const { id: projectId } = useParams<{ id: string }>();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [search, setSearch] = useState("");
     const [editPhase, setEditPhase] = useState<Phase | null>(null);
     const [editModalOpen, setEditModalOpen] = useState(false);
+
+    const currentPage = Math.max(1, Number(searchParams.get("page")) || 1);
+
+    const setPage = useCallback(
+        (pageOrUpdater: number | ((prev: number) => number)) => {
+            setSearchParams((prev) => {
+                const next =
+                    typeof pageOrUpdater === "function"
+                        ? pageOrUpdater(currentPage)
+                        : pageOrUpdater;
+                const nextParams = new URLSearchParams(prev);
+                if (next <= 1) {
+                    nextParams.delete("page");
+                } else {
+                    nextParams.set("page", String(next));
+                }
+                return nextParams;
+            });
+        },
+        [setSearchParams, currentPage],
+    );
 
     const navigate = useNavigate();
     const confirm = useConfirm();
@@ -35,9 +65,18 @@ const Phases = () => {
 
     const debouncedSearch = useDebounce(search, 300);
 
+    useEffect(() => {
+        setSearchParams((prev) => {
+            const next = new URLSearchParams(prev);
+            next.delete("page");
+            return next;
+        });
+    }, [debouncedSearch]);
+
     const { data: phasesData, isLoading } = usePhasesQuery(
         projectId,
         debouncedSearch,
+        currentPage,
     );
 
     const phases = useMemo<Phase[]>(() => {
@@ -52,6 +91,10 @@ const Phases = () => {
             status: item.status,
         }));
     }, [phasesData]);
+
+    const totalPhases = phasesData?.data?.pagination?.total ?? 0;
+    const totalPages = phasesData?.data?.pagination?.totalPages ?? 0;
+    const safePage = Math.min(currentPage, totalPages || 1);
 
     const columns = useMemo<DataTableColumn<Phase>[]>(
         () => [
@@ -151,7 +194,7 @@ const Phases = () => {
     );
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-5">
             <div>
                 <h1 className="text-lg font-semibold text-foreground">
                     Phases
@@ -161,7 +204,7 @@ const Phases = () => {
                 </p>
             </div>
 
-            <div className="pb-4 flex items-center justify-between gap-4">
+            <div className="flex items-center justify-between gap-4">
                 <AddPhaseModal />
 
                 <div className="relative min-w-xs">
@@ -184,6 +227,50 @@ const Phases = () => {
                 showDefaultFooter={false}
                 loading={isLoading}
             />
+
+            {totalPages > 0 && (
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-xs text-muted-foreground px-1">
+                        Showing{" "}
+                        <span className="font-medium text-foreground">
+                            {phases.length}
+                        </span>{" "}
+                        of{" "}
+                        <span className="font-medium text-foreground">
+                            {totalPhases}
+                        </span>{" "}
+                        phase{totalPhases !== 1 ? "s" : ""}
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setPage((p) => Math.max(1, p - 1))}
+                            disabled={safePage === 1}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <span className="text-xs text-muted-foreground px-2">
+                            Page{" "}
+                            <span className="font-medium text-foreground">
+                                {safePage}
+                            </span>{" "}
+                            of{" "}
+                            <span className="font-medium text-foreground">
+                                {totalPages}
+                            </span>
+                        </span>
+                        <button
+                            onClick={() =>
+                                setPage((p) => Math.min(totalPages, p + 1))
+                            }
+                            disabled={safePage === totalPages}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                        >
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <EditPhaseModal
                 phase={editPhase}

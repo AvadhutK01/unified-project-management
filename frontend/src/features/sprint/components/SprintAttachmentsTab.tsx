@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { format } from "date-fns";
 import {
     Loader2,
@@ -18,7 +19,29 @@ const SprintAttachmentsTab = ({
     fileInputRef,
     onFileUpload,
     onDeleteMedia,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
 }: SprintAttachmentsTabProps) => {
+    const sentinelRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!hasNextPage || isFetchingNextPage) return;
+        const sentinel = sentinelRef.current;
+        if (!sentinel) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting) {
+                    fetchNextPage();
+                }
+            },
+            { threshold: 0.1 },
+        );
+
+        observer.observe(sentinel);
+        return () => observer.disconnect();
+    }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
     return (
         <div className="p-6 rounded-2xl border border-border/60 bg-card/60 backdrop-blur-md shadow-xs space-y-6">
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
@@ -123,6 +146,14 @@ const SprintAttachmentsTab = ({
                             </div>
                         );
                     })
+                )}
+                {isFetchingNextPage && (
+                    <div className="flex items-center justify-center py-4">
+                        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                    </div>
+                )}
+                {hasNextPage && !isFetchingNextPage && (
+                    <div ref={sentinelRef} className="h-4" />
                 )}
             </div>
         </div>

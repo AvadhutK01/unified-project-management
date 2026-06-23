@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Loader2, Send, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -15,6 +15,9 @@ interface WorkItemCommentsTabProps {
     isSubmittingComment: boolean;
     onAddComment: (comment: string) => void;
     onDeleteComment: (discussionId: string) => void;
+    fetchNextPage: () => void;
+    hasNextPage: boolean;
+    isFetchingNextPage: boolean;
 }
 
 const WorkItemCommentsTab = ({
@@ -25,8 +28,30 @@ const WorkItemCommentsTab = ({
     isSubmittingComment,
     onAddComment,
     onDeleteComment,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
 }: WorkItemCommentsTabProps) => {
     const [commentText, setCommentText] = useState("");
+    const sentinelRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!hasNextPage || isFetchingNextPage) return;
+        const sentinel = sentinelRef.current;
+        if (!sentinel) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting) {
+                    fetchNextPage();
+                }
+            },
+            { threshold: 0.1 },
+        );
+
+        observer.observe(sentinel);
+        return () => observer.disconnect();
+    }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -148,6 +173,14 @@ const WorkItemCommentsTab = ({
                             </div>
                         );
                     })
+                )}
+                {isFetchingNextPage && (
+                    <div className="flex items-center justify-center py-4">
+                        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                    </div>
+                )}
+                {hasNextPage && !isFetchingNextPage && (
+                    <div ref={sentinelRef} className="h-4" />
                 )}
             </div>
         </div>

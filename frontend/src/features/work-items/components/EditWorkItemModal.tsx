@@ -96,6 +96,15 @@ const EditWorkItemModal = ({
         },
     });
 
+    const selectedType = form.watch("type");
+    const statusOptions = useMemo(
+        () =>
+            selectedType === "task"
+                ? WORK_ITEM_STATUS_OPTIONS.filter((o) => o.value !== "resolved")
+                : WORK_ITEM_STATUS_OPTIONS,
+        [selectedType],
+    );
+
     useEffect(() => {
         if (workItem) {
             form.reset({
@@ -202,6 +211,17 @@ const EditWorkItemModal = ({
                                                     onValueChange={(val) => {
                                                         if (val === "") return;
                                                         field.onChange(val);
+                                                        if (
+                                                            val === "task" &&
+                                                            form.getValues(
+                                                                "status",
+                                                            ) === "resolved"
+                                                        ) {
+                                                            form.setValue(
+                                                                "status",
+                                                                "new",
+                                                            );
+                                                        }
                                                     }}
                                                     defaultValue={field.value}
                                                 >
@@ -289,7 +309,7 @@ const EditWorkItemModal = ({
                                                         </SelectTrigger>
                                                     </FormControl>
                                                     <SelectContent>
-                                                        {WORK_ITEM_STATUS_OPTIONS.map(
+                                                        {statusOptions.map(
                                                             (option) => (
                                                                 <SelectItem
                                                                     key={

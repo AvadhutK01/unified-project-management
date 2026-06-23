@@ -68,9 +68,13 @@ export interface WorkItemListProps {
     onDeleteRequest?: (workItem: WorkItem) => void;
     projectMembers?: Array<{ id: string; name: string; email: string }>;
     canEdit?: boolean;
-
     canDelete?: boolean;
     canView?: boolean;
+    currentPage?: number;
+    totalPages?: number;
+    totalItems?: number;
+    onPageChange?: (pageOrUpdater: number | ((prev: number) => number)) => void;
+    isLoading: boolean;
 }
 
 export interface AddWorkItemModalProps {

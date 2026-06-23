@@ -95,6 +95,9 @@ export interface SprintCommentsTabProps {
     isSubmittingComment: boolean;
     onAddComment: (comment: string) => void;
     onDeleteComment: (discussionId: string) => void;
+    fetchNextPage: () => void;
+    hasNextPage: boolean;
+    isFetchingNextPage: boolean;
 }
 
 export interface SprintAttachmentsTabProps {
@@ -105,11 +108,17 @@ export interface SprintAttachmentsTabProps {
     fileInputRef: React.RefObject<HTMLInputElement | null>;
     onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onDeleteMedia: (mediaId: string) => void;
+    fetchNextPage: () => void;
+    hasNextPage: boolean;
+    isFetchingNextPage: boolean;
 }
 
 export interface SprintActivitiesTabProps {
     activities: any[];
     isActivitiesLoading: boolean;
+    fetchNextPage: () => void;
+    hasNextPage: boolean;
+    isFetchingNextPage: boolean;
 }
 
 export interface SprintTrackerCardProps {

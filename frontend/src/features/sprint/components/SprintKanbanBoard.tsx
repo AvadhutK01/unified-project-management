@@ -14,11 +14,25 @@ import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { SPRINT_STATUSES } from "../constants/sprint.constants";
 import { type SprintItem, type SprintStatus } from "../types/sprint.types";
 import { getItemId, parseItemId, parseColumnId } from "../utils/kanban-utils";
+import { useSprintsKanban } from "../hooks/useSprintsKanban";
 import KanbanColumn from "./KanbanColumn";
 import DragOverlayCard from "./DragOverlayCard";
 
+const SPRINT_TRANSITIONS: Record<string, string[]> = {
+    new: ["active", "removed"],
+    active: ["onhold", "closed", "removed"],
+    onhold: ["active", "closed", "removed"],
+    removed: [],
+    closed: [],
+};
+
+function isValidSprintTransition(from: string, to: string): boolean {
+    if (from === to) return true;
+    return SPRINT_TRANSITIONS[from]?.includes(to) ?? false;
+}
+
 interface SprintKanbanBoardProps {
-    sprints: SprintItem[];
+    phaseId?: string;
     onEditRequest?: (sprint: SprintItem) => void;
     onStatusChange?: (
         sprint: SprintItem,
@@ -30,19 +44,22 @@ interface SprintKanbanBoardProps {
 }
 
 const SprintKanbanBoard = ({
-    sprints,
+    phaseId,
     onEditRequest,
     onStatusChange,
     canView,
     canEdit,
 }: SprintKanbanBoardProps) => {
-    const [items, setItems] = useState<SprintItem[]>(sprints);
+    const { itemsByStatus, loading, hasMore, loadMore } =
+        useSprintsKanban(phaseId);
+
+    const [items, setItems] = useState<SprintItem[]>([]);
     const [activeId, setActiveId] = useState<string | null>(null);
     const [overId, setOverId] = useState<string | null>(null);
 
     useEffect(() => {
-        setItems(sprints);
-    }, [sprints]);
+        setItems(Object.values(itemsByStatus).flat());
+    }, [itemsByStatus]);
 
     const grouped = useMemo(() => {
         const map: Record<SprintStatus, SprintItem[]> = {
@@ -52,9 +69,9 @@ const SprintKanbanBoard = ({
             removed: [],
             onhold: [],
         };
-        for (const sprint of items) {
-            if (map[sprint.status]) {
-                map[sprint.status].push(sprint);
+        for (const item of items) {
+            if (map[item.status]) {
+                map[item.status].push(item);
             }
         }
         for (const key of Object.keys(map)) {
@@ -114,6 +131,8 @@ const SprintKanbanBoard = ({
 
             if (!fromStatus || !toStatus) return;
 
+            if (!isValidSprintTransition(fromStatus, toStatus)) return;
+
             const activeItemId = parseItemId(activeIdStr);
             const prevItems = items;
             const activeIndex = prevItems.findIndex(
@@ -139,7 +158,6 @@ const SprintKanbanBoard = ({
                 newItems.push(updatedItem);
             }
 
-            // Reassign sequences based on new position in each column
             const columns = [
                 "new",
                 "active",
@@ -159,7 +177,6 @@ const SprintKanbanBoard = ({
 
             setItems(newItems);
 
-            // Find new position of the moved item
             const movedIndex = newItems.findIndex((s) => s.id === activeItemId);
             const newSequence = newItems[movedIndex]?.sequence;
 
@@ -189,7 +206,22 @@ const SprintKanbanBoard = ({
                 setOverId(null);
             }}
             onDragOver={(event: DragOverEvent) => {
-                setOverId(event.over?.id as string | null);
+                const over = event.over;
+                if (!over || !activeId) {
+                    setOverId(null);
+                    return;
+                }
+                const fromStatus = findContainer(activeId);
+                const toStatus = findContainer(over.id as string);
+                if (
+                    fromStatus &&
+                    toStatus &&
+                    isValidSprintTransition(fromStatus, toStatus)
+                ) {
+                    setOverId(over.id as string);
+                } else {
+                    setOverId(null);
+                }
             }}
             onDragEnd={handleDragEnd}
             onDragCancel={() => {
@@ -211,6 +243,9 @@ const SprintKanbanBoard = ({
                             onEditRequest={onEditRequest}
                             canView={canView}
                             canEdit={canEdit}
+                            loading={loading[status]}
+                            hasMore={hasMore[status]}
+                            onLoadMore={() => loadMore(status)}
                         />
                     ))}
                 </div>

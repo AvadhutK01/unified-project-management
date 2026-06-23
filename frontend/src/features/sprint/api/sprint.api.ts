@@ -4,8 +4,21 @@ import type {
     UpdateSprintPayload,
 } from "../types/sprint.types";
 
-export const fetchSprints = async ({ phaseId }: { phaseId: string }) => {
+export const fetchSprints = async ({
+    phaseId,
+    page = 1,
+    limit = 10,
+    status,
+}: {
+    phaseId: string;
+    page?: number;
+    limit?: number;
+    status?: string;
+}) => {
     const params = new URLSearchParams({ phaseId });
+    params.set("page", String(page));
+    params.set("limit", String(limit));
+    if (status) params.set("status", status);
     const { data } = await api.get(`/sprints?${params.toString()}`);
     return data;
 };

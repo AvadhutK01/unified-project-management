@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+    useInfiniteQuery,
+    useMutation,
+    useQuery,
+    useQueryClient,
+} from "@tanstack/react-query";
 import {
     createWorkItem,
     fetchWorkItems,
@@ -15,10 +20,10 @@ import {
     deleteWorkItemMedia,
 } from "../api/workitem.api";
 
-export const useWorkItemsQuery = (sprintId: string | undefined) => {
+export const useWorkItemsQuery = (sprintId: string | undefined, page = 1) => {
     return useQuery({
-        queryKey: ["work-items", sprintId],
-        queryFn: () => fetchWorkItems({ sprintId: sprintId! }),
+        queryKey: ["work-items", sprintId, page],
+        queryFn: () => fetchWorkItems({ sprintId: sprintId!, page }),
         enabled: !!sprintId,
     });
 };
@@ -77,10 +82,22 @@ export const useUpdateWorkItemStatusMutation = () => {
     });
 };
 
-export const useWorkItemDiscussionsQuery = (workItemId: string | undefined) => {
-    return useQuery({
+export const useWorkItemDiscussionsInfiniteQuery = (
+    workItemId: string | undefined,
+    limit = 50,
+) => {
+    return useInfiniteQuery({
         queryKey: ["work-item-discussions", workItemId],
-        queryFn: () => fetchWorkItemDiscussions(workItemId!),
+        queryFn: ({ pageParam }) =>
+            fetchWorkItemDiscussions(workItemId!, pageParam, limit),
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) => {
+            const pagination = lastPage?.data?.pagination;
+            if (!pagination || pagination.page >= pagination.totalPages) {
+                return undefined;
+            }
+            return pagination.page + 1;
+        },
         enabled: !!workItemId,
     });
 };
@@ -109,18 +126,42 @@ export const useDeleteWorkItemDiscussionMutation = () => {
     });
 };
 
-export const useWorkItemActivitiesQuery = (workItemId: string | undefined) => {
-    return useQuery({
+export const useWorkItemActivitiesInfiniteQuery = (
+    workItemId: string | undefined,
+    limit = 50,
+) => {
+    return useInfiniteQuery({
         queryKey: ["work-item-activities", workItemId],
-        queryFn: () => fetchWorkItemActivities(workItemId!),
+        queryFn: ({ pageParam }) =>
+            fetchWorkItemActivities(workItemId!, pageParam, limit),
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) => {
+            const pagination = lastPage?.data?.pagination;
+            if (!pagination || pagination.page >= pagination.totalPages) {
+                return undefined;
+            }
+            return pagination.page + 1;
+        },
         enabled: !!workItemId,
     });
 };
 
-export const useWorkItemMediaQuery = (workItemId: string | undefined) => {
-    return useQuery({
+export const useWorkItemMediaInfiniteQuery = (
+    workItemId: string | undefined,
+    limit = 10,
+) => {
+    return useInfiniteQuery({
         queryKey: ["work-item-media", workItemId],
-        queryFn: () => fetchWorkItemMedia(workItemId!),
+        queryFn: ({ pageParam }) =>
+            fetchWorkItemMedia(workItemId!, pageParam, limit),
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) => {
+            const pagination = lastPage?.data?.pagination;
+            if (!pagination || pagination.page >= pagination.totalPages) {
+                return undefined;
+            }
+            return pagination.page + 1;
+        },
         enabled: !!workItemId,
     });
 };

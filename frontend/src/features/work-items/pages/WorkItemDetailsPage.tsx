@@ -9,13 +9,13 @@ import {
     useWorkItemQuery,
     useUpdateWorkItemStatusMutation,
     useDeleteWorkItemMutation,
-    useWorkItemDiscussionsQuery,
+    useWorkItemDiscussionsInfiniteQuery,
     useCreateWorkItemDiscussionMutation,
     useDeleteWorkItemDiscussionMutation,
-    useWorkItemMediaQuery,
+    useWorkItemMediaInfiniteQuery,
     useUploadWorkItemMediaMutation,
     useDeleteWorkItemMediaMutation,
-    useWorkItemActivitiesQuery,
+    useWorkItemActivitiesInfiniteQuery,
 } from "../hooks/useWorkItems";
 
 import WorkItemDetailsLoading from "../components/WorkItemDetailsLoading";
@@ -55,12 +55,27 @@ const WorkItemDetailsPage = () => {
         error: workItemError,
     } = useWorkItemQuery(workItemId);
 
-    const { data: discussionsRes, isLoading: isCommentsLoading } =
-        useWorkItemDiscussionsQuery(workItemId);
-    const { data: mediaRes, isLoading: isMediaLoading } =
-        useWorkItemMediaQuery(workItemId);
-    const { data: activitiesRes, isLoading: isActivitiesLoading } =
-        useWorkItemActivitiesQuery(workItemId);
+    const {
+        data: discussionsData,
+        isLoading: isCommentsLoading,
+        fetchNextPage: fetchNextDiscussionsPage,
+        hasNextPage: hasNextDiscussionsPage,
+        isFetchingNextPage: isFetchingNextDiscussionsPage,
+    } = useWorkItemDiscussionsInfiniteQuery(workItemId);
+    const {
+        data: mediaData,
+        isLoading: isMediaLoading,
+        fetchNextPage: fetchNextMediaPage,
+        hasNextPage: hasNextMediaPage,
+        isFetchingNextPage: isFetchingNextMediaPage,
+    } = useWorkItemMediaInfiniteQuery(workItemId);
+    const {
+        data: activitiesData,
+        isLoading: isActivitiesLoading,
+        fetchNextPage: fetchNextActivitiesPage,
+        hasNextPage: hasNextActivitiesPage,
+        isFetchingNextPage: isFetchingNextActivitiesPage,
+    } = useWorkItemActivitiesInfiniteQuery(workItemId);
 
     const { mutate: updateWorkItemStatus } = useUpdateWorkItemStatusMutation();
     const { mutate: deleteWorkItem } = useDeleteWorkItemMutation();
@@ -76,9 +91,12 @@ const WorkItemDetailsPage = () => {
 
     const phaseName = workItem?.phaseTitle || undefined;
     const sprintName = workItem?.sprintTitle || undefined;
-    const discussions = discussionsRes?.data?.data ?? [];
-    const mediaList = mediaRes?.data?.data ?? [];
-    const activities = activitiesRes?.data?.data ?? [];
+    const discussions =
+        discussionsData?.pages.flatMap((p) => p?.data?.data ?? []) ?? [];
+    const mediaList =
+        mediaData?.pages.flatMap((p) => p?.data?.data ?? []) ?? [];
+    const activities =
+        activitiesData?.pages.flatMap((p) => p?.data?.data ?? []) ?? [];
 
     const currentUserEmail = localStorage.getItem("email") || "";
 
@@ -315,6 +333,11 @@ const WorkItemDetailsPage = () => {
                                 isSubmittingComment={isSubmittingComment}
                                 onAddComment={handleAddComment}
                                 onDeleteComment={handleDeleteComment}
+                                fetchNextPage={fetchNextDiscussionsPage}
+                                hasNextPage={hasNextDiscussionsPage}
+                                isFetchingNextPage={
+                                    isFetchingNextDiscussionsPage
+                                }
                             />
                         </TabsContent>
 
@@ -330,6 +353,9 @@ const WorkItemDetailsPage = () => {
                                 fileInputRef={fileInputRef}
                                 onFileUpload={handleFileUpload}
                                 onDeleteMedia={handleDeleteMedia}
+                                fetchNextPage={fetchNextMediaPage}
+                                hasNextPage={hasNextMediaPage}
+                                isFetchingNextPage={isFetchingNextMediaPage}
                             />
                         </TabsContent>
 
@@ -340,6 +366,11 @@ const WorkItemDetailsPage = () => {
                             <WorkItemActivitiesTab
                                 activities={activities}
                                 isActivitiesLoading={isActivitiesLoading}
+                                fetchNextPage={fetchNextActivitiesPage}
+                                hasNextPage={hasNextActivitiesPage}
+                                isFetchingNextPage={
+                                    isFetchingNextActivitiesPage
+                                }
                             />
                         </TabsContent>
                     </Tabs>
