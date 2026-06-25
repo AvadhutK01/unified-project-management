@@ -109,7 +109,7 @@ describe("Organization Membership and Invitation Integration Tests", () => {
             name: `Test_Member_Role_${uniqueTime}`,
             organizationId: orgId,
         });
-        roleId = role.id;
+        roleId = role!.id;
 
         const otherRole = await createRole({
             name: `Test_Admin_Role_${uniqueTime}`,
@@ -125,21 +125,21 @@ describe("Organization Membership and Invitation Integration Tests", () => {
         ]);
 
         expect(invites.length).toBe(2);
-        expect(invites[0].email).toBe(user2Email);
-        expect(invites[0].status).toBe("pending");
+        expect(invites[0]!!.email).toBe(user2Email);
+        expect(invites[0]!!.status).toBe("pending");
 
-        invitationId = invites[0].id;
-        user3InvitationId = invites[1].id;
+        invitationId = invites[0]!.id;
+        user3InvitationId = invites[1]!!.id;
     });
 
     it("should fetch pending invitations for invited user", async () => {
         const result = await getInvitationsForUser(user2Id, 1, 10);
         expect(result.data.length).toBe(1);
-        expect(result.data[0].id).toBe(invitationId);
-        expect(result.data[0].status).toBe("pending");
-        expect(result.data[0].roleName).toBeDefined();
-        expect(result.data[0].invitedByName).toBeDefined();
-        expect(result.data[0].organizationName).toBeDefined();
+        expect(result.data[0]!!.id).toBe(invitationId);
+        expect(result.data[0]!.status).toBe("pending");
+        expect(result.data[0]!.roleName).toBeDefined();
+        expect(result.data[0]!.invitedByName).toBeDefined();
+        expect(result.data[0]!.organizationName).toBeDefined();
     });
 
     it("should allow a user to accept their pending invitation", async () => {
@@ -148,17 +148,18 @@ describe("Organization Membership and Invitation Integration Tests", () => {
             user2Id,
             "accepted",
         );
-        expect(updated.status).toBe("accepted");
+        expect(updated!.status).toBe("accepted");
 
         const members = await getOrganizationMembersList(
             orgId,
+            ownerId,
             "joined",
             1,
             10,
         );
         expect(members.data.length).toBe(1);
-        expect(members.data[0].memberId).toBe(user2Id);
-        expect(members.data[0].status).toBe("active");
+        expect(members.data[0]!!.memberId).toBe(user2Id);
+        expect(members.data[0]!.status).toBe("active");
     });
 
     it("should allow a user to reject their pending invitation", async () => {
@@ -167,17 +168,18 @@ describe("Organization Membership and Invitation Integration Tests", () => {
             user3Id,
             "rejected",
         );
-        expect(updated.status).toBe("rejected");
+        expect(updated!.status).toBe("rejected");
 
         const invites = await getOrganizationMembersList(
             orgId,
+            ownerId,
             "invited",
             1,
             10,
         );
         expect(invites.data.length).toBe(1);
-        expect(invites.data[0].memberId).toBe(user3Id);
-        expect(invites.data[0].status).toBe("rejected");
+        expect(invites.data[0]!!.memberId).toBe(user3Id);
+        expect(invites.data[0]!.status).toBe("rejected");
     });
 
     it("should successfully re-invite a rejected member", async () => {
@@ -187,35 +189,37 @@ describe("Organization Membership and Invitation Integration Tests", () => {
             user3Email,
             otherRoleId,
         );
-        expect(reInvited.status).toBe("pending");
-        expect(reInvited.roleId).toBe(otherRoleId);
+        expect(reInvited!.status).toBe("pending");
+        expect(reInvited!.roleId).toBe(otherRoleId);
 
         const invites = await getOrganizationMembersList(
             orgId,
+            ownerId,
             "invited",
             1,
             10,
         );
         expect(invites.data.length).toBe(1);
-        expect(invites.data[0].memberId).toBe(user3Id);
-        expect(invites.data[0].status).toBe("pending");
+        expect(invites.data[0]!!.memberId).toBe(user3Id);
+        expect(invites.data[0]!.status).toBe("pending");
     });
 
     it("should get member details successfully", async () => {
         const members = await getOrganizationMembersList(
             orgId,
+            ownerId,
             "joined",
             1,
             10,
         );
-        const memberId = members.data[0].id;
+        const memberId = members.data[0]!!.id;
 
         const details = await getMemberDetails(memberId);
-        expect(details.username).toBeDefined();
-        expect(details.email).toBe(user2Email);
-        expect(details.status).toBe("active");
-        expect(details.phoneNumber).toBeDefined();
-        expect(details.roleName).toBeDefined();
+        expect(details!.username).toBeDefined();
+        expect(details!.email).toBe(user2Email);
+        expect(details!.status).toBe("active");
+        expect(details!.phoneNumber).toBeDefined();
+        expect(details!.roleName).toBeDefined();
     });
 
     it("should successfully retrieve member role and permissions details", async () => {
@@ -234,35 +238,37 @@ describe("Organization Membership and Invitation Integration Tests", () => {
     it("should edit member role and status successfully", async () => {
         const members = await getOrganizationMembersList(
             orgId,
+            ownerId,
             "joined",
             1,
             10,
         );
-        const memberId = members.data[0].id;
+        const memberId = members.data[0]!!.id;
 
         const updated = await editMemberDetails(memberId, {
             roleId: otherRoleId,
             status: "onleave",
         });
 
-        expect(updated.status).toBe("onleave");
-        expect(updated.roleId).toBe(otherRoleId);
+        expect(updated!.status).toBe("onleave");
+        expect(updated!.roleId).toBe(otherRoleId);
 
         const details = await getMemberDetails(memberId);
-        expect(details.status).toBe("onleave");
+        expect(details!.status).toBe("onleave");
     });
 
     it("should soft delete member successfully", async () => {
         const members = await getOrganizationMembersList(
             orgId,
+            ownerId,
             "joined",
             1,
             10,
         );
-        const memberId = members.data[0].id;
+        const memberId = members.data[0]!!.id;
 
         const deleted = await removeMember(memberId);
-        expect(deleted.deletedAt).toBeDefined();
+        expect(deleted!.deletedAt).toBeDefined();
 
         await expect(getMemberDetails(memberId)).rejects.toThrow(
             "Member not found",
@@ -270,6 +276,7 @@ describe("Organization Membership and Invitation Integration Tests", () => {
 
         const updatedMembersList = await getOrganizationMembersList(
             orgId,
+            ownerId,
             "joined",
             1,
             10,
@@ -280,14 +287,15 @@ describe("Organization Membership and Invitation Integration Tests", () => {
     it("should successfully revoke a pending invitation", async () => {
         const result = await getOrganizationMembersList(
             orgId,
+            ownerId,
             "invited",
             1,
             10,
         );
-        const inviteId = result.data[0].id;
+        const inviteId = result.data[0]!!.id;
 
         const revoked = await revokeInvitation(inviteId);
-        expect(revoked.status).toBe("revoked");
+        expect(revoked!.status).toBe("revoked");
 
         await expect(revokeInvitation(inviteId)).rejects.toThrow(
             "Invitation is not in pending state",
@@ -319,6 +327,7 @@ describe("Organization Membership and Invitation Integration Tests", () => {
         // Search for invitations by username
         const invitedSearchResult = await getOrganizationMembersList(
             orgId,
+            ownerId,
             "invited",
             1,
             10,
@@ -343,6 +352,7 @@ describe("Organization Membership and Invitation Integration Tests", () => {
         // Search joined members by email
         const joinedSearchResult = await getOrganizationMembersList(
             orgId,
+            ownerId,
             "joined",
             1,
             10,
@@ -389,7 +399,7 @@ describe("Organization Membership and Invitation Integration Tests", () => {
             description: "Test project for members list",
         });
 
-        await addProjectMember(project.id, orgId, orgMember.id, ownerId);
+        await addProjectMember(project.id, orgId, orgMember!.id, ownerId);
 
         // Fetch paginated project members list
         const projectMembers = await getProjectMembersPaginated(
@@ -400,10 +410,10 @@ describe("Organization Membership and Invitation Integration Tests", () => {
         );
 
         expect(projectMembers.data.length).toBe(1);
-        expect(projectMembers.data[0].memberId).toBe(orgMember.id);
-        expect(projectMembers.data[0].userId).toBe(testUser.id);
-        expect(projectMembers.data[0].name).toBeDefined();
-        expect(projectMembers.data[0].email).toBe(testUserEmail);
+        expect(projectMembers.data[0]!!.memberId).toBe(orgMember!.id);
+        expect(projectMembers.data[0]!.userId).toBe(testUser.id);
+        expect(projectMembers.data[0]!!.name).toBeDefined();
+        expect(projectMembers.data[0]!.email).toBe(testUserEmail);
         expect(projectMembers.pagination.total).toBe(1);
         expect(projectMembers.pagination.page).toBe(1);
         expect(projectMembers.pagination.limit).toBe(10);

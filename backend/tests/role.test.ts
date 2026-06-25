@@ -86,15 +86,15 @@ describe("Roles and Permissions Flow Integration Tests", () => {
             organizationId: testOrgId,
         });
 
-        expect(role.id).toBeDefined();
+        expect(role!.id).toBeDefined();
         expect(role.name).toBe(roleName);
         expect(role.description).toBe("Test role for integration testing");
         expect(role.isActive).toBe(true);
         expect(role.permissions).toBeDefined();
         expect(role.permissions.length).toBe(2);
-        expect(role.permissions[0].id).toBe(createdPermissionIds[0]);
+        expect(role.permissions[0]!.id).toBe(createdPermissionIds[0]!);
 
-        createdRoleId = role.id;
+        createdRoleId = role!.id;
     });
 
     /**
@@ -108,7 +108,7 @@ describe("Roles and Permissions Flow Integration Tests", () => {
             organizationId: testOrgId,
         });
 
-        expect(role.id).toBeDefined();
+        expect(role!.id).toBeDefined();
         expect(role.name).toBe(roleName);
         expect(role.permissions).toBeDefined();
         expect(role.permissions.length).toBe(0);
@@ -141,7 +141,7 @@ describe("Roles and Permissions Flow Integration Tests", () => {
     it("should successfully retrieve a role by ID with its permissions", async () => {
         const role = await getRoleById(createdRoleId, testOrgId);
 
-        expect(role.id).toBe(createdRoleId);
+        expect(role!.id).toBe(createdRoleId);
         expect(role.name).toBeDefined();
         expect(role.permissions).toBeDefined();
         expect(Array.isArray(role.permissions)).toBe(true);
@@ -173,7 +173,7 @@ describe("Roles and Permissions Flow Integration Tests", () => {
         expect(result.pagination.totalPages).toBeGreaterThanOrEqual(0);
 
         if (result.data.length > 0) {
-            expect(result.data[0].permissions).toBeDefined();
+            expect(result.data[0]!.permissions).toBeDefined();
         }
     });
 
@@ -339,14 +339,14 @@ describe("Roles and Permissions Flow Integration Tests", () => {
     it("should successfully reassign permissions multiple times", async () => {
         const role = await createRole({
             name: `Multi_Reassign_Role_${Date.now()}`,
-            permissionIds: [createdPermissionIds[0]],
+            permissionIds: [createdPermissionIds[0]!],
             organizationId: testOrgId,
         });
 
         expect(role.permissions.length).toBe(1);
 
         const updated1 = await updateRole(
-            role.id,
+            role!.id,
             {
                 permissionIds: createdPermissionIds.slice(0, 2),
             },
@@ -355,14 +355,14 @@ describe("Roles and Permissions Flow Integration Tests", () => {
         expect(updated1.permissions.length).toBe(2);
 
         const updated2 = await updateRole(
-            role.id,
+            role!.id,
             {
-                permissionIds: [createdPermissionIds[2]],
+                permissionIds: [createdPermissionIds[2]!],
             },
             testOrgId,
         );
         expect(updated2.permissions.length).toBe(1);
-        expect(updated2.permissions[0].id).toBe(createdPermissionIds[2]);
+        expect(updated2.permissions[0]!.id).toBe(createdPermissionIds[2]!);
     });
 
     /**

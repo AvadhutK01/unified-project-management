@@ -84,7 +84,7 @@ describe("Sprint Media Integration Tests", () => {
                 name: "Developer",
             })
             .returning();
-        roleId = role[0].id;
+        roleId = role[0]!.id;
 
         // 5. Create organization members
         const [ownerMember] = await db
@@ -96,7 +96,7 @@ describe("Sprint Media Integration Tests", () => {
                 status: "active",
             })
             .returning();
-        ownerOrgMemberId = ownerMember.id;
+        ownerOrgMemberId = ownerMember!.id;
 
         const [user2Member] = await db
             .insert(organizationMembers)
@@ -107,7 +107,7 @@ describe("Sprint Media Integration Tests", () => {
                 status: "active",
             })
             .returning();
-        user2OrgMemberId = user2Member.id;
+        user2OrgMemberId = user2Member!.id;
 
         // 6. Create project, phase and sprint
         const project = await createProject({
@@ -155,23 +155,23 @@ describe("Sprint Media Integration Tests", () => {
             mockFile,
         );
 
-        expect(result.id).toBeDefined();
-        expect(result.name).toBe("sprint_design.pdf");
-        expect(result.fileType).toBe("application/pdf");
-        expect(result.fileSize).toBe(12);
-        expect(result.url).toContain("sprints/");
+        expect(result!.id).toBeDefined();
+        expect(result!.name).toBe("sprint_design.pdf");
+        expect(result!.fileType).toBe("application/pdf");
+        expect(result!.fileSize).toBe(12);
+        expect(result!.url).toContain("sprints/");
 
-        mediaId = result.id;
+        mediaId = result!.id;
     });
 
     it("should fetch a paginated list of sprint media attachments", async () => {
         const list = await getSprintMediaList(sprintId, orgId, 1, 10);
 
         expect(list.data.length).toBe(1);
-        expect(list.data[0].id).toBe(mediaId);
-        expect(list.data[0].name).toBe("sprint_design.pdf");
-        expect(list.data[0].uploaderName).toBeDefined();
-        expect(list.data[0].uploaderEmail).toBeDefined();
+        expect(list.data[0]!!.id).toBe(mediaId);
+        expect(list.data[0]!!.name).toBe("sprint_design.pdf");
+        expect(list.data[0]!!.uploaderName).toBeDefined();
+        expect(list.data[0]!!.uploaderEmail).toBeDefined();
     });
 
     it("should return correct matches on search query", async () => {
@@ -204,7 +204,7 @@ describe("Sprint Media Integration Tests", () => {
 
     it("should successfully delete a sprint media attachment", async () => {
         const deleted = await deleteSprintMedia(mediaId, ownerId, orgId);
-        expect(deleted.deletedAt).toBeDefined();
+        expect(deleted!.deletedAt).toBeDefined();
 
         const list = await getSprintMediaList(sprintId, orgId, 1, 10);
         expect(list.data.length).toBe(0);

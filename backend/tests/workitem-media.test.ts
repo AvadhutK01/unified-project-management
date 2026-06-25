@@ -86,7 +86,7 @@ describe("Workitem Media Integration Tests", () => {
                 name: "Developer",
             })
             .returning();
-        roleId = role[0].id;
+        roleId = role[0]!.id;
 
         // 5. Get existing owner member (created by createOrganization)
         const ownerMember = await findMemberByOrgAndUserId(orgId, ownerId);
@@ -101,7 +101,7 @@ describe("Workitem Media Integration Tests", () => {
                 status: "active",
             })
             .returning();
-        user2OrgMemberId = user2Member.id;
+        user2OrgMemberId = user2Member!.id;
 
         // 6. Create project, phase, sprint and workitem
         const project = await createProject({
@@ -157,23 +157,23 @@ describe("Workitem Media Integration Tests", () => {
             mockFile,
         );
 
-        expect(result.id).toBeDefined();
-        expect(result.name).toBe("workitem_design.pdf");
-        expect(result.fileType).toBe("application/pdf");
-        expect(result.fileSize).toBe(12);
-        expect(result.url).toContain("workitems/");
+        expect(result!.id).toBeDefined();
+        expect(result!.name).toBe("workitem_design.pdf");
+        expect(result!.fileType).toBe("application/pdf");
+        expect(result!.fileSize).toBe(12);
+        expect(result!.url).toContain("workitems/");
 
-        mediaId = result.id;
+        mediaId = result!.id;
     });
 
     it("should fetch a paginated list of workitem media attachments", async () => {
         const list = await getWorkitemMediaList(workitemId, orgId, 1, 10);
 
         expect(list.data.length).toBe(1);
-        expect(list.data[0].id).toBe(mediaId);
-        expect(list.data[0].name).toBe("workitem_design.pdf");
-        expect(list.data[0].uploaderName).toBeDefined();
-        expect(list.data[0].uploaderEmail).toBeDefined();
+        expect(list.data[0]!!.id).toBe(mediaId);
+        expect(list.data[0]!!.name).toBe("workitem_design.pdf");
+        expect(list.data[0]!!.uploaderName).toBeDefined();
+        expect(list.data[0]!!.uploaderEmail).toBeDefined();
     });
 
     it("should return correct matches on search query", async () => {
@@ -206,7 +206,7 @@ describe("Workitem Media Integration Tests", () => {
 
     it("should successfully delete a workitem media attachment", async () => {
         const deleted = await deleteWorkitemMedia(mediaId, ownerId, orgId);
-        expect(deleted.deletedAt).toBeDefined();
+        expect(deleted!.deletedAt).toBeDefined();
 
         const list = await getWorkitemMediaList(workitemId, orgId, 1, 10);
         expect(list.data.length).toBe(0);

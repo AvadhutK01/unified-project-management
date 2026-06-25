@@ -104,23 +104,23 @@ describe("Workitem Flow Integration Tests", () => {
             .values({
                 organizationId,
                 memberId: ownerId,
-                roleId: role.id,
+                roleId: role!.id,
                 status: "active",
             })
             .returning();
-        ownerOrgMemberId = ownerMember.id;
+        ownerOrgMemberId = ownerMember!.id;
 
         await db.insert(organizationMembers).values({
             organizationId,
             memberId: memberId,
-            roleId: role.id,
+            roleId: role!.id,
             status: "active",
         });
 
         await db.insert(organizationMembers).values({
             organizationId,
             memberId: nonMemberId,
-            roleId: role.id,
+            roleId: role!.id,
             status: "active",
         });
 
@@ -252,7 +252,7 @@ describe("Workitem Flow Integration Tests", () => {
         );
 
         expect(updated.id).toBe(createdWorkitemId);
-        expect(updated.status).toBe("active");
+        expect(updated!.status).toBe("active");
     });
 
     it("should prevent updating task status to resolved", async () => {
@@ -293,6 +293,6 @@ describe("Workitem Flow Integration Tests", () => {
         );
 
         expect(deleted.id).toBe(createdWorkitemId);
-        expect(deleted.deletedAt).not.toBeNull();
+        expect(deleted!.deletedAt).not.toBeNull();
     });
 });

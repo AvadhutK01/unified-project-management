@@ -359,7 +359,7 @@ describe("Organization Flow Integration Tests", () => {
         await createMember({
             organizationId: otherOrg.id,
             memberId: ownerId,
-            roleId: testRole.id,
+            roleId: testRole!.id,
             status: "active",
         });
 

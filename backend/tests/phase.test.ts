@@ -104,16 +104,16 @@ describe("Phase Flow Integration Tests", () => {
             .values({
                 organizationId,
                 memberId: ownerId,
-                roleId: role.id,
+                roleId: role!.id,
                 status: "active",
             })
             .returning();
-        ownerOrgMemberId = ownerMember.id;
+        ownerOrgMemberId = ownerMember!.id;
 
         await db.insert(organizationMembers).values({
             organizationId,
             memberId: memberId,
-            roleId: role.id,
+            roleId: role!.id,
             status: "active",
         });
 
@@ -407,7 +407,7 @@ describe("Phase Flow Integration Tests", () => {
         expect(updated.name).toBe("Phase One Updated");
         expect(updated.description).toBe("Updated description");
         expect(updated.type).toBe("testing");
-        expect(updated.status).toBe("started");
+        expect(updated!.status).toBe("started");
     });
 
     /**
@@ -516,7 +516,7 @@ describe("Phase Flow Integration Tests", () => {
             ownerId,
         );
         expect(deleted.id).toBe(createdPhaseId);
-        expect(deleted.deletedAt).not.toBeNull();
+        expect(deleted!.deletedAt).not.toBeNull();
 
         await expect(
             getPhaseById(createdPhaseId, organizationId, ownerId),

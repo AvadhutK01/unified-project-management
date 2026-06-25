@@ -87,7 +87,7 @@ describe("Workitem Discussion Integration Tests", () => {
                 name: "Developer",
             })
             .returning();
-        roleId = role[0].id;
+        roleId = role[0]!.id;
 
         // 5. Get existing owner member (created by createOrganization)
         const ownerMember = await findMemberByOrgAndUserId(orgId, ownerId);
@@ -102,7 +102,7 @@ describe("Workitem Discussion Integration Tests", () => {
                 status: "active",
             })
             .returning();
-        user2OrgMemberId = user2Member.id;
+        user2OrgMemberId = user2Member!.id;
 
         // 6. Create project, phase, sprint and workitem
         const project = await createProject({
@@ -147,13 +147,13 @@ describe("Workitem Discussion Integration Tests", () => {
             [user2OrgMemberId],
         );
 
-        expect(result.id).toBeDefined();
-        expect(result.comment).toBe(commentText);
-        expect(result.memberId).toBe(ownerOrgMemberId);
-        expect(result.tags.length).toBe(1);
-        expect(result.tags[0].memberId).toBe(user2OrgMemberId);
+        expect(result!.id).toBeDefined();
+        expect(result!.comment).toBe(commentText);
+        expect(result!.memberId).toBe(ownerOrgMemberId);
+        expect(result!.tags.length).toBe(1);
+        expect(result!.tags[0]!.memberId).toBe(user2OrgMemberId);
 
-        commentId = result.id;
+        commentId = result!.id;
     });
 
     it("should reject discussion comment creation if a tagged member does not belong to the organization", async () => {
@@ -172,15 +172,17 @@ describe("Workitem Discussion Integration Tests", () => {
         const list = await getWorkitemDiscussions(workitemId, orgId, 1, 10);
 
         expect(list.data.length).toBe(1);
-        expect(list.data[0].id).toBe(commentId);
-        expect(list.data[0].comment).toBe(
+        expect(list.data[0]!!.id).toBe(commentId);
+        expect(list.data[0]!!.comment).toBe(
             "Hello team, let's look at this workitem requirement!",
         );
-        expect(list.data[0].authorName).toBeDefined();
-        expect(list.data[0].authorEmail).toBeDefined();
-        expect(list.data[0].taggedMembers.length).toBe(1);
-        expect(list.data[0].taggedMembers[0].memberId).toBe(user2OrgMemberId);
-        expect(list.data[0].taggedMembers[0].email).toBe(user2Email);
+        expect(list.data[0]!!.authorName).toBeDefined();
+        expect(list.data[0]!!.authorEmail).toBeDefined();
+        expect(list.data[0]!!.taggedMembers.length).toBe(1);
+        expect(list.data[0]!!.taggedMembers[0]!.memberId).toBe(
+            user2OrgMemberId,
+        );
+        expect(list.data[0]!!.taggedMembers[0]!.email).toBe(user2Email);
     });
 
     it("should successfully update discussion comment text and tagging", async () => {
@@ -193,12 +195,12 @@ describe("Workitem Discussion Integration Tests", () => {
             [], // Clear tags
         );
 
-        expect(result.comment).toBe(updatedText);
-        expect(result.tags.length).toBe(0);
+        expect(result!.comment).toBe(updatedText);
+        expect(result!.tags.length).toBe(0);
 
         const list = await getWorkitemDiscussions(workitemId, orgId, 1, 10);
-        expect(list.data[0].comment).toBe(updatedText);
-        expect(list.data[0].taggedMembers.length).toBe(0);
+        expect(list.data[0]!!.comment).toBe(updatedText);
+        expect(list.data[0]!!.taggedMembers.length).toBe(0);
     });
 
     it("should block update attempt by a user who is not the author", async () => {
@@ -228,7 +230,7 @@ describe("Workitem Discussion Integration Tests", () => {
             ownerId,
             orgId,
         );
-        expect(deleted.deletedAt).toBeDefined();
+        expect(deleted!.deletedAt).toBeDefined();
 
         const list = await getWorkitemDiscussions(workitemId, orgId, 1, 10);
         expect(list.data.length).toBe(0);

@@ -104,23 +104,23 @@ describe("Sprint Flow Integration Tests", () => {
             .values({
                 organizationId,
                 memberId: ownerId,
-                roleId: role.id,
+                roleId: role!.id,
                 status: "active",
             })
             .returning();
-        ownerOrgMemberId = ownerMember.id;
+        ownerOrgMemberId = ownerMember!.id;
 
         await db.insert(organizationMembers).values({
             organizationId,
             memberId: memberId,
-            roleId: role.id,
+            roleId: role!.id,
             status: "active",
         });
 
         await db.insert(organizationMembers).values({
             organizationId,
             memberId: nonMemberId,
-            roleId: role.id,
+            roleId: role!.id,
             status: "active",
         });
 
@@ -325,7 +325,7 @@ describe("Sprint Flow Integration Tests", () => {
         );
 
         expect(updated.id).toBe(createdSprintId);
-        expect(updated.status).toBe("active");
+        expect(updated!.status).toBe("active");
     });
 
     it("should retrieve activity logs for a sprint and verify automated descriptions", async () => {
@@ -384,7 +384,7 @@ describe("Sprint Flow Integration Tests", () => {
             ownerId,
         );
         expect(deleted.id).toBe(createdSprintId);
-        expect(deleted.deletedAt).not.toBeNull();
+        expect(deleted!.deletedAt).not.toBeNull();
 
         await expect(
             getSprintById(createdSprintId, organizationId, ownerId),

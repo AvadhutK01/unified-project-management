@@ -345,7 +345,7 @@ describe("User Flow Integration Tests", () => {
             password: "NewPassword@123",
         });
 
-        expect(result.id).toBeDefined();
+        expect(result!.id).toBeDefined();
 
         const loginResult = await loginUser({
             email: emailH,

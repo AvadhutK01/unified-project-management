@@ -115,33 +115,33 @@ describe("Project Flow Integration Tests", () => {
             .values({
                 organizationId,
                 memberId: ownerId,
-                roleId: role.id,
+                roleId: role!.id,
                 status: "active",
             })
             .returning();
-        ownerOrgMemberId = ownerMember.id;
+        ownerOrgMemberId = ownerMember!.id;
 
         const [member1Member] = await db
             .insert(organizationMembers)
             .values({
                 organizationId,
                 memberId: memberId1,
-                roleId: role.id,
+                roleId: role!.id,
                 status: "active",
             })
             .returning();
-        member1OrgMemberId = member1Member.id;
+        member1OrgMemberId = member1Member!.id;
 
         const [nonMemberMember] = await db
             .insert(organizationMembers)
             .values({
                 organizationId,
                 memberId: nonMemberId,
-                roleId: role.id,
+                roleId: role!.id,
                 status: "active",
             })
             .returning();
-        nonMemberOrgMemberId = nonMemberMember.id;
+        nonMemberOrgMemberId = nonMemberMember!.id;
     }, 30000);
 
     /**
@@ -173,7 +173,7 @@ describe("Project Flow Integration Tests", () => {
             ownerId,
         );
         expect(members.length).toBe(1);
-        expect(members[0].organizationMemberId).toBe(member1OrgMemberId);
+        expect(members[0]!.organizationMemberId).toBe(member1OrgMemberId);
     });
 
     /**
@@ -334,7 +334,7 @@ describe("Project Flow Integration Tests", () => {
             ownerId,
         );
         expect(members.length).toBe(1);
-        expect(members[0].organizationMemberId).toBe(ownerOrgMemberId);
+        expect(members[0]!.organizationMemberId).toBe(ownerOrgMemberId);
     }, 20000);
 
     /**
