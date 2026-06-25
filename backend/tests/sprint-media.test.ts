@@ -87,16 +87,12 @@ describe("Sprint Media Integration Tests", () => {
         roleId = role[0]!.id;
 
         // 5. Create organization members
-        const [ownerMember] = await db
-            .insert(organizationMembers)
-            .values({
-                organizationId: orgId,
-                memberId: ownerId,
-                roleId: roleId,
-                status: "active",
-            })
-            .returning();
-        ownerOrgMemberId = ownerMember!.id;
+        const allOrgMembersForOwner = await db
+            .select()
+            .from(organizationMembers);
+        ownerOrgMemberId = allOrgMembersForOwner.find(
+            (m) => m.memberId === ownerId,
+        )!.id;
 
         const [user2Member] = await db
             .insert(organizationMembers)

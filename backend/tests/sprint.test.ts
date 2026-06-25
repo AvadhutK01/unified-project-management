@@ -99,16 +99,12 @@ describe("Sprint Flow Integration Tests", () => {
             .values({ organizationId, name: "Dev" })
             .returning();
 
-        const [ownerMember] = await db
-            .insert(organizationMembers)
-            .values({
-                organizationId,
-                memberId: ownerId,
-                roleId: role!.id,
-                status: "active",
-            })
-            .returning();
-        ownerOrgMemberId = ownerMember!.id;
+        const allOrgMembersForOwner = await db
+            .select()
+            .from(organizationMembers);
+        ownerOrgMemberId = allOrgMembersForOwner.find(
+            (m) => m.memberId === ownerId,
+        )!.id;
 
         await db.insert(organizationMembers).values({
             organizationId,
