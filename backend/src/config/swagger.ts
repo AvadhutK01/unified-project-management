@@ -3130,6 +3130,173 @@ const swaggerDocument = {
                 },
             },
         },
+        "/reports/project-overview": {
+            get: {
+                summary: "Get project overview report",
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        name: "org_id",
+                        in: "header",
+                        required: true,
+                        schema: { type: "string", format: "uuid" },
+                        description: "Organization ID",
+                    },
+                    {
+                        name: "startDate",
+                        in: "query",
+                        required: true,
+                        schema: { type: "string", format: "date-time" },
+                        description: "Start date (ISO datetime)",
+                    },
+                    {
+                        name: "endDate",
+                        in: "query",
+                        required: true,
+                        schema: { type: "string", format: "date-time" },
+                        description: "End date (ISO datetime)",
+                    },
+                ],
+                responses: {
+                    200: { description: "Project overview report" },
+                    400: { description: "Bad Request" },
+                    401: { description: "Unauthorized" },
+                    403: { description: "Forbidden" },
+                },
+            },
+        },
+        "/reports/sprint-performance": {
+            get: {
+                summary: "Get sprint performance report",
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        name: "org_id",
+                        in: "header",
+                        required: true,
+                        schema: { type: "string", format: "uuid" },
+                        description: "Organization ID",
+                    },
+                    {
+                        name: "startDate",
+                        in: "query",
+                        required: true,
+                        schema: { type: "string", format: "date-time" },
+                    },
+                    {
+                        name: "endDate",
+                        in: "query",
+                        required: true,
+                        schema: { type: "string", format: "date-time" },
+                    },
+                ],
+                responses: {
+                    200: { description: "Sprint performance report" },
+                    400: { description: "Bad Request" },
+                    401: { description: "Unauthorized" },
+                    403: { description: "Forbidden" },
+                },
+            },
+        },
+        "/reports/workitem-analytics": {
+            get: {
+                summary: "Get workitem analytics report",
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        name: "org_id",
+                        in: "header",
+                        required: true,
+                        schema: { type: "string", format: "uuid" },
+                        description: "Organization ID",
+                    },
+                    {
+                        name: "startDate",
+                        in: "query",
+                        required: true,
+                        schema: { type: "string", format: "date-time" },
+                    },
+                    {
+                        name: "endDate",
+                        in: "query",
+                        required: true,
+                        schema: { type: "string", format: "date-time" },
+                    },
+                ],
+                responses: {
+                    200: { description: "Workitem analytics report" },
+                    400: { description: "Bad Request" },
+                    401: { description: "Unauthorized" },
+                    403: { description: "Forbidden" },
+                },
+            },
+        },
+        "/reports/member-activity": {
+            get: {
+                summary: "Get member activity report",
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        name: "org_id",
+                        in: "header",
+                        required: true,
+                        schema: { type: "string", format: "uuid" },
+                        description: "Organization ID",
+                    },
+                    {
+                        name: "startDate",
+                        in: "query",
+                        required: true,
+                        schema: { type: "string", format: "date-time" },
+                    },
+                    {
+                        name: "endDate",
+                        in: "query",
+                        required: true,
+                        schema: { type: "string", format: "date-time" },
+                    },
+                ],
+                responses: {
+                    200: { description: "Member activity report" },
+                    400: { description: "Bad Request" },
+                    401: { description: "Unauthorized" },
+                    403: { description: "Forbidden" },
+                },
+            },
+        },
+        "/reports/resource-allocation": {
+            get: {
+                summary: "Get resource allocation report",
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        name: "org_id",
+                        in: "header",
+                        required: true,
+                        schema: { type: "string", format: "uuid" },
+                        description: "Organization ID",
+                    },
+                    {
+                        name: "startDate",
+                        in: "query",
+                        required: true,
+                        schema: { type: "string", format: "date-time" },
+                    },
+                    {
+                        name: "endDate",
+                        in: "query",
+                        required: true,
+                        schema: { type: "string", format: "date-time" },
+                    },
+                ],
+                responses: {
+                    200: { description: "Resource allocation report" },
+                    400: { description: "Bad Request" },
+                    401: { description: "Unauthorized" },
+                    403: { description: "Forbidden" },
+                },
+            },
+        },
     },
 };
 
