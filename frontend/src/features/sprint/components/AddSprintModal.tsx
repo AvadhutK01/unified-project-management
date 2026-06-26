@@ -68,6 +68,10 @@ const AddSprintModal = ({ onAddSprint, canAdd }: AddSprintModalProps) => {
         },
     });
 
+    const startDate = form.watch("startDate");
+    const [startDateOpen, setStartDateOpen] = useState(false);
+    const [endDateOpen, setEndDateOpen] = useState(false);
+
     const onSubmit = (data: SprintFormValues) => {
         if (!phaseId) return;
         const payload = convertFormToPayload(data, phaseId);
@@ -143,7 +147,10 @@ const AddSprintModal = ({ onAddSprint, canAdd }: AddSprintModalProps) => {
                                     render={({ field }) => (
                                         <FormItem className="flex flex-col flex-1">
                                             <FormLabel>Start Date</FormLabel>
-                                            <Popover>
+                                            <Popover
+                                                open={startDateOpen}
+                                                onOpenChange={setStartDateOpen}
+                                            >
                                                 <PopoverTrigger asChild>
                                                     <FormControl>
                                                         <button
@@ -168,9 +175,17 @@ const AddSprintModal = ({ onAddSprint, canAdd }: AddSprintModalProps) => {
                                                     <Calendar
                                                         mode="single"
                                                         selected={field.value}
-                                                        onSelect={
-                                                            field.onChange
-                                                        }
+                                                        onSelect={(date) => {
+                                                            field.onChange(
+                                                                date,
+                                                            );
+                                                            setStartDateOpen(
+                                                                false,
+                                                            );
+                                                        }}
+                                                        disabled={{
+                                                            before: new Date(),
+                                                        }}
                                                         initialFocus
                                                     />
                                                 </PopoverContent>
@@ -186,7 +201,10 @@ const AddSprintModal = ({ onAddSprint, canAdd }: AddSprintModalProps) => {
                                     render={({ field }) => (
                                         <FormItem className="flex flex-col flex-1">
                                             <FormLabel>End Date</FormLabel>
-                                            <Popover>
+                                            <Popover
+                                                open={endDateOpen}
+                                                onOpenChange={setEndDateOpen}
+                                            >
                                                 <PopoverTrigger asChild>
                                                     <FormControl>
                                                         <button
@@ -211,9 +229,17 @@ const AddSprintModal = ({ onAddSprint, canAdd }: AddSprintModalProps) => {
                                                     <Calendar
                                                         mode="single"
                                                         selected={field.value}
-                                                        onSelect={
-                                                            field.onChange
-                                                        }
+                                                        onSelect={(date) => {
+                                                            field.onChange(
+                                                                date,
+                                                            );
+                                                            setEndDateOpen(
+                                                                false,
+                                                            );
+                                                        }}
+                                                        disabled={{
+                                                            before: startDate,
+                                                        }}
                                                         initialFocus
                                                     />
                                                 </PopoverContent>

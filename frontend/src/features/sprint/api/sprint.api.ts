@@ -74,12 +74,15 @@ export const fetchSprintDiscussions = async (
 export const createSprintDiscussion = async ({
     sprintId,
     comment,
+    taggedMemberIds,
 }: {
     sprintId: string;
     comment: string;
+    taggedMemberIds?: string[];
 }) => {
     const { data } = await api.post(`/sprints/${sprintId}/discussions`, {
         comment,
+        taggedMemberIds,
     });
     return data;
 };

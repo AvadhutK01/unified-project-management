@@ -15,11 +15,13 @@ export const fetchMembers = async ({
     page = 1,
     limit = 10,
     search = "",
+    isForProject,
 }: {
     type: string;
     page?: number;
     limit?: number;
     search?: string;
+    isForProject?: boolean;
 }) => {
     const params = new URLSearchParams({
         type,
@@ -29,6 +31,10 @@ export const fetchMembers = async ({
 
     if (search) {
         params.set("search", search);
+    }
+
+    if (isForProject) {
+        params.set("isForProject", String(isForProject));
     }
 
     const { data } = await api.get(

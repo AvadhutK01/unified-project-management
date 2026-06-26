@@ -2,11 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Loader2, Send, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getInitials, getAvatarColorClass } from "../utils/sprint.utils";
-import type { SprintCommentsTabProps } from "../types/sprint.types";
+import MentionInput from "@/components/common/MentionInput";
+import MentionText from "@/components/common/MentionText";
+import type {
+    SprintCommentsTabProps,
+    SprintCommentsTabMention,
+} from "../types/sprint.types";
 
 const SprintCommentsTab = ({
     sprintId,
@@ -19,8 +23,12 @@ const SprintCommentsTab = ({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    users,
 }: SprintCommentsTabProps) => {
     const [commentText, setCommentText] = useState("");
+    const [commentMentions, setCommentMentions] = useState<
+        SprintCommentsTabMention[]
+    >([]);
     const sentinelRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -44,8 +52,9 @@ const SprintCommentsTab = ({
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!sprintId || !commentText.trim()) return;
-        onAddComment(commentText.trim());
+        onAddComment(commentText.trim(), commentMentions);
         setCommentText("");
+        setCommentMentions([]);
     };
 
     return (
@@ -69,10 +78,14 @@ const SprintCommentsTab = ({
                     </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 space-y-3">
-                    <Textarea
+                    <MentionInput
+                        users={users}
                         value={commentText}
-                        onChange={(e) => setCommentText(e.target.value)}
-                        placeholder="Write a comment..."
+                        onChange={(text, mentions) => {
+                            setCommentText(text);
+                            setCommentMentions(mentions);
+                        }}
+                        placeholder="Write a comment... (Type @ to mention)"
                         className="min-h-[80px] bg-secondary/20 border-border/40 focus-visible:ring-1 focus-visible:ring-primary/40 rounded-xl"
                     />
                     <div className="flex justify-end">
@@ -154,9 +167,10 @@ const SprintCommentsTab = ({
                                             )}
                                         </div>
                                     </div>
-                                    <p className="text-sm text-foreground/90 mt-1 whitespace-pre-wrap leading-relaxed">
-                                        {d.comment}
-                                    </p>
+                                    <MentionText
+                                        text={d.comment}
+                                        className="text-sm text-foreground/90 mt-1"
+                                    />
                                 </div>
                             </div>
                         );

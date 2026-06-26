@@ -19,6 +19,7 @@ import {
 } from "../hooks/useWorkItems";
 
 import WorkItemDetailsLoading from "../components/WorkItemDetailsLoading";
+import { useProjectMembersQuery } from "../../projects/hooks/useProjects";
 import WorkItemDetailsError from "../components/WorkItemDetailsError";
 import WorkItemDetailsHeader from "../components/WorkItemDetailsHeader";
 import WorkItemOverviewTab from "../components/WorkItemOverviewTab";
@@ -54,6 +55,8 @@ const WorkItemDetailsPage = () => {
         isLoading: isWorkItemLoading,
         error: workItemError,
     } = useWorkItemQuery(workItemId);
+
+    const { data: projectMembersRes } = useProjectMembersQuery(projectId);
 
     const {
         data: discussionsData,
@@ -97,6 +100,14 @@ const WorkItemDetailsPage = () => {
         mediaData?.pages.flatMap((p) => p?.data?.data ?? []) ?? [];
     const activities =
         activitiesData?.pages.flatMap((p) => p?.data?.data ?? []) ?? [];
+
+    const users = useMemo(() => {
+        const members = projectMembersRes?.data?.data ?? [];
+        return members.map((m: { memberId: string; name: string }) => ({
+            id: m.memberId,
+            name: m.name,
+        }));
+    }, [projectMembersRes]);
 
     const currentUserEmail = localStorage.getItem("email") || "";
 
@@ -144,10 +155,14 @@ const WorkItemDetailsPage = () => {
         });
     };
 
-    const handleAddComment = (comment: string) => {
+    const handleAddComment = (
+        comment: string,
+        mentions?: { id: string; name: string }[],
+    ) => {
         if (!workItemId) return;
+        const taggedMemberIds = mentions?.map((m) => m.id) ?? [];
         createDiscussion(
-            { id: workItemId, comment },
+            { id: workItemId, comment, taggedMemberIds },
             {
                 onSuccess: () => {
                     toast.success("Comment added successfully");
@@ -338,6 +353,7 @@ const WorkItemDetailsPage = () => {
                                 isFetchingNextPage={
                                     isFetchingNextDiscussionsPage
                                 }
+                                users={users}
                             />
                         </TabsContent>
 

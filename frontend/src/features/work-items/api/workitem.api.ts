@@ -125,12 +125,15 @@ export const fetchWorkItemDiscussions = async (
 export const createWorkItemDiscussion = async ({
     id,
     comment,
+    taggedMemberIds,
 }: {
     id: string;
     comment: string;
+    taggedMemberIds?: string[];
 }) => {
     const { data } = await api.post(`/workitems/${id}/discussions`, {
         comment,
+        taggedMemberIds,
     });
     return data;
 };

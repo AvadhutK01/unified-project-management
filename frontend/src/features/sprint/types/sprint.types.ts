@@ -87,17 +87,26 @@ export interface SprintOverviewTabProps {
     sprint: SprintItem;
 }
 
+export type SprintCommentsTabMention = {
+    id: string;
+    name: string;
+};
+
 export interface SprintCommentsTabProps {
     sprintId: string;
     discussions: any[];
     isCommentsLoading: boolean;
     currentUserEmail: string;
     isSubmittingComment: boolean;
-    onAddComment: (comment: string) => void;
+    onAddComment: (
+        comment: string,
+        mentions?: SprintCommentsTabMention[],
+    ) => void;
     onDeleteComment: (discussionId: string) => void;
     fetchNextPage: () => void;
     hasNextPage: boolean;
     isFetchingNextPage: boolean;
+    users: { id: string; name: string }[];
 }
 
 export interface SprintAttachmentsTabProps {

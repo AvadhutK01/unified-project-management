@@ -104,6 +104,9 @@ const EditPhaseModal = ({ phase, open, onOpenChange }: EditPhaseModalProps) => {
     }, [phase, form]);
 
     const watchType = form.watch("type");
+    const startDate = form.watch("startDate");
+    const [startDateOpen, setStartDateOpen] = useState(false);
+    const [endDateOpen, setEndDateOpen] = useState(false);
 
     const onSubmit = (data: PhaseFormValues) => {
         if (!phase?.id) return;
@@ -310,7 +313,12 @@ const EditPhaseModal = ({ phase, open, onOpenChange }: EditPhaseModalProps) => {
                                                 <FormLabel>
                                                     Start Date
                                                 </FormLabel>
-                                                <Popover>
+                                                <Popover
+                                                    open={startDateOpen}
+                                                    onOpenChange={
+                                                        setStartDateOpen
+                                                    }
+                                                >
                                                     <PopoverTrigger asChild>
                                                         <FormControl>
                                                             <button
@@ -337,9 +345,19 @@ const EditPhaseModal = ({ phase, open, onOpenChange }: EditPhaseModalProps) => {
                                                             selected={
                                                                 field.value
                                                             }
-                                                            onSelect={
-                                                                field.onChange
-                                                            }
+                                                            onSelect={(
+                                                                date,
+                                                            ) => {
+                                                                field.onChange(
+                                                                    date,
+                                                                );
+                                                                setStartDateOpen(
+                                                                    false,
+                                                                );
+                                                            }}
+                                                            disabled={{
+                                                                before: new Date(),
+                                                            }}
                                                             initialFocus
                                                         />
                                                     </PopoverContent>
@@ -355,7 +373,12 @@ const EditPhaseModal = ({ phase, open, onOpenChange }: EditPhaseModalProps) => {
                                         render={({ field }) => (
                                             <FormItem className="flex flex-col flex-1">
                                                 <FormLabel>End Date</FormLabel>
-                                                <Popover>
+                                                <Popover
+                                                    open={endDateOpen}
+                                                    onOpenChange={
+                                                        setEndDateOpen
+                                                    }
+                                                >
                                                     <PopoverTrigger asChild>
                                                         <FormControl>
                                                             <button
@@ -382,9 +405,19 @@ const EditPhaseModal = ({ phase, open, onOpenChange }: EditPhaseModalProps) => {
                                                             selected={
                                                                 field.value
                                                             }
-                                                            onSelect={
-                                                                field.onChange
-                                                            }
+                                                            onSelect={(
+                                                                date,
+                                                            ) => {
+                                                                field.onChange(
+                                                                    date,
+                                                                );
+                                                                setEndDateOpen(
+                                                                    false,
+                                                                );
+                                                            }}
+                                                            disabled={{
+                                                                before: startDate,
+                                                            }}
                                                             initialFocus
                                                         />
                                                     </PopoverContent>

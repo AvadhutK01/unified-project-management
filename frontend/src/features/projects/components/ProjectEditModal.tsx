@@ -63,7 +63,7 @@ const ProjectEditModal = ({
     open,
     onOpenChange,
 }: ProjectEditModalProps) => {
-    const { data: members } = useInfiniteMembersQuery("joined");
+    const { data: members } = useInfiniteMembersQuery("joined", "", true);
     const { mutate: updateProject, isPending: isSubmitting } =
         useUpdateProjectMutation();
     const { data: projectData, isLoading: isLoadingProject } =
@@ -104,6 +104,10 @@ const ProjectEditModal = ({
             projectImage: null,
         },
     });
+
+    const startDate = form.watch("startDate");
+    const [startDateOpen, setStartDateOpen] = useState(false);
+    const [endDateOpen, setEndDateOpen] = useState(false);
 
     useEffect(() => {
         if (projectData?.data) {
@@ -326,7 +330,12 @@ const ProjectEditModal = ({
                                                     Start Date
                                                 </FormLabel>
 
-                                                <Popover>
+                                                <Popover
+                                                    open={startDateOpen}
+                                                    onOpenChange={
+                                                        setStartDateOpen
+                                                    }
+                                                >
                                                     <PopoverTrigger asChild>
                                                         <FormControl>
                                                             <button
@@ -354,9 +363,19 @@ const ProjectEditModal = ({
                                                             selected={
                                                                 field.value
                                                             }
-                                                            onSelect={
-                                                                field.onChange
-                                                            }
+                                                            onSelect={(
+                                                                date,
+                                                            ) => {
+                                                                field.onChange(
+                                                                    date,
+                                                                );
+                                                                setStartDateOpen(
+                                                                    false,
+                                                                );
+                                                            }}
+                                                            disabled={{
+                                                                before: new Date(),
+                                                            }}
                                                             initialFocus
                                                         />
                                                     </PopoverContent>
@@ -373,7 +392,12 @@ const ProjectEditModal = ({
                                             <FormItem className="flex flex-col flex-1">
                                                 <FormLabel>End Date</FormLabel>
 
-                                                <Popover>
+                                                <Popover
+                                                    open={endDateOpen}
+                                                    onOpenChange={
+                                                        setEndDateOpen
+                                                    }
+                                                >
                                                     <PopoverTrigger asChild>
                                                         <FormControl>
                                                             <button
@@ -401,9 +425,19 @@ const ProjectEditModal = ({
                                                             selected={
                                                                 field.value
                                                             }
-                                                            onSelect={
-                                                                field.onChange
-                                                            }
+                                                            onSelect={(
+                                                                date,
+                                                            ) => {
+                                                                field.onChange(
+                                                                    date,
+                                                                );
+                                                                setEndDateOpen(
+                                                                    false,
+                                                                );
+                                                            }}
+                                                            disabled={{
+                                                                before: startDate,
+                                                            }}
                                                             initialFocus
                                                         />
                                                     </PopoverContent>

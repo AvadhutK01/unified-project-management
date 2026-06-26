@@ -33,14 +33,19 @@ export const useMembersQuery = (type: string, page = 1, search = "") => {
     });
 };
 
-export const useInfiniteMembersQuery = (type: string, search = "") => {
+export const useInfiniteMembersQuery = (
+    type: string,
+    search = "",
+    isForProject: boolean,
+) => {
     return useInfiniteQuery({
-        queryKey: ["members", type, search],
+        queryKey: ["members", type, search, isForProject],
         queryFn: ({ pageParam }) =>
             fetchMembers({
                 type,
                 page: pageParam,
                 search,
+                isForProject,
             }),
 
         initialPageParam: 1,

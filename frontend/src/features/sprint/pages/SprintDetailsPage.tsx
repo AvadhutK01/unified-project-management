@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FileText, MessageSquare, Paperclip, History } from "lucide-react";
 import { toast } from "sonner";
@@ -20,7 +20,10 @@ import {
     useUploadSprintMediaMutation,
     useDeleteSprintMediaMutation,
 } from "../hooks/useSprints";
-import { useProjectByIdQuery } from "../../projects/hooks/useProjects";
+import {
+    useProjectByIdQuery,
+    useProjectMembersQuery,
+} from "../../projects/hooks/useProjects";
 import { usePhaseByIdQuery } from "../../phases/hooks/usePhases";
 
 import SprintDetailsLoading from "../components/SprintDetailsLoading";
@@ -60,6 +63,7 @@ const SprintDetailsPage = () => {
         error: sprintError,
     } = useSprintQuery(sprintId);
     const { data: projectRes } = useProjectByIdQuery(projectId);
+    const { data: projectMembersRes } = useProjectMembersQuery(projectId);
     const { data: phaseRes } = usePhaseByIdQuery(phaseId);
     const {
         data: discussionsData,
@@ -101,6 +105,14 @@ const SprintDetailsPage = () => {
         mediaData?.pages.flatMap((p) => p?.data?.data ?? []) ?? [];
     const activities =
         activitiesData?.pages.flatMap((p) => p?.data?.data ?? []) ?? [];
+
+    const users = useMemo(() => {
+        const members = projectMembersRes?.data?.data ?? [];
+        return members.map((m: { memberId: string; name: string }) => ({
+            id: m.memberId,
+            name: m.name,
+        }));
+    }, [projectMembersRes]);
 
     const currentUserEmail = localStorage.getItem("email") || "";
 
@@ -160,10 +172,14 @@ const SprintDetailsPage = () => {
         });
     };
 
-    const handleAddComment = (comment: string) => {
+    const handleAddComment = (
+        comment: string,
+        mentions?: { id: string; name: string }[],
+    ) => {
         if (!sprintId) return;
+        const taggedMemberIds = mentions?.map((m) => m.id) ?? [];
         createDiscussion(
-            { sprintId, comment },
+            { sprintId, comment, taggedMemberIds },
             {
                 onSuccess: () => {
                     toast.success("Comment added successfully");
@@ -349,6 +365,7 @@ const SprintDetailsPage = () => {
                                 fetchNextPage={fetchNextPage}
                                 hasNextPage={hasNextPage}
                                 isFetchingNextPage={isFetchingNextPage}
+                                users={users}
                             />
                         </TabsContent>
 
