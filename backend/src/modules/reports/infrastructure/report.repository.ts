@@ -6,7 +6,7 @@ import {
     workitems,
     organizationMembers,
     projectMembers,
-    workitemActivityLogs,
+    users,
 } from "../../../infrastructure/database/schema/index.js";
 import { eq, and, gte, lte, isNull, inArray } from "drizzle-orm";
 
@@ -202,47 +202,273 @@ export const getMemberActivity = async (
     orgId: string,
     startDate: string,
     endDate: string,
+    memberId?: string,
 ) => {
-    const members = await db
-        .select()
+    const orgMembersQuery = db
+        .select({
+            id: organizationMembers.id,
+            userId: organizationMembers.memberId,
+        })
         .from(organizationMembers)
         .where(
             and(
                 eq(organizationMembers.organizationId, orgId),
                 isNull(organizationMembers.deletedAt),
-                gte(organizationMembers.createdAt, new Date(startDate)),
-                lte(organizationMembers.createdAt, new Date(endDate)),
+                memberId ? eq(organizationMembers.id, memberId) : undefined,
+            ),
+        );
+    const orgMembersList = await orgMembersQuery;
+
+    if (orgMembersList.length === 0) return [];
+
+    const orgMemberIds = orgMembersList.map((m) => m.id);
+    const userIds = orgMembersList.map((m) => m.userId);
+
+    const usersList = await db
+        .select({
+            id: users.id,
+            username: users.username,
+        })
+        .from(users)
+        .where(inArray(users.id, userIds));
+
+    const userMap = new Map(usersList.map((u) => [u.id, u.username]));
+    const orgMemberToNameMap = new Map(
+        orgMembersList.map((m) => [m.id, userMap.get(m.userId) || "Unknown"]),
+    );
+
+    const projMembersList = await db
+        .select({
+            id: projectMembers.id,
+            organizationMemberId: projectMembers.organizationMemberId,
+            projectId: projectMembers.projectId,
+        })
+        .from(projectMembers)
+        .where(
+            and(
+                inArray(projectMembers.organizationMemberId, orgMemberIds),
+                isNull(projectMembers.deletedAt),
             ),
         );
 
-    const userIds = members.map((m) => m.memberId);
+    const projMemberIds = projMembersList.map((m) => m.id);
+    const projMemberToOrgMember = new Map(
+        projMembersList.map((m) => [m.id, m.organizationMemberId]),
+    );
 
-    let workitemLogs: any[] = [];
-    if (userIds.length > 0) {
-        workitemLogs = await db
-            .select()
-            .from(workitemActivityLogs)
+    let workitemsList: any[] = [];
+    if (projMemberIds.length > 0) {
+        workitemsList = await db
+            .select({
+                id: workitems.id,
+                sprintId: workitems.sprintId,
+                assignedTo: workitems.assignedTo,
+                status: workitems.status,
+                completed: workitems.completed,
+            })
+            .from(workitems)
             .where(
                 and(
-                    inArray(workitemActivityLogs.userId, userIds),
-                    gte(workitemActivityLogs.createdAt, new Date(startDate)),
-                    lte(workitemActivityLogs.createdAt, new Date(endDate)),
+                    inArray(workitems.assignedTo, projMemberIds),
+                    isNull(workitems.deletedAt),
+                    gte(workitems.createdAt, new Date(startDate)),
+                    lte(workitems.createdAt, new Date(endDate)),
                 ),
             );
     }
 
-    return {
-        totalMembersJoined: members.length,
-        members: members.map((m) => {
-            const logs = workitemLogs.filter((l) => l.userId === m.memberId);
-            return {
-                organizationMemberId: m.id,
-                userId: m.memberId,
-                roleId: m.roleId,
-                totalActivityLogs: logs.length,
-            };
-        }),
+    const projectIds = [...new Set(projMembersList.map((m) => m.projectId))];
+
+    let projectsList: any[] = [];
+    if (projectIds.length > 0) {
+        projectsList = await db
+            .select({ id: projects.id, title: projects.title })
+            .from(projects)
+            .where(inArray(projects.id, projectIds));
+    }
+
+    let phasesList: any[] = [];
+    if (projectIds.length > 0) {
+        phasesList = await db
+            .select({
+                id: phases.id,
+                name: phases.name,
+                projectId: phases.projectId,
+            })
+            .from(phases)
+            .where(
+                and(
+                    inArray(phases.projectId, projectIds),
+                    isNull(phases.deletedAt),
+                ),
+            );
+    }
+
+    const phaseIds = [...new Set(phasesList.map((p) => p.id))];
+    let sprintsList: any[] = [];
+    if (phaseIds.length > 0) {
+        sprintsList = await db
+            .select({
+                id: sprints.id,
+                title: sprints.title,
+                phaseId: sprints.phaseId,
+                startDate: sprints.startDate,
+                endDate: sprints.endDate,
+            })
+            .from(sprints)
+            .where(
+                and(
+                    inArray(sprints.phaseId, phaseIds),
+                    isNull(sprints.deletedAt),
+                ),
+            );
+    }
+
+    const sprintMap = new Map(sprintsList.map((s) => [s.id, s]));
+    const phaseMap = new Map(phasesList.map((p) => [p.id, p]));
+    const projectMap = new Map(projectsList.map((p) => [p.id, p]));
+
+    type GroupData = {
+        memberName: string;
+        projectName: string;
+        phaseName: string;
+        sprintName: string;
+        totalWorkitems: number;
+        statusCounts: Record<string, number>;
+        totalWorkedTime: number;
     };
+
+    const grouped = new Map<string, GroupData>();
+
+    const filterStart = new Date(startDate).getTime();
+    const filterEnd = new Date(endDate).getTime();
+
+    for (const pm of projMembersList) {
+        const orgMemberId = pm.organizationMemberId;
+        const projectId = pm.projectId;
+        const memberName = orgMemberToNameMap.get(orgMemberId) || "Unknown";
+        const project = projectMap.get(projectId);
+        if (!project) continue;
+
+        const projectPhases = phasesList.filter(
+            (ph) => ph.projectId === projectId,
+        );
+        for (const phase of projectPhases) {
+            const phaseSprints = sprintsList.filter(
+                (s) => s.phaseId === phase.id,
+            );
+            for (const sprint of phaseSprints) {
+                const sStart = sprint.startDate
+                    ? new Date(sprint.startDate).getTime()
+                    : null;
+                const sEnd = sprint.endDate
+                    ? new Date(sprint.endDate).getTime()
+                    : null;
+
+                let inRange = false;
+                if (sStart && sEnd) {
+                    if (sStart >= filterStart && sEnd <= filterEnd)
+                        inRange = true;
+                } else {
+                    inRange = true;
+                }
+
+                if (inRange) {
+                    const groupKey = `${orgMemberId}_${sprint.id}`;
+                    if (!grouped.has(groupKey)) {
+                        grouped.set(groupKey, {
+                            memberName,
+                            projectName: project.title,
+                            phaseName: phase.name,
+                            sprintName: sprint.title,
+                            totalWorkitems: 0,
+                            statusCounts: {
+                                new: 0,
+                                active: 0,
+                                resolved: 0,
+                                closed: 0,
+                                removed: 0,
+                                onhold: 0,
+                            },
+                            totalWorkedTime: 0,
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    for (const w of workitemsList) {
+        if (!w.assignedTo) continue;
+        const orgMemberId = projMemberToOrgMember.get(w.assignedTo);
+        if (!orgMemberId) continue;
+
+        const sprint = sprintMap.get(w.sprintId);
+        if (!sprint) continue;
+        const phase = phaseMap.get(sprint.phaseId);
+        if (!phase) continue;
+        const project = projectMap.get(phase.projectId);
+        if (!project) continue;
+
+        const groupKey = `${orgMemberId}_${w.sprintId}`;
+
+        if (!grouped.has(groupKey)) {
+            grouped.set(groupKey, {
+                memberName: orgMemberToNameMap.get(orgMemberId) || "Unknown",
+                projectName: project.title,
+                phaseName: phase.name,
+                sprintName: sprint.title,
+                totalWorkitems: 0,
+                statusCounts: {
+                    new: 0,
+                    active: 0,
+                    resolved: 0,
+                    closed: 0,
+                    removed: 0,
+                    onhold: 0,
+                },
+                totalWorkedTime: 0,
+            });
+        }
+
+        const data = grouped.get(groupKey)!;
+        data.totalWorkitems++;
+        if (data.statusCounts[w.status as string] !== undefined) {
+            data.statusCounts[w.status as string]!++;
+        }
+        if (w.completed) {
+            data.totalWorkedTime += w.completed;
+        }
+    }
+
+    const allGroupedValues = Array.from(grouped.values());
+    const memberNamesWithRows = new Set(
+        allGroupedValues.map((g) => g.memberName),
+    );
+
+    for (const member of orgMembersList) {
+        const name = orgMemberToNameMap.get(member.id) || "Unknown";
+        if (!memberNamesWithRows.has(name)) {
+            allGroupedValues.push({
+                memberName: name,
+                projectName: "-",
+                phaseName: "-",
+                sprintName: "-",
+                totalWorkitems: 0,
+                statusCounts: {
+                    new: 0,
+                    active: 0,
+                    resolved: 0,
+                    closed: 0,
+                    removed: 0,
+                    onhold: 0,
+                },
+                totalWorkedTime: 0,
+            });
+        }
+    }
+
+    return allGroupedValues;
 };
 
 export const getPhaseOverview = async (

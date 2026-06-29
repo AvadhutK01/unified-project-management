@@ -9,7 +9,10 @@ import { createPhase } from "../src/modules/phases/application/phase.use-cases.j
 import { createSprint } from "../src/modules/sprints/application/sprint.use-cases.js";
 import { createWorkitem } from "../src/modules/workitems/application/workitem.use-cases.js";
 import { db } from "../src/infrastructure/database/client.js";
-import { organizationMembers } from "../src/infrastructure/database/schema/index.js";
+import {
+    organizationMembers,
+    projectMembers,
+} from "../src/infrastructure/database/schema/index.js";
 import { eq } from "drizzle-orm";
 import {
     generateProjectOverviewReport,
@@ -89,12 +92,19 @@ describe("Reports Module Integration Tests", () => {
             endDate: new Date().toISOString().split("T")[0],
         });
 
+        const allProjMembers = await db
+            .select()
+            .from(projectMembers)
+            .where(eq(projectMembers.projectId, project.id));
+        const projMemberId = allProjMembers[0]!.id;
+
         await createWorkitem({
             sprintId: sprint.id,
             organizationId: orgId,
             userId: ownerId,
             title: "Workitem 1",
             workitemType: "task",
+            assignedTo: projMemberId,
         });
     }, 40000);
 
@@ -141,7 +151,9 @@ describe("Reports Module Integration Tests", () => {
             endDate,
         );
 
-        expect(data.totalMembersJoined).toBeGreaterThanOrEqual(1);
+        expect(data.length).toBeGreaterThanOrEqual(1);
+        expect(data[0]!.memberName).toBeDefined();
+        expect(data[0]!.totalWorkitems).toBeGreaterThanOrEqual(1);
     });
 
     it("should successfully fetch phase overview report", async () => {

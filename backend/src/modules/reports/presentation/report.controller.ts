@@ -64,16 +64,20 @@ export const getMemberActivityHandler = async (
 ) => {
     try {
         const orgId = req.orgId as string;
-        const { startDate, endDate } = req.query as {
+        const { startDate, endDate, memberId } = req.query as {
             startDate: string;
             endDate: string;
+            memberId?: string;
         };
         const result = await generateMemberActivityReport(
             orgId,
             startDate,
             endDate,
+            memberId,
         );
-        return res.status(200).json({ status: "success", data: result });
+        return res
+            .status(200)
+            .json({ status: "success", data: { data: result } });
     } catch (error) {
         next(error);
     }

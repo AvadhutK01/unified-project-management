@@ -3247,6 +3247,7 @@ const swaggerDocument = {
         "/reports/member-activity": {
             get: {
                 summary: "Get member activity report",
+                tags: ["Reports"],
                 security: [{ bearerAuth: [] }],
                 parameters: [
                     {
@@ -3260,13 +3261,20 @@ const swaggerDocument = {
                         name: "startDate",
                         in: "query",
                         required: true,
-                        schema: { type: "string", format: "date-time" },
+                        schema: { type: "string", format: "date" },
                     },
                     {
                         name: "endDate",
                         in: "query",
                         required: true,
-                        schema: { type: "string", format: "date-time" },
+                        schema: { type: "string", format: "date" },
+                    },
+                    {
+                        name: "memberId",
+                        in: "query",
+                        required: false,
+                        schema: { type: "string", format: "uuid" },
+                        description: "Optional member ID to filter by",
                     },
                 ],
                 responses: {
@@ -3283,6 +3291,57 @@ const swaggerDocument = {
                                         },
                                         data: {
                                             type: "object",
+                                            properties: {
+                                                data: {
+                                                    type: "array",
+                                                    items: {
+                                                        type: "object",
+                                                        properties: {
+                                                            memberName: {
+                                                                type: "string",
+                                                            },
+                                                            projectName: {
+                                                                type: "string",
+                                                            },
+                                                            phaseName: {
+                                                                type: "string",
+                                                            },
+                                                            sprintName: {
+                                                                type: "string",
+                                                            },
+                                                            totalWorkitems: {
+                                                                type: "number",
+                                                            },
+                                                            statusCounts: {
+                                                                type: "object",
+                                                                properties: {
+                                                                    new: {
+                                                                        type: "number",
+                                                                    },
+                                                                    active: {
+                                                                        type: "number",
+                                                                    },
+                                                                    resolved: {
+                                                                        type: "number",
+                                                                    },
+                                                                    closed: {
+                                                                        type: "number",
+                                                                    },
+                                                                    removed: {
+                                                                        type: "number",
+                                                                    },
+                                                                    onhold: {
+                                                                        type: "number",
+                                                                    },
+                                                                },
+                                                            },
+                                                            totalWorkedTime: {
+                                                                type: "number",
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                            },
                                         },
                                     },
                                 },

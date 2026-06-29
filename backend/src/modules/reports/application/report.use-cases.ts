@@ -25,8 +25,9 @@ export const generateMemberActivityReport = async (
     orgId: string,
     startDate: string,
     endDate: string,
+    memberId?: string,
 ) => {
-    return await getMemberActivity(orgId, startDate, endDate);
+    return await getMemberActivity(orgId, startDate, endDate, memberId);
 };
 
 export const generatePhaseOverviewReport = async (

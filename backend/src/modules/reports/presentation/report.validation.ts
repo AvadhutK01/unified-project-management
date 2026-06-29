@@ -9,6 +9,7 @@ export const reportQuerySchema = z.object({
             endDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
                 message: "endDate must be a valid date",
             }),
+            memberId: z.string().uuid().optional(),
         })
         .refine(
             (data) => {
