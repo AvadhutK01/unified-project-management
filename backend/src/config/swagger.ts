@@ -3158,7 +3158,31 @@ const swaggerDocument = {
                     },
                 ],
                 responses: {
-                    200: { description: "Project overview report" },
+                    200: {
+                        description: "Project overview report",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        status: {
+                                            type: "string",
+                                            example: "success",
+                                        },
+                                        data: {
+                                            type: "object",
+                                            properties: {
+                                                data: {
+                                                    type: "array",
+                                                    items: { type: "object" },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
                     400: { description: "Bad Request" },
                     401: { description: "Unauthorized" },
                     403: { description: "Forbidden" },
@@ -3191,43 +3215,32 @@ const swaggerDocument = {
                     },
                 ],
                 responses: {
-                    200: { description: "Sprint performance report" },
+                    200: {
+                        description: "Sprint performance report",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        status: {
+                                            type: "string",
+                                            example: "success",
+                                        },
+                                        data: {
+                                            type: "object",
+                                            properties: {
+                                                data: {
+                                                    type: "array",
+                                                    items: { type: "object" },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
                     400: { description: "Bad Request" },
-                    401: { description: "Unauthorized" },
-                    403: { description: "Forbidden" },
-                },
-            },
-        },
-        "/reports/workitem-analytics": {
-            get: {
-                summary: "Get workitem analytics report",
-                security: [{ bearerAuth: [] }],
-                parameters: [
-                    {
-                        name: "org_id",
-                        in: "header",
-                        required: true,
-                        schema: { type: "string", format: "uuid" },
-                        description: "Organization ID",
-                    },
-                    {
-                        name: "startDate",
-                        in: "query",
-                        required: true,
-                        schema: { type: "string", format: "date-time" },
-                    },
-                    {
-                        name: "endDate",
-                        in: "query",
-                        required: true,
-                        schema: { type: "string", format: "date-time" },
-                    },
-                ],
-                responses: {
-                    200: { description: "Workitem analytics report" },
-                    400: { description: "Bad Request" },
-                    401: { description: "Unauthorized" },
-                    403: { description: "Forbidden" },
                 },
             },
         },
@@ -3257,16 +3270,34 @@ const swaggerDocument = {
                     },
                 ],
                 responses: {
-                    200: { description: "Member activity report" },
+                    200: {
+                        description: "Member activity report",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        status: {
+                                            type: "string",
+                                            example: "success",
+                                        },
+                                        data: {
+                                            type: "object",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
                     400: { description: "Bad Request" },
                     401: { description: "Unauthorized" },
                     403: { description: "Forbidden" },
                 },
             },
         },
-        "/reports/resource-allocation": {
+        "/reports/phase-overview": {
             get: {
-                summary: "Get resource allocation report",
+                summary: "Get phase overview report",
                 security: [{ bearerAuth: [] }],
                 parameters: [
                     {
@@ -3290,10 +3321,193 @@ const swaggerDocument = {
                     },
                 ],
                 responses: {
-                    200: { description: "Resource allocation report" },
+                    200: {
+                        description: "Phase overview report",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        status: {
+                                            type: "string",
+                                            example: "success",
+                                        },
+                                        data: {
+                                            type: "object",
+                                            properties: {
+                                                data: {
+                                                    type: "array",
+                                                    items: { type: "object" },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
                     400: { description: "Bad Request" },
                     401: { description: "Unauthorized" },
                     403: { description: "Forbidden" },
+                },
+            },
+        },
+        "/dashboards/organizations": {
+            get: {
+                summary: "Get organization dashboard metrics",
+                tags: ["Dashboards"],
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        name: "org_id",
+                        in: "header",
+                        required: true,
+                        schema: { type: "string", format: "uuid" },
+                        description: "Organization ID",
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: "Dashboard metrics retrieved successfully",
+                    },
+                    404: { description: "Organization not found" },
+                },
+            },
+        },
+        "/dashboards/projects/{projectId}": {
+            get: {
+                summary: "Get project dashboard metrics",
+                tags: ["Dashboards"],
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        name: "org_id",
+                        in: "header",
+                        required: true,
+                        schema: { type: "string", format: "uuid" },
+                        description: "Organization ID",
+                    },
+                    {
+                        name: "projectId",
+                        in: "path",
+                        required: true,
+                        schema: { type: "string", format: "uuid" },
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: "Dashboard metrics retrieved successfully",
+                    },
+                    404: { description: "Project not found" },
+                },
+            },
+        },
+        "/dashboards/phases/{phaseId}": {
+            get: {
+                summary: "Get phase dashboard metrics",
+                tags: ["Dashboards"],
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        name: "org_id",
+                        in: "header",
+                        required: true,
+                        schema: { type: "string", format: "uuid" },
+                        description: "Organization ID",
+                    },
+                    {
+                        name: "phaseId",
+                        in: "path",
+                        required: true,
+                        schema: { type: "string", format: "uuid" },
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: "Dashboard metrics retrieved successfully",
+                    },
+                    404: { description: "Phase not found" },
+                },
+            },
+        },
+        "/dashboards/organizations/summary": {
+            get: {
+                summary: "Get organization dashboard AI summary",
+                tags: ["Dashboards"],
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        name: "org_id",
+                        in: "header",
+                        required: true,
+                        schema: { type: "string", format: "uuid" },
+                        description: "Organization ID",
+                    },
+                ],
+                responses: {
+                    200: {
+                        description:
+                            "Dashboard AI summary retrieved successfully",
+                    },
+                    404: { description: "Organization not found" },
+                },
+            },
+        },
+        "/dashboards/projects/{projectId}/summary": {
+            get: {
+                summary: "Get project dashboard AI summary",
+                tags: ["Dashboards"],
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        name: "org_id",
+                        in: "header",
+                        required: true,
+                        schema: { type: "string", format: "uuid" },
+                        description: "Organization ID",
+                    },
+                    {
+                        name: "projectId",
+                        in: "path",
+                        required: true,
+                        schema: { type: "string", format: "uuid" },
+                    },
+                ],
+                responses: {
+                    200: {
+                        description:
+                            "Dashboard AI summary retrieved successfully",
+                    },
+                    404: { description: "Project not found" },
+                },
+            },
+        },
+        "/dashboards/phases/{phaseId}/summary": {
+            get: {
+                summary: "Get phase dashboard AI summary",
+                tags: ["Dashboards"],
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        name: "org_id",
+                        in: "header",
+                        required: true,
+                        schema: { type: "string", format: "uuid" },
+                        description: "Organization ID",
+                    },
+                    {
+                        name: "phaseId",
+                        in: "path",
+                        required: true,
+                        schema: { type: "string", format: "uuid" },
+                    },
+                ],
+                responses: {
+                    200: {
+                        description:
+                            "Dashboard AI summary retrieved successfully",
+                    },
+                    404: { description: "Phase not found" },
                 },
             },
         },

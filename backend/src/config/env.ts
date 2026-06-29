@@ -15,6 +15,7 @@ const envSchema = z.object({
     AWS_SECRET_ACCESS_KEY: z.string().default("mock-secret"),
     AWS_REGION: z.string().default("us-east-1"),
     AWS_BUCKET_NAME: z.string().default("mock-bucket"),
+    GEMINI_API_KEY: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

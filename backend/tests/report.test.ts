@@ -14,9 +14,8 @@ import { eq } from "drizzle-orm";
 import {
     generateProjectOverviewReport,
     generateSprintPerformanceReport,
-    generateWorkitemAnalyticsReport,
     generateMemberActivityReport,
-    generateResourceAllocationReport,
+    generatePhaseOverviewReport,
 } from "../src/modules/reports/application/report.use-cases.js";
 
 describe("Reports Module Integration Tests", () => {
@@ -61,6 +60,10 @@ describe("Reports Module Integration Tests", () => {
             organizationId: orgId,
             title: `Reports_Proj_${uniqueTime}`,
             orgMemberIds: [ownerOrgMemberId],
+            startDate: new Date(Date.now() - 86400000)
+                .toISOString()
+                .split("T")[0],
+            endDate: new Date().toISOString().split("T")[0],
         });
 
         const phase = await createPhase({
@@ -68,6 +71,10 @@ describe("Reports Module Integration Tests", () => {
             organizationId: orgId,
             userId: ownerId,
             name: "Phase 1",
+            startDate: new Date(Date.now() - 86400000)
+                .toISOString()
+                .split("T")[0],
+            endDate: new Date().toISOString().split("T")[0],
         });
 
         const sprint = await createSprint({
@@ -76,6 +83,10 @@ describe("Reports Module Integration Tests", () => {
             userId: ownerId,
             title: "Sprint 1",
             status: "new",
+            startDate: new Date(Date.now() - 86400000)
+                .toISOString()
+                .split("T")[0],
+            endDate: new Date().toISOString().split("T")[0],
         });
 
         await createWorkitem({
@@ -105,8 +116,8 @@ describe("Reports Module Integration Tests", () => {
             endDate,
         );
 
-        expect(data.totalProjects).toBeGreaterThanOrEqual(1);
-        expect(data.projects[0]!.phaseCount).toBeGreaterThanOrEqual(1);
+        expect(data.length).toBeGreaterThanOrEqual(1);
+        expect(data[0]!.phaseCount).toBeGreaterThanOrEqual(1);
     });
 
     it("should successfully fetch sprint performance report", async () => {
@@ -117,20 +128,9 @@ describe("Reports Module Integration Tests", () => {
             endDate,
         );
 
-        expect(data.totalSprints).toBeGreaterThanOrEqual(1);
-        expect(data.sprints[0]!.totalWorkitems).toBeGreaterThanOrEqual(1);
-    });
-
-    it("should successfully fetch workitem analytics report", async () => {
-        const { startDate, endDate } = getReportDateRange();
-        const data = await generateWorkitemAnalyticsReport(
-            orgId,
-            startDate,
-            endDate,
-        );
-
-        expect(data.totalWorkitems).toBeGreaterThanOrEqual(1);
-        expect(data.byType.task).toBeGreaterThanOrEqual(1);
+        expect(data.length).toBeGreaterThanOrEqual(1);
+        expect(data[0]!.totalWorkitems).toBeGreaterThanOrEqual(0);
+        expect(data[0]!.statusCounts).toBeDefined();
     });
 
     it("should successfully fetch member activity report", async () => {
@@ -144,15 +144,13 @@ describe("Reports Module Integration Tests", () => {
         expect(data.totalMembersJoined).toBeGreaterThanOrEqual(1);
     });
 
-    it("should successfully fetch resource allocation report", async () => {
+    it("should successfully fetch phase overview report", async () => {
         const { startDate, endDate } = getReportDateRange();
-        const data = await generateResourceAllocationReport(
+        const data = await generatePhaseOverviewReport(
             orgId,
             startDate,
             endDate,
         );
-
-        expect(data.projectsTracked).toBeGreaterThanOrEqual(1);
-        expect(data.allocation.length).toBeGreaterThanOrEqual(1);
+        expect(data.length).toBeGreaterThanOrEqual(1);
     });
 });

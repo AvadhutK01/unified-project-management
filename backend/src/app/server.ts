@@ -1,6 +1,7 @@
 import { createApp } from "./create-app.js";
 import { env } from "../config/env.js";
 import { logger } from "../config/logger.js";
+import { initializeSocket } from "./socket.js";
 
 export const startServer = (): void => {
     const app = createApp();
@@ -9,6 +10,8 @@ export const startServer = (): void => {
             `Server running in ${env.NODE_ENV} mode on port ${env.PORT}`,
         );
     });
+
+    initializeSocket(server);
 
     const shutdown = (signal: string) => {
         logger.info(`Received ${signal}. Shutting down server gracefully...`);

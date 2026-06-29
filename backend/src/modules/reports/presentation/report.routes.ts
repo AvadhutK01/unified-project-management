@@ -2,9 +2,8 @@ import { Router } from "express";
 import {
     getProjectOverviewHandler,
     getSprintPerformanceHandler,
-    getWorkitemAnalyticsHandler,
     getMemberActivityHandler,
-    getResourceAllocationHandler,
+    getPhaseOverviewHandler,
 } from "./report.controller.js";
 import { validateRequest } from "../../../shared/validators/index.js";
 import { authenticate } from "../../../shared/middleware/authenticate.js";
@@ -16,9 +15,6 @@ const router = Router({ mergeParams: true });
 
 router.use(authenticate);
 router.use(requireOrgId);
-
-// All reports require 'organization_view' permission
-// Route prefix expected: /api/v1/organizations/:orgId/reports
 
 router.get(
     "/project-overview",
@@ -35,13 +31,6 @@ router.get(
 );
 
 router.get(
-    "/workitem-analytics",
-    requirePermission("organization_view"),
-    validateRequest(reportQuerySchema),
-    getWorkitemAnalyticsHandler,
-);
-
-router.get(
     "/member-activity",
     requirePermission("organization_view"),
     validateRequest(reportQuerySchema),
@@ -49,10 +38,10 @@ router.get(
 );
 
 router.get(
-    "/resource-allocation",
+    "/phase-overview",
     requirePermission("organization_view"),
     validateRequest(reportQuerySchema),
-    getResourceAllocationHandler,
+    getPhaseOverviewHandler,
 );
 
 export { router as reportRouter };
