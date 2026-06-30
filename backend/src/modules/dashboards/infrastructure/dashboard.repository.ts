@@ -1,18 +1,16 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray, desc, and, isNull } from "drizzle-orm";
 import { db } from "../../../infrastructure/database/client.js";
 import { organizations } from "../../../infrastructure/database/schema/organization.js";
 import { projects } from "../../../infrastructure/database/schema/project.js";
 import { phases } from "../../../infrastructure/database/schema/phase.js";
 import { sprints } from "../../../infrastructure/database/schema/sprint.js";
 import { workitems } from "../../../infrastructure/database/schema/workitem.js";
+import { organizationMembers } from "../../../infrastructure/database/schema/organization-member.js";
+import { projectMembers } from "../../../infrastructure/database/schema/project-member.js";
 
-/**
- * Retrieves the organization dashboard metrics.
- * @param organizationId The organization UUID.
- * @returns An object containing organization details and its metrics.
- */
 export const getOrganizationDashboardMetrics = async (
     organizationId: string,
+    userId: string,
 ) => {
     const orgResult = await db
         .select()
@@ -23,34 +21,108 @@ export const getOrganizationDashboardMetrics = async (
     if (orgResult.length === 0) {
         return null;
     }
+    const org = orgResult[0]!;
+
+    const orgMembers = await db
+        .select()
+        .from(organizationMembers)
+        .where(eq(organizationMembers.organizationId, organizationId));
 
     const orgProjects = await db
         .select()
         .from(projects)
-        .where(eq(projects.organizationId, organizationId));
+        .where(
+            and(
+                eq(projects.organizationId, organizationId),
+                isNull(projects.deletedAt),
+            ),
+        );
 
-    const projectsByStatus = {
-        notstarted: 0,
-        started: 0,
-        onhold: 0,
-        completed: 0,
-    };
+    const completedProjectsCount = orgProjects.filter(
+        (p) => p.status === "completed",
+    ).length;
+    const activeProjectsCount = orgProjects.filter(
+        (p) => p.status === "started",
+    ).length;
 
-    orgProjects.forEach((proj) => {
-        if (proj.status in projectsByStatus) {
-            projectsByStatus[proj.status as keyof typeof projectsByStatus]++;
+    const projectList = [];
+    for (const project of orgProjects) {
+        const projectPhases = await db
+            .select()
+            .from(phases)
+            .where(eq(phases.projectId, project.id));
+
+        let totalItems = projectPhases.length;
+        let completedItems = projectPhases.filter(
+            (p) => p.status === "completed",
+        ).length;
+
+        const phaseIds = projectPhases.map((p) => p.id);
+        if (phaseIds.length > 0) {
+            const projectSprints = await db
+                .select()
+                .from(sprints)
+                .where(inArray(sprints.phaseId, phaseIds));
+
+            totalItems += projectSprints.length;
+            completedItems += projectSprints.filter(
+                (s) => s.status === "closed",
+            ).length;
+
+            const sprintIds = projectSprints.map((s) => s.id);
+            if (sprintIds.length > 0) {
+                const projectWorkItems = await db
+                    .select()
+                    .from(workitems)
+                    .where(inArray(workitems.sprintId, sprintIds));
+
+                totalItems += projectWorkItems.length;
+                completedItems += projectWorkItems.filter(
+                    (w) => w.status === "closed" || w.status === "resolved",
+                ).length;
+            }
         }
-    });
+
+        const completionPercent =
+            totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
+
+        projectList.push({
+            projectName: project.title,
+            completionPercent: Math.round(completionPercent * 100) / 100,
+        });
+    }
+
+    const orgMember = orgMembers.find((m) => m.memberId === userId);
+    let recentWorkItems: any[] = [];
+    if (orgMember) {
+        const userProjectMembers = await db
+            .select()
+            .from(projectMembers)
+            .where(eq(projectMembers.organizationMemberId, orgMember.id));
+
+        const userProjectMemberIds = userProjectMembers.map((pm) => pm.id);
+        if (userProjectMemberIds.length > 0) {
+            recentWorkItems = await db
+                .select()
+                .from(workitems)
+                .where(inArray(workitems.assignedTo, userProjectMemberIds))
+                .orderBy(desc(workitems.createdAt))
+                .limit(5);
+        }
+    }
 
     return {
-        organization: orgResult[0],
-        metrics: {
-            totalProjects: orgProjects.length,
-            projectsByStatus,
-        },
-        recentProjects: orgProjects
-            .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-            .slice(0, 5),
+        title: org.name,
+        slug: org.slug,
+        logoUrl: org.logoUrl,
+        websiteUrl: org.websiteUrl,
+        description: org.description,
+        totalMembersCount: orgMembers.length,
+        totalProjectsCount: orgProjects.length,
+        completedProjectsCount,
+        activeProjectsCount,
+        projects: projectList,
+        recentWorkItems,
     };
 };
 

@@ -9,11 +9,15 @@ import { generateDashboardSummary } from "../../../shared/services/ai.service.js
 /**
  * Retrieves organization dashboard metrics.
  * @param organizationId The organization UUID.
+ * @param userId The user UUID.
  * @throws AppError if organization is not found.
  * @returns The dashboard metrics.
  */
-export const getOrganizationDashboard = async (organizationId: string) => {
-    const data = await getOrgDashboardRepo(organizationId);
+export const getOrganizationDashboard = async (
+    organizationId: string,
+    userId: string,
+) => {
+    const data = await getOrgDashboardRepo(organizationId, userId);
     if (!data) {
         throw notFoundError("Organization not found");
     }
@@ -51,13 +55,15 @@ export const getPhaseDashboard = async (phaseId: string) => {
 /**
  * Generates an AI summary for the organization dashboard metrics.
  * @param organizationId The organization UUID.
+ * @param userId The user UUID.
  * @throws AppError if organization is not found.
  * @returns The AI summary string.
  */
 export const getOrganizationDashboardSummary = async (
     organizationId: string,
+    userId: string,
 ) => {
-    const data = await getOrganizationDashboard(organizationId);
+    const data = await getOrganizationDashboard(organizationId, userId);
     return await generateDashboardSummary("Organization", data);
 };
 

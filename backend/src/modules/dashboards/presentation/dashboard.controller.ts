@@ -14,7 +14,7 @@ export const handleGetOrganizationDashboard = async (
     next: NextFunction,
 ): Promise<Response | void> => {
     try {
-        const result = await getOrganizationDashboard(req.orgId!);
+        const result = await getOrganizationDashboard(req.orgId!, req.user!.id);
         return res.status(200).json({ status: "success", data: result });
     } catch (error) {
         next(error);
@@ -55,7 +55,10 @@ export const handleGetOrganizationSummary = async (
     next: NextFunction,
 ): Promise<Response | void> => {
     try {
-        const result = await getOrganizationDashboardSummary(req.orgId!);
+        const result = await getOrganizationDashboardSummary(
+            req.orgId!,
+            req.user!.id,
+        );
         return res.status(200).json({ status: "success", summary: result });
     } catch (error) {
         next(error);
