@@ -7,6 +7,7 @@ import {
     Users,
     ShieldCheck,
     FolderKanbanIcon,
+    FileText,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -90,6 +91,29 @@ const Sidebar = () => {
             label: "Projects",
             path: `/${activeOrganization?.slug}/projects`,
             permission: "project_list",
+        },
+        {
+            icon: FileText,
+            label: "Reports",
+            permission: "report_project",
+            subItems: [
+                {
+                    label: "Project Report",
+                    path: `/${activeOrganization?.slug}/reports/project`,
+                },
+                {
+                    label: "Phase Report",
+                    path: `/${activeOrganization?.slug}/reports/phase`,
+                },
+                {
+                    label: "Sprint Report",
+                    path: `/${activeOrganization?.slug}/reports/sprint`,
+                },
+                {
+                    label: "Member Activity Report",
+                    path: `/${activeOrganization?.slug}/reports/member-activity`,
+                },
+            ],
         },
     ];
 

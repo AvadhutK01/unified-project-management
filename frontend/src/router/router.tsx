@@ -7,6 +7,7 @@ import { createBrowserRouter } from "react-router-dom";
 import MainLayout from "@/layout/MainLayout";
 import { ProtectedRoute } from "@/features/rbac/components/ProtectedRoute";
 import { PERMISSIONS } from "@/features/rbac/types/rbac.types";
+import PhaseReport from "@/features/reports/pages/PhaseReport";
 
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const Home = lazy(() => import("@/pages/Home"));
@@ -56,6 +57,15 @@ const SprintDetailsPage = lazy(
     () => import("@/features/sprint/pages/SprintDetailsPage"),
 );
 const WorkItems = lazy(() => import("@/features/work-items/pages/WorkItems"));
+const ProjectReport = lazy(
+    () => import("@/features/reports/pages/ProjectReport"),
+);
+const SprintReport = lazy(
+    () => import("@/features/reports/pages/SprintReport"),
+);
+const MemberActivity = lazy(
+    () => import("@/features/reports/pages/MemberActivity"),
+);
 const WorkItemDetailsPage = lazy(
     () => import("@/features/work-items/pages/WorkItemDetailsPage"),
 );
@@ -349,6 +359,72 @@ export const router = createBrowserRouter([
                         <MainLayout>
                             <PrivateRoute>
                                 <WorkItems />
+                            </PrivateRoute>
+                        </MainLayout>
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/:slug/reports/project",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <MainLayout>
+                            <PrivateRoute>
+                                <ProtectedRoute
+                                    permission={PERMISSIONS.REPORTS.PROJECT}
+                                >
+                                    <ProjectReport />
+                                </ProtectedRoute>
+                            </PrivateRoute>
+                        </MainLayout>
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/:slug/reports/phase",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <MainLayout>
+                            <PrivateRoute>
+                                <ProtectedRoute
+                                    permission={PERMISSIONS.REPORTS.PHASE}
+                                >
+                                    <PhaseReport />
+                                </ProtectedRoute>
+                            </PrivateRoute>
+                        </MainLayout>
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/:slug/reports/sprint",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <MainLayout>
+                            <PrivateRoute>
+                                <ProtectedRoute
+                                    permission={PERMISSIONS.REPORTS.SPRINT}
+                                >
+                                    <SprintReport />
+                                </ProtectedRoute>
+                            </PrivateRoute>
+                        </MainLayout>
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/:slug/reports/member-activity",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <MainLayout>
+                            <PrivateRoute>
+                                <ProtectedRoute
+                                    permission={
+                                        PERMISSIONS.REPORTS.MEMBER_ACTIVITY
+                                    }
+                                >
+                                    <MemberActivity />
+                                </ProtectedRoute>
                             </PrivateRoute>
                         </MainLayout>
                     </Suspense>

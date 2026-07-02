@@ -34,6 +34,12 @@ export const PERMISSIONS = {
         VIEW: "sprint_view",
         DELETE: "sprint_delete",
     },
+    REPORTS: {
+        PROJECT: "report_project",
+        SPRINT: "report_sprint",
+        PHASE: "report_phase",
+        MEMBER_ACTIVITY: "report_member_activity",
+    },
 } as const;
 
 export type PermissionCodename = string;

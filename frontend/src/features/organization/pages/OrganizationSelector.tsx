@@ -80,9 +80,6 @@ export default function OrganizationSelector() {
 
     const handleOrgClick = (orgId: string, original: unknown) => {
         setSelectedId(selectedId === orgId ? null : orgId);
-        setActiveOrganization(
-            original as Parameters<typeof setActiveOrganization>[0],
-        );
     };
 
     const handleAccept = (id: string, orgName: string) => {
@@ -208,11 +205,16 @@ export default function OrganizationSelector() {
                             className="w-full sm:w-auto sm:min-w-56"
                             size="lg"
                             disabled={!selectedId}
-                            onClick={() =>
+                            onClick={() => {
+                                setActiveOrganization(
+                                    selectedOrg?.__original as Parameters<
+                                        typeof setActiveOrganization
+                                    >[0],
+                                );
                                 navigate(
                                     `/${selectedOrg?.slug.toLowerCase()}/dashboard`,
-                                )
-                            }
+                                );
+                            }}
                         >
                             Continue to Dashboard
                             <ArrowRight className="size-4" />
