@@ -2,6 +2,9 @@ import { Bell } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useOrganizationStore } from "@/store/organization.store";
+import { Switch } from "@/components/ui/switch";
+import { useToggleLeaveMutation } from "@/features/members/hooks/useMembers";
+import { useStore } from "@/store/store";
 
 interface User {
     name: string;
@@ -15,6 +18,15 @@ const Header = () => {
         name: "",
         email: "",
     });
+    const { isOrgOwner, memberStatus, setMemberStatus } = useStore();
+    const [isOnLeave, setIsOnLeave] = useState(
+        () => memberStatus === "onleave",
+    );
+    const toggleLeaveMutation = useToggleLeaveMutation();
+
+    useEffect(() => {
+        setIsOnLeave(memberStatus === "onleave");
+    }, [memberStatus]);
     const [showProfilePanel, setShowProfilePanel] = useState(false);
     const [showOrgDropdown, setShowOrgDropdown] = useState(false);
     const profilePanelRef = useRef<HTMLDivElement>(null);
@@ -64,6 +76,12 @@ const Header = () => {
         };
     }, [showProfilePanel, showOrgDropdown]);
 
+    const handleToggleLeave = (checked: boolean) => {
+        setIsOnLeave(checked);
+        setMemberStatus(checked ? "onleave" : "available");
+        toggleLeaveMutation.mutate();
+    };
+
     const { clearActiveOrganization } = useOrganizationStore();
 
     const handleLogout = async () => {
@@ -84,7 +102,7 @@ const Header = () => {
                         onClick={() => setShowProfilePanel(!showProfilePanel)}
                         className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
                     >
-                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-linear-to-br from-primary/15 to-accent/15 text-primary text-xs font-bold hover:from-primary/25 hover:to-accent/25 transition-all duration-200 ring-1 ring-primary/10">
+                        <span className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-linear-to-br from-primary/15 to-accent/15 text-primary text-xs font-bold hover:from-primary/25 hover:to-accent/25 transition-all duration-200 ring-1 ring-primary/10">
                             <span className="text-lg font-semibold text-pink-700">
                                 {user.name
                                     ?.split(" ")
@@ -94,6 +112,10 @@ const Header = () => {
                                     .join("")
                                     .toUpperCase() || "AK"}
                             </span>
+                            {/* Status dot */}
+                            <span
+                                className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-card ${isOnLeave ? "bg-amber-400" : "bg-emerald-500"}`}
+                            />
                         </span>
                     </button>
 
@@ -128,6 +150,36 @@ const Header = () => {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* On Leave toggle */}
+                            {!isOrgOwner && (
+                                <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="flex items-center gap-2">
+                                            <span
+                                                className={`h-2 w-2 rounded-full shrink-0 ${isOnLeave ? "bg-amber-400" : "bg-emerald-500"}`}
+                                            />
+                                            <div>
+                                                <p className="text-xs font-medium text-gray-700 dark:text-gray-200 leading-none">
+                                                    {isOnLeave
+                                                        ? "On Leave"
+                                                        : "Available"}
+                                                </p>
+                                                <p className="text-[10px] text-gray-400 mt-0.5">
+                                                    {isOnLeave
+                                                        ? "You are marked as on leave"
+                                                        : "You are active"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <Switch
+                                            checked={isOnLeave}
+                                            onCheckedChange={handleToggleLeave}
+                                            className="data-[state=checked]:bg-amber-400"
+                                        />
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="py-2">
                                 <button

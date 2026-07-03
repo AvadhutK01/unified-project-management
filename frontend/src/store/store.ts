@@ -11,6 +11,7 @@ interface Store {
 
     permissions: string[];
     isOrgOwner: boolean;
+    memberStatus: string;
     permissionsLoaded: boolean;
     permissionsError: string | null;
     setPermissions: (
@@ -19,6 +20,7 @@ interface Store {
     ) => void;
     clearPermissions: () => void;
     initializePermissions: (orgId: string) => Promise<void>;
+    setMemberStatus: (status: string) => void;
 }
 
 export const useStore = create<Store>((set) => ({
@@ -27,6 +29,7 @@ export const useStore = create<Store>((set) => ({
 
     permissions: [],
     isOrgOwner: false,
+    memberStatus: "",
     permissionsLoaded: false,
     permissionsError: null,
     setPermissions: (permissions, isOrgOwner) =>
@@ -40,9 +43,11 @@ export const useStore = create<Store>((set) => ({
         set({
             permissions: [],
             isOrgOwner: false,
+            memberStatus: "",
             permissionsLoaded: false,
             permissionsError: null,
         }),
+    setMemberStatus: (status) => set({ memberStatus: status }),
     initializePermissions: async (_orgId: string) => {
         set({ permissionsLoaded: false, permissionsError: null });
         try {
@@ -50,9 +55,11 @@ export const useStore = create<Store>((set) => ({
             const data = res?.data?.data ?? {};
             const permissions: PermissionItem[] = data.permissions ?? [];
             const isOrgOwner: boolean = data.is_org_owner ?? false;
+            const memberStatus: string = data.status ?? "";
             set({
                 permissions: permissions.map((p) => p.codename),
                 isOrgOwner,
+                memberStatus,
                 permissionsLoaded: true,
                 permissionsError: null,
             });
@@ -60,6 +67,7 @@ export const useStore = create<Store>((set) => ({
             set({
                 permissions: [],
                 isOrgOwner: false,
+                memberStatus: "",
                 permissionsLoaded: true,
                 permissionsError:
                     error instanceof Error

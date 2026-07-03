@@ -1,5 +1,8 @@
 import { LayoutDashboard, Loader2, AlertCircle } from "lucide-react";
-import { useDashboardQuery } from "../hooks/useDashboard";
+import {
+    useDashboardQuery,
+    useDashboardSummaryMutation,
+} from "../hooks/useDashboard";
 import OrganizationInfo from "../components/OrganizationInfo";
 import StatsCards from "../components/StatsCards";
 import AiSummary from "../components/AiSummary";
@@ -8,6 +11,7 @@ import RecentWorkItems from "../components/RecentWorkItems";
 
 const Dashboard = () => {
     const { data, isLoading, isError, error } = useDashboardQuery();
+    const summaryMutation = useDashboardSummaryMutation();
 
     if (isLoading) {
         return (
@@ -64,7 +68,12 @@ const Dashboard = () => {
                 totalMembersCount={data.totalMembersCount}
             />
 
-            <AiSummary data={data} />
+            <AiSummary
+                data={data}
+                summary={summaryMutation.data}
+                isPending={summaryMutation.isPending}
+                onGenerate={() => summaryMutation.mutate()}
+            />
 
             <div className="grid grid-cols-2 gap-6">
                 <ProjectProgressList projects={data.projects} />

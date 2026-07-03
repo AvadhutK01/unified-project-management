@@ -101,7 +101,7 @@ const ProjectsListPage = () => {
     };
 
     const handleView = (project: Project) => {
-        toast.info(`Viewing ${project.name}`);
+        navigate(`${project.id}`);
     };
 
     const handleEdit = (project: Project) => {

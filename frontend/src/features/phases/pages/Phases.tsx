@@ -125,6 +125,9 @@ const Phases = () => {
                                   {canView && (
                                       <button
                                           title={`View ${phase.name}`}
+                                          onClick={() =>
+                                              navigate(`${phase.id}`)
+                                          }
                                           className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
                                       >
                                           <Eye className="size-4" />

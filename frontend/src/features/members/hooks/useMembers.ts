@@ -11,6 +11,7 @@ import {
     inviteMembers,
     removeMember,
     revokeInvitation,
+    toggleLeaveStatus,
     updateMember,
     updateInvitationStatus,
     reInviteMembers,
@@ -138,4 +139,8 @@ export const useReInviteMembersMutation = () => {
             queryClient.invalidateQueries({ queryKey: ["members"] });
         },
     });
+};
+
+export const useToggleLeaveMutation = () => {
+    return useMutation({ mutationFn: toggleLeaveStatus });
 };

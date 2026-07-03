@@ -1,134 +1,252 @@
-import {
-    LayoutGrid,
-    BarChart2,
-    Users,
-    ListChecks,
-    ArrowRight,
-} from "lucide-react";
+import { Brain, RefreshCw, Sparkles, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { DashboardData } from "../types/dashboard.types";
 
 interface Props {
-    data: DashboardData;
+    data?: DashboardData;
+    summary?: string;
+    isPending?: boolean;
+    onGenerate?: () => void;
 }
 
-const AiSummary = ({ data }: Props) => {
-    const active = data.activeProjectsCount;
-    const completed = data.completedProjectsCount;
-    const total = data.totalProjectsCount;
-    const members = data.totalMembersCount;
+// Render inline markdown: **bold** and `code`
+function renderInline(text: string): React.ReactNode {
+    const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
+    return parts.map((part, i) => {
+        if (part.startsWith("**") && part.endsWith("**")) {
+            return (
+                <strong key={i} className="font-semibold text-foreground">
+                    {part.slice(2, -2)}
+                </strong>
+            );
+        }
+        if (part.startsWith("`") && part.endsWith("`")) {
+            return (
+                <code
+                    key={i}
+                    className="text-[10px] bg-muted px-1 py-0.5 rounded font-mono"
+                >
+                    {part.slice(1, -1)}
+                </code>
+            );
+        }
+        return part;
+    });
+}
 
-    const inFlight = data.projects.filter(
-        (p) => p.completionPercent > 0 && p.completionPercent < 100,
-    );
-    const avgProgress =
-        inFlight.length > 0
-            ? Math.round(
-                  inFlight.reduce((s, p) => s + p.completionPercent, 0) /
-                      inFlight.length,
-              )
-            : 0;
+function formatSummary(text: string) {
+    const lines = text.split("\n");
+    const elements: React.ReactNode[] = [];
+    let key = 0;
 
-    const totalWorkItems = data.recentWorkItems.length;
-    const bugs = data.recentWorkItems.filter((w) => w.type === "bug").length;
-    const tasks = totalWorkItems - bugs;
+    for (let i = 0; i < lines.length; i++) {
+        const raw = lines[i];
+        const trimmed = raw.trim();
+        if (!trimmed) continue;
 
-    const cards = [
-        {
-            icon: LayoutGrid,
-            title: `${total} Project${total !== 1 ? "s" : ""}`,
-            description: `${active} active and ${completed} completed across your organization.`,
-            action: "View Projects",
-            color: "#da7756",
-            bgColor: "rgba(218,119,86,0.12)",
-        },
-        {
-            icon: BarChart2,
-            title: `${avgProgress}% Avg Progress`,
-            description:
-                inFlight.length > 0
-                    ? `Average completion across ${inFlight.length} in-progress project${inFlight.length !== 1 ? "s" : ""}.`
-                    : "No in-progress projects at the moment.",
-            action: "View Details",
-            color: "#6b9bcc",
-            bgColor: "rgba(107,155,204,0.12)",
-        },
-        {
-            icon: Users,
-            title: `${members} Member${members !== 1 ? "s" : ""}`,
-            description:
-                total > 0 && members > 0
-                    ? `${(total / members).toFixed(1)} projects per member on average across the org.`
-                    : "No members added to the organization yet.",
-            action: "View Team",
-            color: "#9ec8ba",
-            bgColor: "rgba(158,200,186,0.15)",
-        },
-        {
-            icon: ListChecks,
-            title: `${totalWorkItems} Work Item${totalWorkItems !== 1 ? "s" : ""}`,
-            description:
-                totalWorkItems > 0
-                    ? `${tasks} task${tasks !== 1 ? "s" : ""} and ${bugs} bug${bugs !== 1 ? "s" : ""} recently assigned to team members.`
-                    : "No work items have been assigned recently.",
-            action: "View Items",
-            color: "#798c5e",
-            bgColor: "rgba(121,140,94,0.12)",
-        },
-    ];
+        // Top-level section header: *   **Title:** (nothing after the closing **)
+        const sectionMatch = trimmed.match(/^\*{1,3}\s+\*{2}(.+?)\*{2}:?\s*$/);
+        if (sectionMatch) {
+            elements.push(
+                <div
+                    key={key++}
+                    className="flex items-center gap-2 mt-5 mb-2 first:mt-0"
+                >
+                    <span className="h-3.5 w-1 rounded-full bg-violet-500/60 shrink-0" />
+                    <span className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                        {sectionMatch[1].replace(/:$/, "")}
+                    </span>
+                </div>,
+            );
+            continue;
+        }
 
+        // Bold standalone header (no bullet): **Title:**
+        const boldHeaderMatch = trimmed.match(/^\*{2}(.+?)\*{2}:?\s*$/);
+        if (boldHeaderMatch) {
+            elements.push(
+                <p
+                    key={key++}
+                    className="text-xs font-semibold text-foreground mt-3 mb-1"
+                >
+                    {boldHeaderMatch[1].replace(/:$/, "")}
+                </p>,
+            );
+            continue;
+        }
+
+        // Sub-bullet with bold title: *   **Title:** description
+        const boldBulletMatch = trimmed.match(
+            /^\*{1,3}\s+\*{2}(.+?)\*{2}:?\s*(.+)/,
+        );
+        if (boldBulletMatch) {
+            elements.push(
+                <li
+                    key={key++}
+                    className="flex items-start gap-2 text-[12.5px] leading-relaxed text-foreground/80 mb-1.5 ml-3"
+                >
+                    <span className="h-1.5 w-1.5 rounded-full bg-violet-400/70 mt-1.5 shrink-0" />
+                    <span>
+                        <strong className="font-semibold text-foreground">
+                            {boldBulletMatch[1]}:
+                        </strong>{" "}
+                        {renderInline(boldBulletMatch[2])}
+                    </span>
+                </li>,
+            );
+            continue;
+        }
+
+        // Plain bullet: *   text
+        const plainBulletMatch = trimmed.match(/^\*{1,3}\s+(.+)/);
+        if (plainBulletMatch) {
+            elements.push(
+                <li
+                    key={key++}
+                    className="flex items-start gap-2 text-[12.5px] leading-relaxed text-foreground/75 mb-1.5 ml-3"
+                >
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40 mt-1.5 shrink-0" />
+                    <span>{renderInline(plainBulletMatch[1])}</span>
+                </li>,
+            );
+            continue;
+        }
+
+        // Regular paragraph text
+        elements.push(
+            <p
+                key={key++}
+                className="text-[12.5px] leading-relaxed text-muted-foreground mt-1 mb-1"
+            >
+                {renderInline(trimmed)}
+            </p>,
+        );
+    }
+
+    return elements;
+}
+
+const AiSummary = ({ summary, isPending, onGenerate }: Props) => {
     return (
-        <div className="overflow-hidden rounded-xl bg-linear-to-br from-primary/[0.07] via-accent/50 to-secondary/60 ring-1 ring-primary/15">
+        <div className="overflow-hidden rounded-xl bg-card border shadow-sm">
             {/* Header */}
-            <div className="flex items-center gap-2.5 border-b border-primary/10 px-5 py-3.5">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-                    <LayoutGrid size={13} />
+            <div className="flex items-center justify-between px-5 py-3.5 border-b">
+                <div className="flex items-center gap-2.5">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-violet-500/20 to-purple-600/20 ring-1 ring-violet-500/25">
+                        <Brain size={14} className="text-violet-600" />
+                    </div>
+                    <div>
+                        <span className="text-sm font-semibold text-foreground">
+                            AI Summary
+                        </span>
+                        {!summary && !isPending && (
+                            <span className="text-xs text-muted-foreground ml-2 hidden sm:inline">
+                                — Get insights about your workspace
+                            </span>
+                        )}
+                    </div>
                 </div>
-                <span className="text-sm font-semibold text-foreground">
-                    Summary
-                </span>
-                <span className="text-xs text-muted-foreground">
-                    — Quick overview of your organization
-                </span>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onGenerate}
+                    disabled={isPending}
+                    className="gap-1.5 h-8 text-xs"
+                >
+                    {isPending ? (
+                        <>
+                            <Loader2 size={13} className="animate-spin" />
+                            Generating…
+                        </>
+                    ) : summary ? (
+                        <>
+                            <RefreshCw size={13} />
+                            Regenerate
+                        </>
+                    ) : (
+                        <>
+                            <Sparkles size={13} />
+                            Generate
+                        </>
+                    )}
+                </Button>
             </div>
 
-            {/* Summary cards */}
-            <div className="grid grid-cols-4 gap-3 p-4">
-                {cards.map((card) => {
-                    const Icon = card.icon;
-                    return (
-                        <div
-                            key={card.title}
-                            className="flex flex-col gap-2 rounded-lg border border-border/50 bg-card p-3.5"
-                        >
-                            <div className="flex items-start justify-between gap-2">
-                                <div className="flex min-w-0 items-center gap-2">
-                                    <div
-                                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
-                                        style={{
-                                            backgroundColor: card.bgColor,
-                                            color: card.color,
-                                        }}
-                                    >
-                                        <Icon size={12} />
-                                    </div>
-                                    <span className="truncate text-sm font-semibold text-foreground">
-                                        {card.title}
-                                    </span>
-                                </div>
-                                <button
-                                    className="flex shrink-0 items-center gap-0.5 text-[11px] font-medium transition-opacity hover:opacity-70"
-                                    style={{ color: card.color }}
-                                >
-                                    {card.action}
-                                    <ArrowRight size={11} />
-                                </button>
-                            </div>
-                            <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-                                {card.description}
+            {/* Content */}
+            <div className="relative">
+                <div className="absolute left-0 top-0 bottom-0 w-0.75 bg-linear-to-b from-violet-500/30 via-primary/20 to-transparent" />
+
+                {isPending && !summary ? (
+                    <div className="flex flex-col items-center justify-center gap-3 py-12 px-5">
+                        <div className="relative">
+                            <Brain
+                                size={32}
+                                className="text-violet-400 animate-pulse"
+                            />
+                            <div className="absolute inset-0 bg-violet-400/20 blur-xl rounded-full" />
+                        </div>
+                        <div className="text-center">
+                            <p className="text-sm font-medium text-foreground">
+                                Analyzing your workspace
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                                Generating AI-powered summary…
                             </p>
                         </div>
-                    );
-                })}
+                    </div>
+                ) : summary ? (
+                    <div className="px-5 py-4 pl-7">
+                        <ul className="list-none p-0 m-0 space-y-0">
+                            {formatSummary(summary)}
+                        </ul>
+                        <div className="mt-4 pt-3 border-t flex items-center justify-between">
+                            <p className="text-[11px] text-muted-foreground/50">
+                                Powered by AI — may not be perfectly accurate
+                            </p>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={onGenerate}
+                                disabled={isPending}
+                                className="size-7"
+                                title="Regenerate"
+                            >
+                                {isPending ? (
+                                    <Loader2
+                                        size={12}
+                                        className="animate-spin"
+                                    />
+                                ) : (
+                                    <RefreshCw size={12} />
+                                )}
+                            </Button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center justify-center gap-4 py-12 px-5">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-violet-500/10 to-purple-600/10 ring-1 ring-violet-500/20">
+                            <Sparkles size={20} className="text-violet-500" />
+                        </div>
+                        <div className="text-center max-w-xs">
+                            <p className="text-sm font-medium text-foreground">
+                                No summary yet
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                                Generate an AI-powered overview of your
+                                organization's performance and activity.
+                            </p>
+                        </div>
+                        <Button
+                            variant="default"
+                            size="sm"
+                            onClick={onGenerate}
+                            className="gap-2 mt-1"
+                        >
+                            <Sparkles size={14} />
+                            Generate AI Summary
+                        </Button>
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -27,6 +27,11 @@ export interface DashboardData {
     recentWorkItems: DashboardWorkItem[];
 }
 
+export interface DashboardSummaryResponse {
+    status: string;
+    summary: string;
+}
+
 export interface DashboardResponse {
     status: string;
     data: DashboardData;

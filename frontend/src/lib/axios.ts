@@ -3,7 +3,7 @@ import axios from "axios";
 
 export const api = axios.create({
     baseURL: import.meta.env.VITE_PUBLIC_API_BASE_URL,
-    timeout: 10000,
+    // timeout: 100000,
     headers: {
         "ngrok-skip-browser-warning": "true",
     },

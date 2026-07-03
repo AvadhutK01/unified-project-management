@@ -94,3 +94,8 @@ export const fetchInvitations = async () => {
     const { data } = await api.get(`/organizations/invitations`);
     return data;
 };
+
+export const toggleLeaveStatus = async () => {
+    const { data } = await api.patch("/organizations/members/me/toggle-leave");
+    return data;
+};

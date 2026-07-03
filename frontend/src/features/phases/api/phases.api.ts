@@ -2,6 +2,7 @@ import { api } from "@/lib/axios";
 import type {
     CreatePhasePayload,
     UpdatePhasePayload,
+    PhaseDashboardResponse,
 } from "../types/phase.types";
 
 export const fetchPhases = async ({
@@ -47,4 +48,18 @@ export const deletePhase = async (id: number) => {
 export const fetchPhaseById = async (id: string) => {
     const { data } = await api.get(`/phases/${id}`);
     return data;
+};
+
+export const fetchPhaseDashboard = async (id: string) => {
+    const { data } = await api.get<PhaseDashboardResponse>(
+        `/dashboards/phases/${id}`,
+    );
+    return data.data;
+};
+
+export const fetchPhaseSummary = async (id: string) => {
+    const { data } = await api.get<{ status: string; summary: string }>(
+        `/dashboards/phases/${id}/summary`,
+    );
+    return data.summary;
 };

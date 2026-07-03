@@ -5,6 +5,8 @@ import {
     deletePhase,
     fetchPhases,
     fetchPhaseById,
+    fetchPhaseDashboard,
+    fetchPhaseSummary,
 } from "../api/phases.api";
 
 export const usePhasesQuery = (
@@ -44,6 +46,20 @@ export const useDeletePhaseMutation = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["phases"] });
         },
+    });
+};
+
+export const usePhaseDashboardQuery = (phaseId: string | undefined) => {
+    return useQuery({
+        queryKey: ["phase-dashboard", phaseId],
+        queryFn: () => fetchPhaseDashboard(phaseId!),
+        enabled: !!phaseId,
+    });
+};
+
+export const usePhaseSummaryMutation = () => {
+    return useMutation({
+        mutationFn: fetchPhaseSummary,
     });
 };
 

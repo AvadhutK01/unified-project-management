@@ -1,4 +1,5 @@
 import { api } from "@/lib/axios";
+import type { ProjectDashboardResponse } from "../types/project.types";
 
 export const createProject = async (formData: FormData) => {
     const { data } = await api.post("/projects", formData);
@@ -44,6 +45,20 @@ export const fetchProjects = async ({
 
     const { data } = await api.get(`/projects?${params.toString()}`);
     return data;
+};
+
+export const fetchProjectDashboard = async (id: string) => {
+    const { data } = await api.get<ProjectDashboardResponse>(
+        `/dashboards/projects/${id}`,
+    );
+    return data.data;
+};
+
+export const fetchProjectSummary = async (id: string) => {
+    const { data } = await api.get<{ status: string; summary: string }>(
+        `/dashboards/projects/${id}/summary`,
+    );
+    return data.summary;
 };
 
 export const fetchProjectMembers = async (projectId: string) => {

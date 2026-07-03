@@ -51,7 +51,13 @@ const InvitedMembers = lazy(
 const ProjectsListPage = lazy(
     () => import("@/features/projects/pages/ProjectsListPage"),
 );
+const ProjectDashboardPage = lazy(
+    () => import("@/features/projects/pages/ProjectDashboardPage"),
+);
 const Phases = lazy(() => import("@/features/phases/pages/Phases"));
+const PhaseDashboardPage = lazy(
+    () => import("@/features/phases/pages/PhaseDashboardPage"),
+);
 const SprintPage = lazy(() => import("@/features/sprint/pages/SprintPage"));
 const SprintDetailsPage = lazy(
     () => import("@/features/sprint/pages/SprintDetailsPage"),
@@ -305,6 +311,22 @@ export const router = createBrowserRouter([
                 ),
             },
             {
+                path: "/:slug/projects/:id",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <MainLayout>
+                            <PrivateRoute>
+                                <ProtectedRoute
+                                    permission={PERMISSIONS.PROJECTS.VIEW}
+                                >
+                                    <ProjectDashboardPage />
+                                </ProtectedRoute>
+                            </PrivateRoute>
+                        </MainLayout>
+                    </Suspense>
+                ),
+            },
+            {
                 path: "/:slug/projects/:id/phases",
                 element: (
                     <Suspense fallback={<Loading />}>
@@ -314,6 +336,22 @@ export const router = createBrowserRouter([
                                     permission={PERMISSIONS.PROJECTS.LIST}
                                 >
                                     <Phases />
+                                </ProtectedRoute>
+                            </PrivateRoute>
+                        </MainLayout>
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/:slug/projects/:id/phases/:phaseId",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <MainLayout>
+                            <PrivateRoute>
+                                <ProtectedRoute
+                                    permission={PERMISSIONS.PHASES.VIEW}
+                                >
+                                    <PhaseDashboardPage />
                                 </ProtectedRoute>
                             </PrivateRoute>
                         </MainLayout>

@@ -21,6 +21,19 @@ export interface CreateSprintPayload {
 
 export type SprintStatus = "new" | "active" | "closed" | "removed" | "onhold";
 
+export type WorkItemStatus =
+    | "new"
+    | "active"
+    | "resolved"
+    | "closed"
+    | "removed"
+    | "onhold";
+
+export interface SprintMetrics {
+    totalWorkItems: number;
+    workitemsByStatus: Record<WorkItemStatus, number>;
+}
+
 export interface SprintItem {
     id: string;
     title: string;
@@ -32,6 +45,7 @@ export interface SprintItem {
     startDate?: string;
     endDate?: string;
     sequence?: number;
+    metrics?: SprintMetrics;
 }
 
 export interface StatusSelectCellProps {
