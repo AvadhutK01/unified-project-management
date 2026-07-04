@@ -916,6 +916,30 @@ const swaggerDocument = {
                 },
             },
         },
+        "/organizations/members/me/toggle-leave": {
+            patch: {
+                summary:
+                    "Toggle the current user's leave status in the organization",
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        name: "org_id",
+                        in: "header",
+                        required: true,
+                        schema: { type: "string", format: "uuid" },
+                        description: "Organization ID",
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: "Leave status toggled successfully",
+                    },
+                    400: { description: "Bad Request" },
+                    401: { description: "Unauthorized" },
+                    404: { description: "Member not found" },
+                },
+            },
+        },
         "/organizations/members/{id}": {
             get: {
                 summary: "Get organization member details",

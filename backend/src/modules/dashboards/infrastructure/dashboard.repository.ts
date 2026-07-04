@@ -7,6 +7,7 @@ import { sprints } from "../../../infrastructure/database/schema/sprint.js";
 import { workitems } from "../../../infrastructure/database/schema/workitem.js";
 import { organizationMembers } from "../../../infrastructure/database/schema/organization-member.js";
 import { projectMembers } from "../../../infrastructure/database/schema/project-member.js";
+import { users } from "../../../infrastructure/database/schema/user.js";
 
 export const getOrganizationDashboardMetrics = async (
     organizationId: string,
@@ -141,80 +142,81 @@ export const getProjectDashboardMetrics = async (projectId: string) => {
     if (projectResult.length === 0) {
         return null;
     }
+    const project = projectResult[0]!;
+
+    const teamMembers = await db
+        .select({
+            id: users.id,
+            name: users.username,
+        })
+        .from(projectMembers)
+        .innerJoin(
+            organizationMembers,
+            eq(projectMembers.organizationMemberId, organizationMembers.id),
+        )
+        .innerJoin(users, eq(organizationMembers.memberId, users.id))
+        .where(eq(projectMembers.projectId, projectId));
 
     const projectPhases = await db
         .select()
         .from(phases)
-        .where(eq(phases.projectId, projectId));
+        .where(and(eq(phases.projectId, projectId), isNull(phases.deletedAt)));
 
-    const phasesByStatus = {
-        notstarted: 0,
-        started: 0,
-        onhold: 0,
-        completed: 0,
-    };
+    const completedPhasesCount = projectPhases.filter(
+        (p) => p.status === "completed",
+    ).length;
+    const activePhasesCount = projectPhases.filter(
+        (p) => p.status === "started",
+    ).length;
 
-    projectPhases.forEach((phase) => {
-        if (phase.status in phasesByStatus) {
-            phasesByStatus[phase.status as keyof typeof phasesByStatus]++;
+    const phaseList = [];
+    for (const phase of projectPhases) {
+        const phaseSprints = await db
+            .select()
+            .from(sprints)
+            .where(eq(sprints.phaseId, phase.id));
+
+        let totalItems = phaseSprints.length;
+        let completedItems = phaseSprints.filter(
+            (s) => s.status === "closed",
+        ).length;
+
+        const sprintIds = phaseSprints.map((s) => s.id);
+        if (sprintIds.length > 0) {
+            const phaseWorkItems = await db
+                .select()
+                .from(workitems)
+                .where(inArray(workitems.sprintId, sprintIds));
+
+            totalItems += phaseWorkItems.length;
+            completedItems += phaseWorkItems.filter(
+                (w) => w.status === "closed" || w.status === "resolved",
+            ).length;
         }
-    });
 
-    // To get workitem metrics, we'd theoretically need to join sprints and workitems
-    // But for a simpler DB query without massive joins, we can query them separately if needed,
-    // or do a join. Since it's a dashboard, we will do a targeted query for workitems
-    // belonging to this project via phases -> sprints.
-    const phaseIds = projectPhases.map((p) => p.id);
-    let allWorkitemsSummary = {
-        total: 0,
-        completed: 0,
-        active: 0,
-        completionPercentage: 0.0,
-    };
+        const completionPercent =
+            totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
 
-    if (phaseIds.length > 0) {
-        // Find sprints for these phases
-    }
-
-    // For proper typing without complex inArray (since it's not imported yet),
-    // let's fetch all sprints and filter
-    const allProjectSprints = await db.select().from(sprints);
-
-    const relevantSprintIds = allProjectSprints
-        .filter((s) => phaseIds.includes(s.phaseId))
-        .map((s) => s.id);
-
-    if (relevantSprintIds.length > 0) {
-        const allProjectWorkitems = await db.select().from(workitems);
-
-        const relevantWorkitems = allProjectWorkitems.filter((w) =>
-            relevantSprintIds.includes(w.sprintId),
-        );
-
-        allWorkitemsSummary.total = relevantWorkitems.length;
-        relevantWorkitems.forEach((wi) => {
-            if (wi.status === "closed" || wi.status === "resolved") {
-                allWorkitemsSummary.completed++;
-            } else if (wi.status === "active" || wi.status === "new") {
-                allWorkitemsSummary.active++;
-            }
+        phaseList.push({
+            phaseName: phase.name,
+            completionPercent: Math.round(completionPercent * 100) / 100,
         });
-
-        if (allWorkitemsSummary.total > 0) {
-            allWorkitemsSummary.completionPercentage =
-                (allWorkitemsSummary.completed / allWorkitemsSummary.total) *
-                100;
-        }
     }
 
     return {
-        project: projectResult[0],
-        metrics: {
-            totalPhases: projectPhases.length,
-            phasesByStatus,
-            workitemsSummary: allWorkitemsSummary,
-        },
-        phasesOverview: projectPhases,
+        title: project.title,
+        description: project.description,
+        logoUrl: project.logoUrl,
+        clientName: project.clientName,
+        status: project.status,
+        startDate: project.startDate,
+        endDate: project.endDate,
+        totalMembersCount: teamMembers.length,
+        teamMembers,
+        totalPhasesCount: projectPhases.length,
+        completedPhasesCount,
+        activePhasesCount,
+        phases: phaseList,
     };
 };
 
@@ -234,72 +236,51 @@ export const getPhaseDashboardMetrics = async (phaseId: string) => {
         return null;
     }
 
+    const phase = phaseResult[0]!;
+
     const phaseSprints = await db
         .select()
         .from(sprints)
-        .where(eq(sprints.phaseId, phaseId));
+        .where(and(eq(sprints.phaseId, phaseId), isNull(sprints.deletedAt)));
 
-    const sprintsByStatus = {
-        new: 0,
-        active: 0,
-        onhold: 0,
-        removed: 0,
-        closed: 0,
-    };
+    const completedSprintsCount = phaseSprints.filter(
+        (s) => s.status === "closed",
+    ).length;
+    const activeSprintsCount = phaseSprints.filter(
+        (s) => s.status === "active",
+    ).length;
 
-    const activeSprintsList: typeof phaseSprints = [];
+    const sprintList = [];
+    for (const sprint of phaseSprints) {
+        const sprintWorkItems = await db
+            .select()
+            .from(workitems)
+            .where(eq(workitems.sprintId, sprint.id));
 
-    phaseSprints.forEach((sprint) => {
-        if (sprint.status in sprintsByStatus) {
-            sprintsByStatus[sprint.status as keyof typeof sprintsByStatus]++;
-        }
-        if (sprint.status === "active") {
-            activeSprintsList.push(sprint);
-        }
-    });
+        const totalItems = sprintWorkItems.length;
+        const completedItems = sprintWorkItems.filter(
+            (w) => w.status === "closed" || w.status === "resolved",
+        ).length;
 
-    const sprintIds = phaseSprints.map((s) => s.id);
-    const workitemsByStatus = {
-        new: 0,
-        active: 0,
-        resolved: 0,
-        closed: 0,
-        removed: 0,
-        onhold: 0,
-    };
+        const completionPercent =
+            totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
 
-    const effortSummary = {
-        totalOriginalEstimation: 0.0,
-        totalCompleted: 0.0,
-        totalRemaining: 0.0,
-    };
-
-    if (sprintIds.length > 0) {
-        const allPhaseWorkitems = await db.select().from(workitems);
-        const relevantWorkitems = allPhaseWorkitems.filter((w) =>
-            sprintIds.includes(w.sprintId),
-        );
-
-        relevantWorkitems.forEach((wi) => {
-            if (wi.status in workitemsByStatus) {
-                workitemsByStatus[
-                    wi.status as keyof typeof workitemsByStatus
-                ]++;
-            }
-            effortSummary.totalOriginalEstimation += wi.originalEstimation || 0;
-            effortSummary.totalCompleted += wi.completed || 0;
-            effortSummary.totalRemaining += wi.remaining || 0;
+        sprintList.push({
+            sprintName: sprint.title,
+            completionPercent: Math.round(completionPercent * 100) / 100,
         });
     }
 
     return {
-        phase: phaseResult[0],
-        metrics: {
-            totalSprints: phaseSprints.length,
-            sprintsByStatus,
-            workitemsByStatus,
-            effortSummary,
-        },
-        activeSprints: activeSprintsList,
+        title: phase.name,
+        description: phase.description,
+        status: phase.status,
+        startDate: phase.startDate,
+        endDate: phase.endDate,
+        type: phase.type,
+        totalSprintsCount: phaseSprints.length,
+        completedSprintsCount,
+        activeSprintsCount,
+        sprints: sprintList,
     };
 };

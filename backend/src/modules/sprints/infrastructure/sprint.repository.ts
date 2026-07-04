@@ -4,6 +4,7 @@ import {
     phases,
     projects,
     organizations,
+    workitems,
 } from "../../../infrastructure/database/schema/index.js";
 import { eq, and, ilike, isNull, count, SQL, desc } from "drizzle-orm";
 
@@ -61,8 +62,33 @@ export const findSprintById = async (id: string) => {
     if (results.length === 0) return null;
 
     const row = results[0]!;
+
+    const sprintWorkItems = await db
+        .select()
+        .from(workitems)
+        .where(and(eq(workitems.sprintId, id), isNull(workitems.deletedAt)));
+
+    const workitemsByStatus = {
+        new: 0,
+        active: 0,
+        resolved: 0,
+        closed: 0,
+        removed: 0,
+        onhold: 0,
+    };
+
+    sprintWorkItems.forEach((wi) => {
+        if (wi.status in workitemsByStatus) {
+            workitemsByStatus[wi.status as keyof typeof workitemsByStatus]++;
+        }
+    });
+
     return {
         ...row.sprint,
+        metrics: {
+            totalWorkItems: sprintWorkItems.length,
+            workitemsByStatus,
+        },
     };
 };
 

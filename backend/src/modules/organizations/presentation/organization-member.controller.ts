@@ -10,6 +10,7 @@ import {
     removeMember,
     revokeInvitation,
     getProjectMembersPaginated,
+    toggleMyLeaveStatus,
 } from "../application/organization-member.use-cases.js";
 import { getMemberRoleData } from "../../../shared/utils/role-data.js";
 
@@ -266,6 +267,28 @@ export const handleGetProjectMembersPaginated = async (
             search,
         );
 
+        return res.status(200).json({ status: "success", data: result });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Handles toggling the authenticated member's status between active and onleave.
+ * @param req Express request object containing organization ID.
+ * @param res Express response object.
+ * @param next Express next function.
+ */
+export const handleToggleMyLeaveStatus = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    try {
+        const result = await toggleMyLeaveStatus(
+            req.orgId as string,
+            req.user?.id as string,
+        );
         return res.status(200).json({ status: "success", data: result });
     } catch (error) {
         next(error);

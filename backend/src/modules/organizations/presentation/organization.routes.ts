@@ -27,6 +27,7 @@ import {
     handleDeleteMember,
     handleRevokeInvitation,
     handleGetProjectMembersPaginated,
+    handleToggleMyLeaveStatus,
 } from "./organization-member.controller.js";
 import {
     inviteMembersSchema,
@@ -118,6 +119,12 @@ router.post(
 );
 
 router.get("/members/me/role", requireOrgId, handleGetMyMemberRole);
+
+router.patch(
+    "/members/me/toggle-leave",
+    requireOrgId,
+    handleToggleMyLeaveStatus,
+);
 
 router.get(
     "/members/:id",

@@ -11,10 +11,10 @@ export const initializeSocket = (httpServer: HttpServer) => {
         },
     });
 
-    io.use((socket, next) => {
-        const authHeader =
-            socket.handshake.auth.token ||
-            socket.handshake.headers.authorization;
+    const chatNamespace = io.of("/socket.io");
+
+    chatNamespace.use((socket, next) => {
+        const authHeader = socket.handshake.auth.authorization;
         if (!authHeader) {
             return next(new Error("Authentication error: No token provided"));
         }
@@ -30,10 +30,8 @@ export const initializeSocket = (httpServer: HttpServer) => {
             };
             (socket as any).user = decoded;
 
-            const orgId =
-                socket.handshake.headers.org_id ||
-                socket.handshake.headers["org_id"] ||
-                socket.handshake.auth.org_id;
+            const orgId = socket.handshake.auth.org_id;
+
             if (!orgId) {
                 return next(
                     new Error("Organization error: No org_id provided"),
@@ -56,7 +54,7 @@ export const initializeSocket = (httpServer: HttpServer) => {
         }
     });
 
-    io.on("connection", (socket: Socket) => {
+    chatNamespace.on("connection", (socket: Socket) => {
         handleChatConnection(socket);
     });
 

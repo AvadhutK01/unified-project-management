@@ -29,6 +29,7 @@ import {
     notFoundError,
     unauthorizedError,
     forbiddenError,
+    internalServerError,
 } from "../../../shared/errors/app-error.js";
 
 /**
@@ -404,4 +405,43 @@ export const getProjectMembersPaginated = async (
             totalPages: Math.ceil(total / limit),
         },
     };
+};
+
+/**
+ * Toggles the current user's member status between active and onleave.
+ * @param orgId The organization UUID.
+ * @param userId The user UUID.
+ */
+export const toggleMyLeaveStatus = async (orgId: string, userId: string) => {
+    const org = await findOrganizationById(orgId);
+    if (!org) {
+        throw notFoundError("Organization not found");
+    }
+
+    if (org.ownerUserId === userId) {
+        throw badRequestError(
+            "Organization owner cannot change their status to onleave",
+        );
+    }
+
+    const member = await findMemberByOrgAndUserId(orgId, userId);
+    if (!member) {
+        throw notFoundError("Member not found in organization");
+    }
+
+    if (member.status !== "active" && member.status !== "onleave") {
+        throw badRequestError(
+            "You cannot change your leave status because your current status is " +
+                member.status,
+        );
+    }
+
+    const newStatus = member.status === "active" ? "onleave" : "active";
+
+    const updated = await updateMemberDetails(member.id, { status: newStatus });
+    if (!updated) {
+        throw internalServerError("Failed to update member status");
+    }
+
+    return updated;
 };

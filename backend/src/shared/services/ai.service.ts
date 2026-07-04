@@ -26,13 +26,15 @@ export const generateDashboardSummary = async (
     }
 
     const prompt = `
-You are an expert Project Management Assistant. Please analyze the following ${scope} dashboard data and provide a professional summary.
-Format your response using Markdown bullet points. Focus on:
-1. Overall status and progress.
-2. Any potential risks, bottlenecks, or blockers (e.g., items on hold, unstarted phases, or skewed workitem distributions).
-3. A brief conclusion or recommendation.
+Provide a clear, structured analysis of this ${scope} dashboard data.
+Format your response using Markdown bullet points. Act as a professional data summarizer. Do not use conversational text, greetings, or concluding remarks.
 
-Maintain a professional, analytical, and actionable tone.
+Focus on providing actionable insights:
+1. Overall status, progress, and key metrics highlights.
+2. Potential risks, bottlenecks, or blockers (e.g., items on hold, unstarted phases).
+3. Any important trends or recommendations based on the data.
+
+Keep the summary comprehensive yet concise enough for a quick read on a dashboard.
 
 Data:
 ${JSON.stringify(data, null, 2)}

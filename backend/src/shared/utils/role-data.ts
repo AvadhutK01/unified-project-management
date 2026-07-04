@@ -17,6 +17,7 @@ export const getMemberRoleData = async (orgId: string, userId: string) => {
             name: "Owner",
             permissions: [],
             is_org_owner: true,
+            status: "active",
         };
     }
 
@@ -32,6 +33,7 @@ export const getMemberRoleData = async (orgId: string, userId: string) => {
             name: "Unknown",
             permissions: [],
             is_org_owner: false,
+            status: member.status,
         };
     }
 
@@ -42,5 +44,6 @@ export const getMemberRoleData = async (orgId: string, userId: string) => {
         name: role.name,
         permissions,
         is_org_owner: false,
+        status: member.status,
     };
 };
