@@ -1,5 +1,6 @@
 import Header from "@/components/common/Header";
 import Sidebar from "@/components/common/Sidebar";
+import ChatBot from "@/components/common/ChatBot";
 import type { ReactNode } from "react";
 
 const MainLayout = ({
@@ -16,6 +17,7 @@ const MainLayout = ({
                     {children}
                 </div>
             </main>
+            <ChatBot />
         </div>
     );
 };
