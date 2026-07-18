@@ -12,9 +12,11 @@ import {
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
+import { Separator } from "../ui/separator";
 import { useStore } from "@/store/store";
 import { useOrganizationStore } from "@/store/organization.store";
 import { usePermission } from "@/features/rbac/hooks/usePermission";
+import { OrgSwitcher } from "./OrgSwitcher";
 
 interface SubMenuItem {
     label: string;
@@ -252,17 +254,15 @@ const Sidebar = () => {
                 sidebarOpen ? "w-64" : "w-16",
             )}
         >
-            <div className="flex h-14 items-center px-3 shrink-0">
-                <div className="flex items-center gap-2 overflow-hidden">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shadow-sm">
-                        A
-                    </div>
-
-                    {sidebarOpen && (
-                        <span className="text-sm font-bold tracking-tight whitespace-nowrap">
-                            AgencyOS
-                        </span>
-                    )}
+            {/* Top: Org Switcher */}
+            <div
+                className={cn(
+                    "flex items-center px-3 pt-3 pb-2 shrink-0",
+                    sidebarOpen ? "gap-2" : "justify-center",
+                )}
+            >
+                <div className="flex-1 min-w-0">
+                    <OrgSwitcher collapsed={!sidebarOpen} />
                 </div>
 
                 <Button
@@ -279,7 +279,7 @@ const Sidebar = () => {
             </div>
 
             <div className="px-2 flex-1 overflow-y-auto">
-                <nav className="space-y-1 mt-7">
+                <nav className="space-y-1">
                     {visibleMenuItems.map(renderMenuItem)}
                 </nav>
             </div>

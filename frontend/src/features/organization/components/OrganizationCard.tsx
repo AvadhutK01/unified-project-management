@@ -46,7 +46,7 @@ export function OrganizationCard({
             tabIndex={0}
             onKeyDown={(e) => e.key === "Enter" && onClick()}
             className={cn(
-                "relative flex flex-col gap-4 p-5 rounded-xl border-2 bg-card cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "relative flex flex-col gap-4 p-5 rounded-xl border-2 bg-card cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-h-[170px]",
                 isSelected
                     ? "border-primary shadow-md shadow-primary/10"
                     : "border-border hover:border-primary/40",
@@ -88,7 +88,7 @@ export function OrganizationCard({
             </div>
 
             {/* Meta */}
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <div className="flex items-center justify-between text-xs text-muted-foreground mt-auto">
                 <div className="flex items-center gap-1.5">
                     <Users className="size-3.5" />
                     <span>{memberCount} Members</span>

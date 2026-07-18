@@ -24,7 +24,7 @@ function renderInline(text: string): React.ReactNode {
             return (
                 <code
                     key={i}
-                    className="text-[10px] bg-muted px-1 py-0.5 rounded font-mono"
+                    className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[10px] text-primary"
                 >
                     {part.slice(1, -1)}
                 </code>
@@ -44,16 +44,15 @@ function formatSummary(text: string) {
         const trimmed = raw.trim();
         if (!trimmed) continue;
 
-        // Top-level section header: *   **Title:** (nothing after the closing **)
         const sectionMatch = trimmed.match(/^\*{1,3}\s+\*{2}(.+?)\*{2}:?\s*$/);
         if (sectionMatch) {
             elements.push(
                 <div
                     key={key++}
-                    className="flex items-center gap-2 mt-5 mb-2 first:mt-0"
+                    className="mt-5 mb-2 flex items-center gap-2 rounded-full border border-primary/15 bg-primary/10 px-3 py-1.5 w-fit"
                 >
-                    <span className="h-3.5 w-1 rounded-full bg-violet-500/60 shrink-0" />
-                    <span className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                    <span className="h-2.5 w-2.5 rounded-full bg-primary shrink-0" />
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground/80">
                         {sectionMatch[1].replace(/:$/, "")}
                     </span>
                 </div>,
@@ -61,13 +60,12 @@ function formatSummary(text: string) {
             continue;
         }
 
-        // Bold standalone header (no bullet): **Title:**
         const boldHeaderMatch = trimmed.match(/^\*{2}(.+?)\*{2}:?\s*$/);
         if (boldHeaderMatch) {
             elements.push(
                 <p
                     key={key++}
-                    className="text-xs font-semibold text-foreground mt-3 mb-1"
+                    className="mt-3 mb-1 text-sm font-semibold text-foreground"
                 >
                     {boldHeaderMatch[1].replace(/:$/, "")}
                 </p>,
@@ -75,7 +73,6 @@ function formatSummary(text: string) {
             continue;
         }
 
-        // Sub-bullet with bold title: *   **Title:** description
         const boldBulletMatch = trimmed.match(
             /^\*{1,3}\s+\*{2}(.+?)\*{2}:?\s*(.+)/,
         );
@@ -83,9 +80,9 @@ function formatSummary(text: string) {
             elements.push(
                 <li
                     key={key++}
-                    className="flex items-start gap-2 text-[12.5px] leading-relaxed text-foreground/80 mb-1.5 ml-3"
+                    className="mb-2 ml-1 flex items-start gap-2 rounded-xl border border-primary/10 bg-primary/[0.03] px-3 py-2.5 text-[12.5px] leading-relaxed text-foreground/80"
                 >
-                    <span className="h-1.5 w-1.5 rounded-full bg-violet-400/70 mt-1.5 shrink-0" />
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/70" />
                     <span>
                         <strong className="font-semibold text-foreground">
                             {boldBulletMatch[1]}:
@@ -97,26 +94,24 @@ function formatSummary(text: string) {
             continue;
         }
 
-        // Plain bullet: *   text
         const plainBulletMatch = trimmed.match(/^\*{1,3}\s+(.+)/);
         if (plainBulletMatch) {
             elements.push(
                 <li
                     key={key++}
-                    className="flex items-start gap-2 text-[12.5px] leading-relaxed text-foreground/75 mb-1.5 ml-3"
+                    className="mb-2 ml-1 flex items-start gap-2 rounded-xl border border-border/60 bg-background/70 px-3 py-2.5 text-[12.5px] leading-relaxed text-foreground/75"
                 >
-                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40 mt-1.5 shrink-0" />
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/50" />
                     <span>{renderInline(plainBulletMatch[1])}</span>
                 </li>,
             );
             continue;
         }
 
-        // Regular paragraph text
         elements.push(
             <p
                 key={key++}
-                className="text-[12.5px] leading-relaxed text-muted-foreground mt-1 mb-1"
+                className="mt-1 mb-1 text-[12.5px] leading-relaxed text-muted-foreground"
             >
                 {renderInline(trimmed)}
             </p>,
@@ -128,30 +123,29 @@ function formatSummary(text: string) {
 
 const AiSummary = ({ summary, isPending, onGenerate }: Props) => {
     return (
-        <div className="overflow-hidden rounded-xl bg-card border shadow-sm">
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-3.5 border-b">
+        <div className="overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-br from-background via-card to-primary/[0.04] shadow-[0_20px_45px_-24px_rgba(15,23,42,0.20)]">
+            <div className="flex items-center justify-between border-b border-border/70 bg-gradient-to-r from-primary/[0.08] via-transparent to-transparent px-5 py-3.5">
                 <div className="flex items-center gap-2.5">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-violet-500/20 to-purple-600/20 ring-1 ring-violet-500/25">
-                        <Brain size={14} className="text-violet-600" />
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/15">
+                        <Brain size={16} className="text-primary" />
                     </div>
                     <div>
                         <span className="text-sm font-semibold text-foreground">
                             AI Summary
                         </span>
                         {!summary && !isPending && (
-                            <span className="text-xs text-muted-foreground ml-2 hidden sm:inline">
-                                — Get insights about your workspace
+                            <span className="ml-2 hidden text-xs text-muted-foreground sm:inline">
+                                Workspace insights in seconds
                             </span>
                         )}
                     </div>
                 </div>
                 <Button
-                    variant="outline"
+                    variant="default"
                     size="sm"
                     onClick={onGenerate}
                     disabled={isPending}
-                    className="gap-1.5 h-8 text-xs"
+                    className="bg-linear-to-r from-primary to-primary/80 text-primary-foreground shadow-sm hover:opacity-90"
                 >
                     {isPending ? (
                         <>
@@ -172,79 +166,55 @@ const AiSummary = ({ summary, isPending, onGenerate }: Props) => {
                 </Button>
             </div>
 
-            {/* Content */}
             <div className="relative">
-                <div className="absolute left-0 top-0 bottom-0 w-0.75 bg-linear-to-b from-violet-500/30 via-primary/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 top-0 w-0.75 bg-gradient-to-b from-primary/20 via-primary/8 to-transparent" />
 
                 {isPending && !summary ? (
-                    <div className="flex flex-col items-center justify-center gap-3 py-12 px-5">
+                    <div className="flex flex-col items-center justify-center gap-3 px-5 py-8">
                         <div className="relative">
+                            <div className="absolute inset-0 rounded-full bg-primary/15 blur-xl" />
                             <Brain
                                 size={32}
-                                className="text-violet-400 animate-pulse"
+                                className="relative text-primary/70 animate-pulse"
                             />
-                            <div className="absolute inset-0 bg-violet-400/20 blur-xl rounded-full" />
                         </div>
                         <div className="text-center">
                             <p className="text-sm font-medium text-foreground">
                                 Analyzing your workspace
                             </p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                Generating AI-powered summary…
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                                Generating an AI-powered overview of recent
+                                activity…
                             </p>
                         </div>
                     </div>
                 ) : summary ? (
-                    <div className="px-5 py-4 pl-7">
-                        <ul className="list-none p-0 m-0 space-y-0">
-                            {formatSummary(summary)}
-                        </ul>
-                        <div className="mt-4 pt-3 border-t flex items-center justify-between">
-                            <p className="text-[11px] text-muted-foreground/50">
+                    <div className="px-5 py-3 pl-7">
+                        <div className="rounded-2xl border border-border/70 bg-background/70 p-3 shadow-sm">
+                            <ul className="m-0 list-none space-y-0 p-0">
+                                {formatSummary(summary)}
+                            </ul>
+                        </div>
+                        <div className="mt-4 flex items-center justify-between border-t border-border/70 pt-3">
+                            <p className="text-[11px] text-muted-foreground/70">
                                 Powered by AI — may not be perfectly accurate
                             </p>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={onGenerate}
-                                disabled={isPending}
-                                className="size-7"
-                                title="Regenerate"
-                            >
-                                {isPending ? (
-                                    <Loader2
-                                        size={12}
-                                        className="animate-spin"
-                                    />
-                                ) : (
-                                    <RefreshCw size={12} />
-                                )}
-                            </Button>
                         </div>
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center gap-4 py-12 px-5">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-violet-500/10 to-purple-600/10 ring-1 ring-violet-500/20">
-                            <Sparkles size={20} className="text-violet-500" />
+                    <div className="flex flex-col items-center justify-center gap-3 px-5 py-8">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
+                            <Sparkles size={22} className="text-primary" />
                         </div>
-                        <div className="text-center max-w-xs">
+                        <div className="max-w-xs text-center">
                             <p className="text-sm font-medium text-foreground">
                                 No summary yet
                             </p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
+                            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
                                 Generate an AI-powered overview of your
-                                organization's performance and activity.
+                                organization's performance and recent activity.
                             </p>
                         </div>
-                        <Button
-                            variant="default"
-                            size="sm"
-                            onClick={onGenerate}
-                            className="gap-2 mt-1"
-                        >
-                            <Sparkles size={14} />
-                            Generate AI Summary
-                        </Button>
                     </div>
                 )}
             </div>

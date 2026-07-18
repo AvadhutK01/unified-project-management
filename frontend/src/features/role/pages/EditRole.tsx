@@ -11,12 +11,12 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
 import { roleSchema, type RoleFormValues } from "../schema/roleSchema";
-import type { PermissionField } from "../types/role";
 import type { PermissionRow } from "../utils/permissionHelpers";
 import {
     collectPermissionGraph,
+    deriveAvailableFields,
     derivePermissionRowsFromPermissionItems,
-    permissionDependencies,
+    KNOWN_DEPENDENCIES,
     permissionDependents,
 } from "../utils/permissionHelpers";
 import {
@@ -25,14 +25,6 @@ import {
     useUpdateRoleMutation,
 } from "../hooks/useRoles";
 import { toast } from "sonner";
-
-const PERMISSION_FIELDS: { field: PermissionField; label: string }[] = [
-    { field: "add", label: "Add" },
-    { field: "edit", label: "Edit" },
-    { field: "view", label: "View" },
-    { field: "delete", label: "Delete" },
-    { field: "list", label: "List" },
-];
 
 const INITIAL_PERMISSIONS: PermissionRow[] = [];
 
@@ -47,6 +39,11 @@ const EditRole = () => {
     const { data: rolePermissions } = useFetchRolePermissionsQuery();
     const { mutate: updateRole, isPending: isSubmitting } =
         useUpdateRoleMutation(roleId as string);
+
+    const availableFields = useMemo(
+        () => deriveAvailableFields(rolePermissions?.data ?? []),
+        [rolePermissions],
+    );
 
     const {
         register,
@@ -79,9 +76,9 @@ const EditRole = () => {
             );
 
             permissionRows = permissionRows.map((permissionRow) => {
-                const updatedRow = { ...permissionRow };
+                const updatedFields = { ...permissionRow.fields };
 
-                PERMISSION_FIELDS.forEach(({ field }) => {
+                availableFields.forEach(({ field }) => {
                     const matchingPermission = allAvailablePermissions.find(
                         (item: any) => {
                             const codename = item.codename;
@@ -103,27 +100,23 @@ const EditRole = () => {
                         },
                     );
 
-                    if (
+                    updatedFields[field] = !!(
                         matchingPermission &&
                         rolePermissionCodenameSet.has(
                             matchingPermission.codename,
                         )
-                    ) {
-                        updatedRow[field] = true;
-                    } else {
-                        updatedRow[field] = false;
-                    }
+                    );
                 });
 
-                return updatedRow;
+                return { ...permissionRow, fields: updatedFields };
             });
 
             setPermissions(permissionRows);
         }
-    }, [roleData, rolePermissions, setValue]);
+    }, [roleData, rolePermissions, setValue, availableFields]);
 
     const handlePermissionChange = useCallback(
-        (module: string, field: PermissionField, value: boolean) => {
+        (module: string, field: string, value: boolean) => {
             setPermissions((prev) =>
                 prev.map((permission) => {
                     if (permission.module !== module) {
@@ -133,19 +126,16 @@ const EditRole = () => {
                     if (value) {
                         const requiredDependencies = collectPermissionGraph(
                             field,
-                            permissionDependencies,
+                            KNOWN_DEPENDENCIES,
                         );
 
-                        return requiredDependencies.reduce<PermissionRow>(
-                            (updated, dependency) => ({
-                                ...updated,
-                                [dependency]: true,
-                            }),
-                            {
-                                ...permission,
-                                [field]: true,
-                            },
-                        );
+                        const updatedFields = { ...permission.fields };
+                        updatedFields[field] = true;
+                        requiredDependencies.forEach((dep) => {
+                            updatedFields[dep] = true;
+                        });
+
+                        return { ...permission, fields: updatedFields };
                     }
 
                     if (field === "list") {
@@ -154,16 +144,13 @@ const EditRole = () => {
                             permissionDependents,
                         );
 
-                        return dependents.reduce<PermissionRow>(
-                            (updated, dependent) => ({
-                                ...updated,
-                                [dependent]: false,
-                            }),
-                            {
-                                ...permission,
-                                list: false,
-                            },
-                        );
+                        const updatedFields = { ...permission.fields };
+                        updatedFields[field] = false;
+                        dependents.forEach((dep) => {
+                            updatedFields[dep] = false;
+                        });
+
+                        return { ...permission, fields: updatedFields };
                     }
 
                     if (field === "view") {
@@ -172,21 +159,21 @@ const EditRole = () => {
                             permissionDependents,
                         );
 
-                        return dependents.reduce<PermissionRow>(
-                            (updated, dependent) => ({
-                                ...updated,
-                                [dependent]: false,
-                            }),
-                            {
-                                ...permission,
-                                view: false,
-                            },
-                        );
+                        const updatedFields = { ...permission.fields };
+                        updatedFields[field] = false;
+                        dependents.forEach((dep) => {
+                            updatedFields[dep] = false;
+                        });
+
+                        return { ...permission, fields: updatedFields };
                     }
 
                     return {
                         ...permission,
-                        [field]: false,
+                        fields: {
+                            ...permission.fields,
+                            [field]: false,
+                        },
                     };
                 }),
             );
@@ -200,22 +187,20 @@ const EditRole = () => {
 
     const allSelected =
         permissions.length > 0 &&
+        availableFields.length > 0 &&
         permissions.every((permission) =>
-            PERMISSION_FIELDS.every(
-                (fieldEntry) => permission[fieldEntry.field],
-            ),
+            availableFields.every(({ field }) => permission.fields[field]),
         );
 
     const handleSelectAll = (value: boolean) => {
         setPermissions((prev) =>
-            prev.map((permission) => ({
-                ...permission,
-                add: value,
-                edit: value,
-                view: value,
-                delete: value,
-                list: value,
-            })),
+            prev.map((permission) => {
+                const updatedFields = { ...permission.fields };
+                availableFields.forEach(({ field }) => {
+                    updatedFields[field] = value;
+                });
+                return { ...permission, fields: updatedFields };
+            }),
         );
 
         if (value) {
@@ -234,29 +219,30 @@ const EditRole = () => {
                     </span>
                 ),
             },
-            ...PERMISSION_FIELDS.map(({ field, label }) => ({
+            ...availableFields.map(({ field, label }) => ({
                 key: field,
                 label,
-                render: (row: PermissionRow) => (
-                    <Switch
-                        checked={row[field]}
-                        onCheckedChange={(value) =>
-                            handlePermissionChange(row.module, field, value)
-                        }
-                        size="sm"
-                        aria-label={`Toggle ${row.module} ${label}`}
-                    />
-                ),
+                render: (row: PermissionRow) =>
+                    row.permissionIds[field] ? (
+                        <Switch
+                            checked={row.fields[field] ?? false}
+                            onCheckedChange={(value) =>
+                                handlePermissionChange(row.module, field, value)
+                            }
+                            size="sm"
+                            aria-label={`Toggle ${row.module} ${label}`}
+                        />
+                    ) : (
+                        <span className="text-muted-foreground">—</span>
+                    ),
             })),
         ],
-        [handlePermissionChange],
+        [handlePermissionChange, availableFields],
     );
 
     const onSubmit = (data: RoleFormValues) => {
         const hasAnyPermission = permissions.some((permission) =>
-            PERMISSION_FIELDS.some(
-                (fieldEntry) => permission[fieldEntry.field],
-            ),
+            availableFields.some(({ field }) => permission.fields[field]),
         );
 
         if (!hasAnyPermission) {
@@ -267,13 +253,9 @@ const EditRole = () => {
         }
 
         const permissionIds = permissions.flatMap((permission) =>
-            PERMISSION_FIELDS.filter(
-                (fieldEntry) => permission[fieldEntry.field],
-            )
-                .map(
-                    (fieldEntry) =>
-                        permission.permissionIds?.[fieldEntry.field],
-                )
+            availableFields
+                .filter(({ field }) => permission.fields[field])
+                .map(({ field }) => permission.permissionIds[field])
                 .filter((id): id is string => Boolean(id)),
         );
 

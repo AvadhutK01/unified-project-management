@@ -11,7 +11,6 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
 import { roleSchema, type RoleFormValues } from "../schema/roleSchema";
-import type { PermissionField } from "../types/role";
 import type { PermissionRow } from "../utils/permissionHelpers";
 import {
     useCreateRoleMutation,
@@ -20,18 +19,11 @@ import {
 import { toast } from "sonner";
 import {
     collectPermissionGraph,
+    deriveAvailableFields,
     derivePermissionRowsFromPermissionItems,
-    permissionDependencies,
+    KNOWN_DEPENDENCIES,
     permissionDependents,
 } from "../utils/permissionHelpers";
-
-const PERMISSION_FIELDS: { field: PermissionField; label: string }[] = [
-    { field: "add", label: "Add" },
-    { field: "edit", label: "Edit" },
-    { field: "view", label: "View" },
-    { field: "delete", label: "Delete" },
-    { field: "list", label: "List" },
-];
 
 const INITIAL_PERMISSIONS: PermissionRow[] = [];
 
@@ -50,6 +42,12 @@ const AddRole = () => {
         const items = rolePermissions?.data ?? [];
         setPermissions(derivePermissionRowsFromPermissionItems(items));
     }, [rolePermissions]);
+
+    const availableFields = useMemo(
+        () => deriveAvailableFields(rolePermissions?.data ?? []),
+        [rolePermissions],
+    );
+
     const [permissionError, setPermissionError] = useState<string | null>(null);
 
     const {
@@ -61,7 +59,7 @@ const AddRole = () => {
     });
 
     const handlePermissionChange = useCallback(
-        (module: string, field: PermissionField, value: boolean) => {
+        (module: string, field: string, value: boolean) => {
             setPermissions((prev) =>
                 prev.map((permission) => {
                     if (permission.module !== module) {
@@ -71,19 +69,16 @@ const AddRole = () => {
                     if (value) {
                         const requiredDependencies = collectPermissionGraph(
                             field,
-                            permissionDependencies,
+                            KNOWN_DEPENDENCIES,
                         );
 
-                        return requiredDependencies.reduce<PermissionRow>(
-                            (updated, dependency) => ({
-                                ...updated,
-                                [dependency]: true,
-                            }),
-                            {
-                                ...permission,
-                                [field]: true,
-                            },
-                        );
+                        const updatedFields = { ...permission.fields };
+                        updatedFields[field] = true;
+                        requiredDependencies.forEach((dep) => {
+                            updatedFields[dep] = true;
+                        });
+
+                        return { ...permission, fields: updatedFields };
                     }
 
                     if (field === "list") {
@@ -92,16 +87,13 @@ const AddRole = () => {
                             permissionDependents,
                         );
 
-                        return dependents.reduce<PermissionRow>(
-                            (updated, dependent) => ({
-                                ...updated,
-                                [dependent]: false,
-                            }),
-                            {
-                                ...permission,
-                                list: false,
-                            },
-                        );
+                        const updatedFields = { ...permission.fields };
+                        updatedFields[field] = false;
+                        dependents.forEach((dep) => {
+                            updatedFields[dep] = false;
+                        });
+
+                        return { ...permission, fields: updatedFields };
                     }
 
                     if (field === "view") {
@@ -110,21 +102,21 @@ const AddRole = () => {
                             permissionDependents,
                         );
 
-                        return dependents.reduce<PermissionRow>(
-                            (updated, dependent) => ({
-                                ...updated,
-                                [dependent]: false,
-                            }),
-                            {
-                                ...permission,
-                                view: false,
-                            },
-                        );
+                        const updatedFields = { ...permission.fields };
+                        updatedFields[field] = false;
+                        dependents.forEach((dep) => {
+                            updatedFields[dep] = false;
+                        });
+
+                        return { ...permission, fields: updatedFields };
                     }
 
                     return {
                         ...permission,
-                        [field]: false,
+                        fields: {
+                            ...permission.fields,
+                            [field]: false,
+                        },
                     };
                 }),
             );
@@ -138,20 +130,20 @@ const AddRole = () => {
 
     const allSelected =
         permissions.length > 0 &&
-        permissions.every(
-            (p) => p.add && p.edit && p.view && p.delete && p.list,
+        availableFields.length > 0 &&
+        permissions.every((p) =>
+            availableFields.every(({ field }) => p.fields[field]),
         );
 
     const handleSelectAll = (value: boolean) => {
         setPermissions((prev) =>
-            prev.map((permission) => ({
-                ...permission,
-                add: value,
-                edit: value,
-                view: value,
-                delete: value,
-                list: value,
-            })),
+            prev.map((permission) => {
+                const updatedFields = { ...permission.fields };
+                availableFields.forEach(({ field }) => {
+                    updatedFields[field] = value;
+                });
+                return { ...permission, fields: updatedFields };
+            }),
         );
         if (value) setPermissionError(null);
     };
@@ -167,27 +159,30 @@ const AddRole = () => {
                     </span>
                 ),
             },
-            ...PERMISSION_FIELDS.map(({ field, label }) => ({
+            ...availableFields.map(({ field, label }) => ({
                 key: field,
                 label,
-                render: (row: PermissionRow) => (
-                    <Switch
-                        checked={row[field]}
-                        onCheckedChange={(value) =>
-                            handlePermissionChange(row.module, field, value)
-                        }
-                        size="sm"
-                        aria-label={`Toggle ${row.module} ${label}`}
-                    />
-                ),
+                render: (row: PermissionRow) =>
+                    row.permissionIds[field] ? (
+                        <Switch
+                            checked={row.fields[field] ?? false}
+                            onCheckedChange={(value) =>
+                                handlePermissionChange(row.module, field, value)
+                            }
+                            size="sm"
+                            aria-label={`Toggle ${row.module} ${label}`}
+                        />
+                    ) : (
+                        <span className="text-muted-foreground">—</span>
+                    ),
             })),
         ],
-        [handlePermissionChange],
+        [handlePermissionChange, availableFields],
     );
 
     const onSubmit = (data: RoleFormValues) => {
-        const hasAnyPermission = permissions.some(
-            (p) => p.add || p.edit || p.view || p.delete || p.list,
+        const hasAnyPermission = permissions.some((p) =>
+            availableFields.some(({ field }) => p.fields[field]),
         );
 
         if (!hasAnyPermission) {
@@ -198,13 +193,9 @@ const AddRole = () => {
         }
 
         const permissionIds = permissions.flatMap((permission) =>
-            PERMISSION_FIELDS.filter(
-                (fieldEntry) => permission[fieldEntry.field],
-            )
-                .map(
-                    (fieldEntry) =>
-                        permission.permissionIds?.[fieldEntry.field],
-                )
+            availableFields
+                .filter(({ field }) => permission.fields[field])
+                .map(({ field }) => permission.permissionIds[field])
                 .filter((id): id is string => Boolean(id)),
         );
 
