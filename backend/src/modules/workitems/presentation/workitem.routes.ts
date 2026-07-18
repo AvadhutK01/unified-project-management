@@ -3,6 +3,7 @@ import { authenticate } from "../../../shared/middleware/authenticate.js";
 import { requireOrgId } from "../../../shared/middleware/require-org-id.js";
 import { validateRequest } from "../../../shared/validators/index.js";
 import { uploadMedia } from "../../../shared/middleware/upload.js";
+import { requirePermission } from "../../../shared/middleware/require-permission.js";
 import {
     handleCreateWorkitem,
     handleGetWorkitemById,
@@ -40,30 +41,44 @@ router.use(authenticate);
 router.use(requireOrgId);
 
 // Core Workitem endpoints
-router.post("/", validateRequest(createWorkitemSchema), handleCreateWorkitem);
+router.post(
+    "/",
+    requirePermission("workitem_add"),
+    validateRequest(createWorkitemSchema),
+    handleCreateWorkitem,
+);
 
 router.get(
     "/",
+    requirePermission("workitem_list"),
     validateRequest(getWorkitemsQuerySchema),
     handleGetAllWorkitems,
 );
 
 router.get(
     "/:id",
+    requirePermission("workitem_view"),
     validateRequest(workitemIdParamSchema),
     handleGetWorkitemById,
 );
 
-router.put("/:id", validateRequest(updateWorkitemSchema), handleUpdateWorkitem);
+router.put(
+    "/:id",
+    requirePermission("workitem_edit"),
+    validateRequest(updateWorkitemSchema),
+    handleUpdateWorkitem,
+);
 
 router.patch(
     "/:id/status",
+    requirePermission("workitem_status"),
     validateRequest(updateWorkitemStatusSchema),
     handleUpdateWorkitemStatus,
 );
 
 router.delete(
     "/:id",
+    requirePermission("workitem_delete"),
     validateRequest(workitemIdParamSchema),
     handleDeleteWorkitem,
 );
@@ -94,6 +109,7 @@ router.delete(
 
 router.get(
     "/:id/activities",
+    requirePermission("workitem_view"),
     validateRequest(workitemActivitiesQuerySchema),
     handleGetWorkitemActivities,
 );

@@ -136,6 +136,41 @@ export const seedPermissions = async () => {
             codename: "sprint_status",
             description: "Permission to update sprint status",
         },
+        {
+            name: "Add Work Item",
+            codename: "workitem_add",
+            description: "Permission to create a work item",
+        },
+        {
+            name: "Edit Work Item",
+            codename: "workitem_edit",
+            description: "Permission to update an existing work item",
+        },
+        {
+            name: "View Work Item",
+            codename: "workitem_view",
+            description: "Permission to view a work item",
+        },
+        {
+            name: "Delete Work Item",
+            codename: "workitem_delete",
+            description: "Permission to delete a work item",
+        },
+        {
+            name: "List Work Items",
+            codename: "workitem_list",
+            description: "Permission to view all work items",
+        },
+        {
+            name: "Update Work Item Status",
+            codename: "workitem_status",
+            description: "Permission to update work item status",
+        },
+        {
+            name: "View Report",
+            codename: "report_view",
+            description: "Permission to view reports",
+        },
     ];
 
     for (const permission of allPermissions) {

@@ -10,6 +10,7 @@ import {
 import { validateRequest } from "../../../shared/validators/index.js";
 import { authenticate } from "../../../shared/middleware/authenticate.js";
 import { requireOrgId } from "../../../shared/middleware/require-org-id.js";
+import { requirePermission } from "../../../shared/middleware/require-permission.js";
 import {
     projectDashboardParamsSchema,
     phaseDashboardParamsSchema,
@@ -24,12 +25,14 @@ router.get("/organizations", handleGetOrganizationDashboard);
 
 router.get(
     "/projects/:projectId",
+    requirePermission("project_view"),
     validateRequest(projectDashboardParamsSchema),
     handleGetProjectDashboard,
 );
 
 router.get(
     "/phases/:phaseId",
+    requirePermission("phase_view"),
     validateRequest(phaseDashboardParamsSchema),
     handleGetPhaseDashboard,
 );
@@ -38,12 +41,14 @@ router.get("/organizations/summary", handleGetOrganizationSummary);
 
 router.get(
     "/projects/:projectId/summary",
+    requirePermission("project_view"),
     validateRequest(projectDashboardParamsSchema),
     handleGetProjectSummary,
 );
 
 router.get(
     "/phases/:phaseId/summary",
+    requirePermission("phase_view"),
     validateRequest(phaseDashboardParamsSchema),
     handleGetPhaseSummary,
 );

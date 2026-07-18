@@ -52,7 +52,7 @@ router.put(
 
 router.delete(
     "/:id",
-    requirePermission("phase_edit"),
+    requirePermission("phase_delete"),
     validateRequest(phaseIdParamSchema),
     handleDeletePhase,
 );

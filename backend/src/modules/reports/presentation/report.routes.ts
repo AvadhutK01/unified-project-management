@@ -18,28 +18,28 @@ router.use(requireOrgId);
 
 router.get(
     "/project-overview",
-    requirePermission("organization_view"),
+    requirePermission("report_view"),
     validateRequest(reportQuerySchema),
     getProjectOverviewHandler,
 );
 
 router.get(
     "/sprint-performance",
-    requirePermission("organization_view"),
+    requirePermission("report_view"),
     validateRequest(reportQuerySchema),
     getSprintPerformanceHandler,
 );
 
 router.get(
     "/member-activity",
-    requirePermission("organization_view"),
+    requirePermission("report_view"),
     validateRequest(reportQuerySchema),
     getMemberActivityHandler,
 );
 
 router.get(
     "/phase-overview",
-    requirePermission("organization_view"),
+    requirePermission("report_view"),
     validateRequest(reportQuerySchema),
     getPhaseOverviewHandler,
 );
