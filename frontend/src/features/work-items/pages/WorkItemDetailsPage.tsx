@@ -28,6 +28,8 @@ import WorkItemAttachmentsTab from "../components/WorkItemAttachmentsTab";
 import WorkItemActivitiesTab from "../components/WorkItemActivitiesTab";
 import WorkItemDetailsCard from "../components/WorkItemDetailsCard";
 import EditWorkItemModal from "../components/EditWorkItemModal";
+import { usePermission } from "@/features/rbac/hooks/usePermission";
+import { PERMISSIONS } from "@/features/rbac/types/rbac.types";
 
 const WorkItemDetailsPage = () => {
     const {
@@ -49,6 +51,10 @@ const WorkItemDetailsPage = () => {
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const { hasPermission } = usePermission();
+    const canEdit = hasPermission(PERMISSIONS.WORKITEM.EDIT);
+    const canDelete = hasPermission(PERMISSIONS.WORKITEM.DELETE);
+    const canChangeStatus = hasPermission(PERMISSIONS.WORKITEM.STATUS);
 
     const {
         data: workItem,
@@ -280,6 +286,9 @@ const WorkItemDetailsPage = () => {
                 projectId={projectId!}
                 phaseId={phaseId!}
                 sprintId={sprintId!}
+                canEdit={canEdit}
+                canDelete={canDelete}
+                canChangeStatus={canChangeStatus}
                 onEdit={() => setEditModalOpen(true)}
                 onDelete={handleDeleteWorkItem}
                 onStatusChange={handleStatusChange}

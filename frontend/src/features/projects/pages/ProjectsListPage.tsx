@@ -63,7 +63,7 @@ const ProjectsListPage = () => {
     const canEdit = hasPermission(PERMISSIONS.PROJECTS.EDIT);
     const canDelete = hasPermission(PERMISSIONS.PROJECTS.DELETE);
     const hasPhaseAccess = hasPermission(PERMISSIONS.PHASES.LIST);
-    const hasAnyAction = canView || canEdit || canDelete;
+    const hasAnyAction = canView || canEdit || canDelete || hasPhaseAccess;
 
     const debouncedSearch = useDebounce(search, 300);
 

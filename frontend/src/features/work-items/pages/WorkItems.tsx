@@ -28,6 +28,8 @@ import {
     useUpdateWorkItemStatusMutation,
     useDeleteWorkItemMutation,
 } from "../hooks/useWorkItems";
+import { usePermission } from "@/features/rbac/hooks/usePermission";
+import { PERMISSIONS } from "@/features/rbac/types/rbac.types";
 
 const WorkItems = () => {
     const { view, setView } = useWorkItemViewStore();
@@ -155,10 +157,11 @@ const WorkItems = () => {
         (w: WorkItem) => w.status === "closed",
     ).length;
 
-    const canAdd = true;
-    const canView = true;
-    const canEdit = true;
-    const canDelete = true;
+    const { hasPermission } = usePermission();
+    const canAdd = hasPermission(PERMISSIONS.WORKITEM.ADD);
+    const canView = hasPermission(PERMISSIONS.WORKITEM.VIEW);
+    const canEdit = hasPermission(PERMISSIONS.WORKITEM.EDIT);
+    const canDelete = hasPermission(PERMISSIONS.WORKITEM.DELETE);
 
     return (
         <div className="p-6 space-y-6">

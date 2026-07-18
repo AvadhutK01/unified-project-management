@@ -25,6 +25,9 @@ interface WorkItemDetailsHeaderProps {
     projectId: string;
     phaseId: string;
     sprintId: string;
+    canEdit: boolean;
+    canDelete: boolean;
+    canChangeStatus: boolean;
     onEdit: () => void;
     onDelete: () => void;
     onStatusChange: (status: string) => void;
@@ -39,6 +42,9 @@ const WorkItemDetailsHeader = ({
     projectId,
     phaseId,
     sprintId,
+    canEdit,
+    canDelete,
+    canChangeStatus,
     onEdit,
     onDelete,
     onStatusChange,
@@ -112,49 +118,55 @@ const WorkItemDetailsHeader = ({
                 </div>
 
                 <div className="flex items-center gap-2.5">
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden sm:inline">
-                            Status:
-                        </span>
-                        <Select
-                            value={workItem.status}
-                            onValueChange={onStatusChange}
+                    {canChangeStatus && (
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden sm:inline">
+                                Status:
+                            </span>
+                            <Select
+                                value={workItem.status}
+                                onValueChange={onStatusChange}
+                            >
+                                <SelectTrigger className="w-[130px] h-9 rounded-xl bg-card border-border/40 shadow-xs ring-0!">
+                                    <SelectValue placeholder="Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {WORK_ITEM_STATUS_OPTIONS.map((option) => (
+                                        <SelectItem
+                                            key={option.value}
+                                            value={option.value}
+                                        >
+                                            {option.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
+
+                    {canEdit && (
+                        <Button
+                            onClick={onEdit}
+                            variant="outline"
+                            size="sm"
+                            className="h-9 rounded-xl border-border/40 bg-card hover:bg-secondary shadow-xs gap-1.5"
                         >
-                            <SelectTrigger className="w-[130px] h-9 rounded-xl bg-card border-border/40 shadow-xs ring-0!">
-                                <SelectValue placeholder="Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {WORK_ITEM_STATUS_OPTIONS.map((option) => (
-                                    <SelectItem
-                                        key={option.value}
-                                        value={option.value}
-                                    >
-                                        {option.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                            <Edit className="size-4" />
+                            <span>Edit</span>
+                        </Button>
+                    )}
 
-                    <Button
-                        onClick={onEdit}
-                        variant="outline"
-                        size="sm"
-                        className="h-9 rounded-xl border-border/40 bg-card hover:bg-secondary shadow-xs gap-1.5"
-                    >
-                        <Edit className="size-4" />
-                        <span>Edit</span>
-                    </Button>
-
-                    <Button
-                        onClick={onDelete}
-                        variant="destructive"
-                        size="sm"
-                        className="h-9 rounded-xl shadow-xs gap-1.5"
-                    >
-                        <Trash2 className="size-4" />
-                        <span>Delete</span>
-                    </Button>
+                    {canDelete && (
+                        <Button
+                            onClick={onDelete}
+                            variant="destructive"
+                            size="sm"
+                            className="h-9 rounded-xl shadow-xs gap-1.5"
+                        >
+                            <Trash2 className="size-4" />
+                            <span>Delete</span>
+                        </Button>
+                    )}
                 </div>
             </div>
         </div>

@@ -61,7 +61,7 @@ const Phases = () => {
     const canEdit = hasPermission(PERMISSIONS.PHASES.EDIT);
     const canDelete = hasPermission(PERMISSIONS.PHASES.DELETE);
     const hasSprintAccess = hasPermission(PERMISSIONS.SPRINT.LIST);
-    const hasAnyAction = canView || canEdit || canDelete;
+    const hasAnyAction = canView || canEdit || canDelete || hasSprintAccess;
 
     const debouncedSearch = useDebounce(search, 300);
 

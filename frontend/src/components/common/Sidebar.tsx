@@ -97,7 +97,7 @@ const Sidebar = () => {
         {
             icon: FileText,
             label: "Reports",
-            permission: "report_project",
+            permission: "report_view",
             subItems: [
                 {
                     label: "Project Report",

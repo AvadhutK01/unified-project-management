@@ -75,6 +75,8 @@ const SprintPage = () => {
     const canView = hasPermission(PERMISSIONS.SPRINT.VIEW);
     const canEdit = hasPermission(PERMISSIONS.SPRINT.EDIT);
     const canDelete = hasPermission(PERMISSIONS.SPRINT.DELETE);
+    const canChangeStatus = hasPermission(PERMISSIONS.SPRINT.STATUS);
+    const canViewWorkItems = hasPermission(PERMISSIONS.WORKITEM.LIST);
 
     // Calculate metrics dynamically
     const sprints = sprintsData.data?.data ?? [];
@@ -253,6 +255,7 @@ const SprintPage = () => {
                             canView={canView}
                             canEdit={canEdit}
                             canDelete={canDelete}
+                            canViewWorkItems={canViewWorkItems}
                             onEditRequest={(sprint) => setEditingSprint(sprint)}
                             onStatusChange={(sprint, newStatus) => {
                                 setPendingSprintId(sprint.id);

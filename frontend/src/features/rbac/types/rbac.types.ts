@@ -33,12 +33,18 @@ export const PERMISSIONS = {
         EDIT: "sprint_edit",
         VIEW: "sprint_view",
         DELETE: "sprint_delete",
+        STATUS: "sprint_status",
+    },
+    WORKITEM: {
+        LIST: "workitem_list",
+        ADD: "workitem_add",
+        EDIT: "workitem_edit",
+        VIEW: "workitem_view",
+        DELETE: "workitem_delete",
+        STATUS: "workitem_status",
     },
     REPORTS: {
-        PROJECT: "report_project",
-        SPRINT: "report_sprint",
-        PHASE: "report_phase",
-        MEMBER_ACTIVITY: "report_member_activity",
+        VIEW: "report_view",
     },
 } as const;
 

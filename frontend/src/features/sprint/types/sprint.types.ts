@@ -62,6 +62,7 @@ export interface SprintListProps {
     canEdit?: boolean;
     canDelete?: boolean;
     canView?: boolean;
+    canViewWorkItems?: boolean;
 }
 
 export interface AddSprintModalProps {

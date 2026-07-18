@@ -396,7 +396,11 @@ export const router = createBrowserRouter([
                     <Suspense fallback={<Loading />}>
                         <MainLayout>
                             <PrivateRoute>
-                                <WorkItems />
+                                <ProtectedRoute
+                                    permission={PERMISSIONS.WORKITEM.LIST}
+                                >
+                                    <WorkItems />
+                                </ProtectedRoute>
                             </PrivateRoute>
                         </MainLayout>
                     </Suspense>
@@ -409,7 +413,7 @@ export const router = createBrowserRouter([
                         <MainLayout>
                             <PrivateRoute>
                                 <ProtectedRoute
-                                    permission={PERMISSIONS.REPORTS.PROJECT}
+                                    permission={PERMISSIONS.REPORTS.VIEW}
                                 >
                                     <ProjectReport />
                                 </ProtectedRoute>
@@ -425,7 +429,7 @@ export const router = createBrowserRouter([
                         <MainLayout>
                             <PrivateRoute>
                                 <ProtectedRoute
-                                    permission={PERMISSIONS.REPORTS.PHASE}
+                                    permission={PERMISSIONS.REPORTS.VIEW}
                                 >
                                     <PhaseReport />
                                 </ProtectedRoute>
@@ -441,7 +445,7 @@ export const router = createBrowserRouter([
                         <MainLayout>
                             <PrivateRoute>
                                 <ProtectedRoute
-                                    permission={PERMISSIONS.REPORTS.SPRINT}
+                                    permission={PERMISSIONS.REPORTS.VIEW}
                                 >
                                     <SprintReport />
                                 </ProtectedRoute>
@@ -457,9 +461,7 @@ export const router = createBrowserRouter([
                         <MainLayout>
                             <PrivateRoute>
                                 <ProtectedRoute
-                                    permission={
-                                        PERMISSIONS.REPORTS.MEMBER_ACTIVITY
-                                    }
+                                    permission={PERMISSIONS.REPORTS.VIEW}
                                 >
                                     <MemberActivity />
                                 </ProtectedRoute>
@@ -474,7 +476,11 @@ export const router = createBrowserRouter([
                     <Suspense fallback={<Loading />}>
                         <MainLayout>
                             <PrivateRoute>
-                                <WorkItemDetailsPage />
+                                <ProtectedRoute
+                                    permission={PERMISSIONS.WORKITEM.VIEW}
+                                >
+                                    <WorkItemDetailsPage />
+                                </ProtectedRoute>
                             </PrivateRoute>
                         </MainLayout>
                     </Suspense>

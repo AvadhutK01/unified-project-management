@@ -13,9 +13,10 @@ const SprintList = ({
     canEdit,
     canDelete,
     canView,
+    canViewWorkItems,
 }: SprintListProps) => {
     const navigate = useNavigate();
-    const hasAnyAction = canEdit || canDelete || canView;
+    const hasAnyAction = canEdit || canDelete || canView || canViewWorkItems;
 
     const columns = useMemo<DataTableColumn<SprintItem>[]>(
         () => [
@@ -97,15 +98,19 @@ const SprintList = ({
                                           <Trash2 className="size-4" />
                                       </button>
                                   )}
-                                  <button
-                                      onClick={() =>
-                                          navigate(`${sprint.id}/work-items`)
-                                      }
-                                      className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-indigo-500 hover:bg-indigo-500/10 transition-colors cursor-pointer"
-                                      title="Work Items"
-                                  >
-                                      <ListChecks className="size-4" />
-                                  </button>
+                                  {canViewWorkItems && (
+                                      <button
+                                          onClick={() =>
+                                              navigate(
+                                                  `${sprint.id}/work-items`,
+                                              )
+                                          }
+                                          className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-indigo-500 hover:bg-indigo-500/10 transition-colors cursor-pointer"
+                                          title="Work Items"
+                                      >
+                                          <ListChecks className="size-4" />
+                                      </button>
+                                  )}
                               </div>
                           ),
                       },
@@ -119,6 +124,7 @@ const SprintList = ({
             canEdit,
             canDelete,
             canView,
+            canViewWorkItems,
             hasAnyAction,
         ],
     );
