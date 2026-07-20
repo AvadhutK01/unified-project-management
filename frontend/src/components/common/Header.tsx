@@ -1,10 +1,12 @@
-import { Bell } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useOrganizationStore } from "@/store/organization.store";
 import { Switch } from "@/components/ui/switch";
 import { useToggleLeaveMutation } from "@/features/members/hooks/useMembers";
 import { useStore } from "@/store/store";
+import NotificationBell from "./NotificationBell";
+import NotificationPanel from "./NotificationPanel";
+import { useNotificationStore } from "@/store/notification.store";
 
 interface User {
     name: string;
@@ -33,6 +35,9 @@ const Header = () => {
     const profileButtonRef = useRef<HTMLDivElement>(null);
     const orgDropdownRef = useRef<HTMLDivElement>(null);
     const orgButtonRef = useRef<HTMLDivElement>(null);
+    const panelOpen = useNotificationStore((s) => s.panelOpen);
+    const setPanelOpen = useNotificationStore((s) => s.setPanelOpen);
+    const resetNotifications = useNotificationStore((s) => s.reset);
 
     useEffect(() => {
         const storedUser = {
@@ -65,16 +70,27 @@ const Header = () => {
             ) {
                 setShowOrgDropdown(false);
             }
+
+            if (panelOpen) {
+                const target = event.target as Node;
+                const bellContainer =
+                    target instanceof HTMLElement
+                        ? target.closest("[data-notification-bell]")
+                        : null;
+                if (!bellContainer) {
+                    setPanelOpen(false);
+                }
+            }
         };
 
-        if (showProfilePanel || showOrgDropdown) {
+        if (showProfilePanel || showOrgDropdown || panelOpen) {
             document.addEventListener("mousedown", handleClickOutside);
         }
 
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [showProfilePanel, showOrgDropdown]);
+    }, [showProfilePanel, showOrgDropdown, panelOpen, setPanelOpen]);
 
     const handleToggleLeave = (checked: boolean) => {
         setIsOnLeave(checked);
@@ -85,6 +101,7 @@ const Header = () => {
     const { clearActiveOrganization } = useOrganizationStore();
 
     const handleLogout = async () => {
+        resetNotifications();
         clearActiveOrganization();
         localStorage.clear();
         navigate("/login");
@@ -93,9 +110,10 @@ const Header = () => {
     return (
         <div className="bg-card h-16 pr-4 pl-6 flex items-center justify-end shadow-sm border-b dark:border-gray-700">
             <div className="flex items-center gap-2">
-                <button className="w-10 h-10 flex items-center justify-center transition-colors cursor-pointer">
-                    <Bell className="w-5 h-5 text-foreground" />
-                </button>
+                <div className="relative" data-notification-bell>
+                    <NotificationBell />
+                    <NotificationPanel />
+                </div>
 
                 <div className="relative" ref={profileButtonRef}>
                     <button

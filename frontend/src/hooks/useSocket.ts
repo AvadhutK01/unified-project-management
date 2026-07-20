@@ -1,11 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { useOrganizationStore } from "@/store/organization.store";
 
 const SOCKET_URL = import.meta.env.VITE_PUBLIC_SOCKET_URL ?? "";
 
 export const useSocket = (): Socket | null => {
-    const socketRef = useRef<Socket | null>(null);
+    const [socket, setSocket] = useState<Socket | null>(null);
     const activeOrganization = useOrganizationStore(
         (s) => s.activeOrganization,
     );
@@ -14,7 +14,7 @@ export const useSocket = (): Socket | null => {
         const token = localStorage.getItem("token");
         if (!token || !activeOrganization?.id) return;
 
-        const socket = io(SOCKET_URL, {
+        const newSocket = io(SOCKET_URL, {
             auth: {
                 authorization: `Bearer ${token}`,
                 org_id: activeOrganization.id,
@@ -23,13 +23,13 @@ export const useSocket = (): Socket | null => {
             autoConnect: true,
         });
 
-        socketRef.current = socket;
+        setSocket(newSocket);
 
         return () => {
-            socket.disconnect();
-            socketRef.current = null;
+            newSocket.disconnect();
+            setSocket(null);
         };
     }, [activeOrganization?.id]);
 
-    return socketRef.current;
+    return socket;
 };

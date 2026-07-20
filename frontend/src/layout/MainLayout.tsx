@@ -1,6 +1,8 @@
 import Header from "@/components/common/Header";
 import Sidebar from "@/components/common/Sidebar";
 import ChatBot from "@/components/common/ChatBot";
+import { useNotificationSocket } from "@/features/notifications/hooks/useNotificationSocket";
+import { useNotificationInit } from "@/features/notifications/hooks/useNotificationInit";
 import type { ReactNode } from "react";
 
 const MainLayout = ({
@@ -8,6 +10,9 @@ const MainLayout = ({
 }: Readonly<{
     children: ReactNode;
 }>) => {
+    useNotificationInit();
+    useNotificationSocket();
+
     return (
         <div className="flex h-screen">
             <Sidebar />
