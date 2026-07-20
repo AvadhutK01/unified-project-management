@@ -141,6 +141,34 @@
             "when": 1782027366674,
             "tag": "0019_concerned_bloodscream",
             "breakpoints": true
+        },
+        {
+            "idx": 20,
+            "version": "7",
+            "when": 1784397898468,
+            "tag": "0020_panoramic_deathbird",
+            "breakpoints": true
+        },
+        {
+            "idx": 21,
+            "version": "7",
+            "when": 1784468883071,
+            "tag": "0021_thick_morlun",
+            "breakpoints": true
+        },
+        {
+            "idx": 22,
+            "version": "7",
+            "when": 1784474658636,
+            "tag": "0022_perpetual_lila_cheney",
+            "breakpoints": true
+        },
+        {
+            "idx": 23,
+            "version": "7",
+            "when": 1784567969373,
+            "tag": "0023_short_rattler",
+            "breakpoints": true
         }
     ]
 }

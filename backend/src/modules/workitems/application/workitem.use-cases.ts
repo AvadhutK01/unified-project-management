@@ -23,6 +23,12 @@ import { verifyProjectAccess } from "../../projects/application/project.use-case
 import { findProjectById } from "../../projects/infrastructure/project.repository.js";
 import { findOrganizationById } from "../../organizations/infrastructure/organization.repository.js";
 import { validateWorkitemTransition } from "../../../shared/utils/status-transitions.js";
+import {
+    notifyTaskAssignment,
+    notifyTaskUpdate,
+    notifyTaskStatusUpdate,
+    notifyTaskDeletion,
+} from "../../notifications/application/notification.service.js";
 
 const generateUpdateDescription = (oldWorkitem: any, data: any): string => {
     const changes: string[] = [];
@@ -172,6 +178,8 @@ export const createWorkitem = async (data: {
         description: "Workitem created",
     });
 
+    await notifyTaskAssignment(workitem, data.userId);
+
     return workitem;
 };
 
@@ -316,6 +324,15 @@ export const updateWorkitem = async (
         description,
     });
 
+    if (
+        data.assignedTo !== undefined &&
+        data.assignedTo !== workitem.assignedTo
+    ) {
+        await notifyTaskAssignment(updated, userId);
+    } else {
+        await notifyTaskUpdate(updated, description, userId);
+    }
+
     return updated;
 };
 
@@ -366,6 +383,8 @@ export const updateWorkitemStatus = async (
         description: `Status updated from '${oldStatus}' to '${status}'`,
     });
 
+    await notifyTaskStatusUpdate(updated, oldStatus || "new", status, userId);
+
     return updated;
 };
 
@@ -402,6 +421,8 @@ export const deleteWorkitem = async (
         action: "deleted",
         description: "Workitem soft-deleted",
     });
+
+    await notifyTaskDeletion(workitem, userId);
 
     return deleted;
 };

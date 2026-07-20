@@ -20,6 +20,7 @@ import {
     forbiddenError,
 } from "../../../shared/errors/app-error.js";
 import { createActivityLog } from "../infrastructure/sprint-activity-log.repository.js";
+import { notifyDiscussionMention } from "../../notifications/application/notification.service.js";
 
 /**
  * Creates a new sprint discussion comment and tags members.
@@ -63,6 +64,15 @@ export const createSprintDiscussion = async (
     let tags: any[] = [];
     if (taggedMemberIds.length > 0) {
         tags = await addDiscussionTags(discussion.id, taggedMemberIds);
+        for (const taggedMemberId of taggedMemberIds) {
+            await notifyDiscussionMention(
+                userId,
+                comment,
+                taggedMemberId,
+                sprintId,
+                "sprint",
+            );
+        }
     }
 
     await createActivityLog({
@@ -126,6 +136,15 @@ export const updateSprintDiscussion = async (
     let tags: any[] = [];
     if (taggedMemberIds.length > 0) {
         tags = await addDiscussionTags(discussionId, taggedMemberIds);
+        for (const taggedMemberId of taggedMemberIds) {
+            await notifyDiscussionMention(
+                userId,
+                comment,
+                taggedMemberId,
+                discussion.sprintId,
+                "sprint",
+            );
+        }
     }
 
     return {

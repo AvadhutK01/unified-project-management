@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import {
     Bell,
@@ -15,6 +16,7 @@ import {
     useMarkAllAsReadMutation,
 } from "@/features/notifications/hooks/useNotifications";
 import type { Notification } from "@/features/notifications/types/notification.types";
+import { getNotificationRoute } from "@/features/notifications/utils/notification-router";
 
 const typeIcon: Record<string, typeof Bell> = {
     info: Info,
@@ -25,18 +27,16 @@ const typeIcon: Record<string, typeof Bell> = {
 
 const NotificationItem = ({
     notification,
-    onRead,
+    onClick,
 }: {
     notification: Notification;
-    onRead: (id: string) => void;
+    onClick: (notification: Notification) => void;
 }) => {
     const Icon = typeIcon[notification.type] ?? Bell;
 
     return (
         <button
-            onClick={() => {
-                if (!notification.isRead) onRead(notification.id);
-            }}
+            onClick={() => onClick(notification)}
             className={`w-full text-left px-4 py-3 border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer ${!notification.isRead ? "bg-blue-50/50 dark:bg-blue-900/10" : ""}`}
         >
             <div className="flex items-start gap-3">
@@ -75,6 +75,7 @@ const NotificationItem = ({
 };
 
 const NotificationPanel = () => {
+    const navigate = useNavigate();
     const panelOpen = useNotificationStore((s) => s.panelOpen);
     const setPanelOpen = useNotificationStore((s) => s.setPanelOpen);
     const markReadLocal = useNotificationStore((s) => s.markRead);
@@ -89,10 +90,15 @@ const NotificationPanel = () => {
 
     const notifications = data?.pages?.flatMap((page) => page.data) ?? [];
 
-    const handleMarkRead = (id: string) => {
-        markAsReadMutation.mutate(id, {
-            onSuccess: () => markReadLocal(id),
-        });
+    const handleItemClick = (notification: Notification) => {
+        if (!notification.isRead) {
+            markAsReadMutation.mutate(notification.id, {
+                onSuccess: () => markReadLocal(notification.id),
+            });
+        }
+        setPanelOpen(false);
+        const route = getNotificationRoute(notification);
+        navigate(route);
     };
 
     const handleMarkAllRead = () => {
@@ -140,7 +146,7 @@ const NotificationPanel = () => {
                                 <NotificationItem
                                     key={notification.id}
                                     notification={notification}
-                                    onRead={handleMarkRead}
+                                    onClick={handleItemClick}
                                 />
                             ))}
                             {hasNextPage && (

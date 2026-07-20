@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { FileText, MessageSquare, Paperclip, History } from "lucide-react";
 import { toast } from "sonner";
 import { useConfirm } from "@/providers/ConfirmProvider";
@@ -45,9 +45,12 @@ const WorkItemDetailsPage = () => {
         sprintId: string;
         workItemId: string;
     }>();
+    const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const confirm = useConfirm();
 
+    const initialTab = searchParams.get("tab") || "overview";
+    const [activeTab, setActiveTab] = useState(initialTab);
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -296,7 +299,11 @@ const WorkItemDetailsPage = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
-                    <Tabs defaultValue="overview" className="w-full">
+                    <Tabs
+                        value={activeTab}
+                        onValueChange={setActiveTab}
+                        className="w-full"
+                    >
                         <TabsList className="bg-secondary/60 border border-border/40 rounded-xl p-1 w-full sm:w-auto flex flex-wrap gap-1">
                             <TabsTrigger
                                 value="overview"

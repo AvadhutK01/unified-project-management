@@ -4,12 +4,16 @@ import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import { handleChatConnection } from "../modules/chat/presentation/chat.socket.js";
 
+let socketServer: Server | null = null;
+
 export const initializeSocket = (httpServer: HttpServer) => {
     const io = new Server(httpServer, {
         cors: {
             origin: "*",
         },
     });
+
+    socketServer = io;
 
     const chatNamespace = io.of("/socket.io");
 
@@ -55,8 +59,25 @@ export const initializeSocket = (httpServer: HttpServer) => {
     });
 
     chatNamespace.on("connection", (socket: Socket) => {
+        const user = (socket as any).user;
+        const orgId = (socket as any).orgId;
+        if (user && user.id && orgId) {
+            const roomName = `user:${user.id}:org:${orgId}`;
+            socket.join(roomName);
+
+            socket.on("disconnect", () => {
+                socket.leave(roomName);
+            });
+        }
         handleChatConnection(socket);
     });
 
     return io;
+};
+
+export const getSocketServer = (): Server => {
+    if (!socketServer) {
+        throw new Error("Socket.io is not initialized");
+    }
+    return socketServer;
 };

@@ -16,6 +16,7 @@ const envSchema = z.object({
     AWS_REGION: z.string().default("us-east-1"),
     AWS_BUCKET_NAME: z.string().default("mock-bucket"),
     GEMINI_API_KEY: z.string().optional(),
+    REDIS_URL: z.string().default("redis://localhost:6379"),
 });
 
 const parsed = envSchema.safeParse(process.env);
