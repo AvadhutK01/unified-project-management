@@ -17,3 +17,5 @@ export * from "./workitem-discussion.js";
 export * from "./workitem-activity-log.js";
 export * from "./workitem-media.js";
 export * from "./notification.js";
+export * from "./subscription.js";
+export * from "./transaction.js";

@@ -3,6 +3,7 @@ import { Server, Socket } from "socket.io";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import { handleChatConnection } from "../modules/chat/presentation/chat.socket.js";
+import { handleCallConnection } from "../modules/call/presentation/call.socket.js";
 
 let socketServer: Server | null = null;
 
@@ -63,13 +64,16 @@ export const initializeSocket = (httpServer: HttpServer) => {
         const orgId = (socket as any).orgId;
         if (user && user.id && orgId) {
             const roomName = `user:${user.id}:org:${orgId}`;
+            console.log({ roomName });
             socket.join(roomName);
 
             socket.on("disconnect", () => {
+                console.log("discconnnef");
                 socket.leave(roomName);
             });
         }
         handleChatConnection(socket);
+        handleCallConnection(socket);
     });
 
     return io;

@@ -9,6 +9,7 @@ import { workitemRoutes } from "../modules/workitems/presentation/workitem.route
 import { reportRouter } from "../modules/reports/presentation/report.routes.js";
 import { dashboardRouter } from "../modules/dashboards/presentation/dashboard.routes.js";
 import { notificationRouter } from "../modules/notifications/presentation/notification.routes.js";
+import { subscriptionRouter } from "../modules/subscriptions/presentation/subscription.routes.js";
 
 /**
  * Registers application routers on the parent Router.
@@ -26,5 +27,6 @@ export const registerRoutes = (router: Router): Router => {
     router.use("/reports", reportRouter);
     router.use("/dashboards", dashboardRouter);
     router.use("/notifications", notificationRouter);
+    router.use("/subscriptions", subscriptionRouter);
     return router;
 };

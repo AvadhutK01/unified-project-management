@@ -8,6 +8,9 @@ import NotificationBell from "./NotificationBell";
 import NotificationPanel from "./NotificationPanel";
 import { useNotificationStore } from "@/store/notification.store";
 
+import { Sparkles } from "lucide-react";
+import { useSubscriptionQuery } from "@/features/subscriptions/hooks/useSubscription";
+
 interface User {
     name: string;
     email: string;
@@ -15,6 +18,10 @@ interface User {
 
 const Header = () => {
     const navigate = useNavigate();
+    const { activeOrganization, clearActiveOrganization } =
+        useOrganizationStore();
+    const { data: subscription } = useSubscriptionQuery();
+    const isPremium = subscription?.isPremium ?? false;
 
     const [user, setUser] = useState<User>({
         name: "",
@@ -98,8 +105,6 @@ const Header = () => {
         toggleLeaveMutation.mutate();
     };
 
-    const { clearActiveOrganization } = useOrganizationStore();
-
     const handleLogout = async () => {
         resetNotifications();
         clearActiveOrganization();
@@ -109,7 +114,19 @@ const Header = () => {
 
     return (
         <div className="bg-card h-16 pr-4 pl-6 flex items-center justify-end shadow-sm border-b dark:border-gray-700">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+                {!isPremium && isOrgOwner && activeOrganization && (
+                    <button
+                        onClick={() =>
+                            navigate(`/${activeOrganization.slug}/billing`)
+                        }
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 shadow-sm transition-all cursor-pointer"
+                    >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Upgrade Plan</span>
+                    </button>
+                )}
+
                 <div className="relative" data-notification-bell>
                     <NotificationBell />
                     <NotificationPanel />

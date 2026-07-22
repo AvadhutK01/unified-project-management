@@ -6,12 +6,19 @@ export const PERMISSIONS = {
         VIEW: "roles_view",
         DELETE: "roles_delete",
     },
-    MEMBERS: {
-        LIST: "members_list",
-        ADD: "members_add",
-        EDIT: "members_edit",
-        VIEW: "members_view",
-        DELETE: "members_delete",
+    MEMBERS_JOINED: {
+        LIST: "members_joined_list",
+        ADD: "members_joined_add",
+        EDIT: "members_joined_edit",
+        VIEW: "members_joined_view",
+        DELETE: "members_joined_delete",
+    },
+    MEMBERS_INVITED: {
+        LIST: "members_invited_list",
+        ADD: "members_invited_add",
+        EDIT: "members_invited_edit",
+        VIEW: "members_invited_view",
+        DELETE: "members_invited_delete",
     },
     PROJECTS: {
         LIST: "project_list",

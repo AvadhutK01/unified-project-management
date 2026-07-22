@@ -169,6 +169,13 @@
             "when": 1784567969373,
             "tag": "0023_short_rattler",
             "breakpoints": true
+        },
+        {
+            "idx": 24,
+            "version": "7",
+            "when": 1784569399881,
+            "tag": "0024_white_puff_adder",
+            "breakpoints": true
         }
     ]
 }

@@ -4,32 +4,71 @@ import { useOrganizationStore } from "@/store/organization.store";
 
 const SOCKET_URL = import.meta.env.VITE_PUBLIC_SOCKET_URL ?? "";
 
+let globalSocket: Socket | null = null;
+let currentSocketKey = "";
+
 export const useSocket = (): Socket | null => {
-    const [socket, setSocket] = useState<Socket | null>(null);
     const activeOrganization = useOrganizationStore(
         (s) => s.activeOrganization,
     );
+    const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    const socketKey =
+        token && activeOrganization?.id
+            ? `${token}_${activeOrganization.id}`
+            : "";
+
+    if (socketKey) {
+        if (!globalSocket || currentSocketKey !== socketKey) {
+            if (globalSocket) {
+                globalSocket.disconnect();
+            }
+            globalSocket = io(SOCKET_URL, {
+                auth: {
+                    authorization: `Bearer ${token}`,
+                    org_id: activeOrganization.id,
+                },
+                transports: ["websocket", "polling"],
+                autoConnect: true,
+                reconnection: true,
+                reconnectionAttempts: Infinity,
+                reconnectionDelay: 1000,
+            });
+            currentSocketKey = socketKey;
+        }
+    } else {
+        if (globalSocket) {
+            globalSocket.disconnect();
+            globalSocket = null;
+            currentSocketKey = "";
+        }
+    }
+
+    const [socket, setSocket] = useState<Socket | null>(globalSocket);
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (!token || !activeOrganization?.id) return;
+        setSocket(globalSocket);
 
-        const newSocket = io(SOCKET_URL, {
-            auth: {
-                authorization: `Bearer ${token}`,
-                org_id: activeOrganization.id,
-            },
-            transports: ["websocket"],
-            autoConnect: true,
-        });
+        if (!globalSocket) return;
 
-        setSocket(newSocket);
+        const onConnect = () => {
+            setSocket(globalSocket);
+        };
+
+        const onDisconnect = () => {
+            setSocket(globalSocket);
+        };
+
+        globalSocket.on("connect", onConnect);
+        globalSocket.on("disconnect", onDisconnect);
 
         return () => {
-            newSocket.disconnect();
-            setSocket(null);
+            if (globalSocket) {
+                globalSocket.off("connect", onConnect);
+                globalSocket.off("disconnect", onDisconnect);
+            }
         };
-    }, [activeOrganization?.id]);
+    }, [socketKey]);
 
     return socket;
 };

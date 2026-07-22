@@ -7,6 +7,8 @@ export interface Organization {
     websiteUrl: string | null;
     description: string;
     status: string;
+    plan?: string;
+    subscriptionExpiresAt?: string | null;
     createdAt: string;
     updatedAt: string;
 }

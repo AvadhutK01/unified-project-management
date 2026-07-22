@@ -8,14 +8,17 @@ import {
     ShieldCheck,
     FolderKanbanIcon,
     FileText,
+    CreditCard,
+    Sparkles,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
-import { Separator } from "../ui/separator";
 import { useStore } from "@/store/store";
 import { useOrganizationStore } from "@/store/organization.store";
+import { useSubscriptionQuery } from "@/features/subscriptions/hooks/useSubscription";
 import { usePermission } from "@/features/rbac/hooks/usePermission";
+import { isAtLeastPlan } from "@/features/subscriptions/utils/subscriptionHelpers";
 import { OrgSwitcher } from "./OrgSwitcher";
 
 interface SubMenuItem {
@@ -28,6 +31,7 @@ interface MenuItemBase {
     label: string;
     permission?: string;
     ownerOnly?: boolean;
+    badge?: string;
 }
 
 interface MenuItemWithPath extends MenuItemBase {
@@ -51,9 +55,47 @@ const Sidebar = () => {
     const { hasPermission, isOrgOwner } = usePermission();
 
     const { activeOrganization } = useOrganizationStore();
+    const { data: subscription } = useSubscriptionQuery();
+    const currentPlan = subscription?.plan ?? "free";
+    const isBasicOrAbove = isAtLeastPlan(currentPlan, "basic");
 
     const [activeItem, setActiveItem] = useState("Dashboard");
     const [expandedItems, setExpandedItems] = useState<string[]>([]);
+
+    const hasJoinedList = hasPermission("members_joined_list");
+    const hasInvitedList = hasPermission("members_invited_list");
+
+    const membersMenuItem = (() => {
+        if (hasJoinedList && hasInvitedList) {
+            return {
+                icon: Users,
+                label: "Members",
+                subItems: [
+                    {
+                        label: "Joined",
+                        path: `/${activeOrganization?.slug}/members/joined`,
+                    },
+                    {
+                        label: "Invited",
+                        path: `/${activeOrganization?.slug}/members/invited`,
+                    },
+                ],
+            } as MenuItem;
+        } else if (hasJoinedList) {
+            return {
+                icon: Users,
+                label: "Members",
+                path: `/${activeOrganization?.slug}/members/joined`,
+            } as MenuItem;
+        } else if (hasInvitedList) {
+            return {
+                icon: Users,
+                label: "Members",
+                path: `/${activeOrganization?.slug}/members/invited`,
+            } as MenuItem;
+        }
+        return null;
+    })();
 
     const menuItems: MenuItem[] = [
         {
@@ -68,26 +110,18 @@ const Sidebar = () => {
             ownerOnly: true,
         },
         {
+            icon: CreditCard,
+            label: "Billing & Subscriptions",
+            path: `/${activeOrganization?.slug}/billing`,
+            ownerOnly: true,
+        },
+        {
             icon: ShieldCheck,
             label: "Roles",
             path: `/${activeOrganization?.slug}/roles`,
             permission: "roles_list",
         },
-        {
-            icon: Users,
-            label: "Members",
-            permission: "members_list",
-            subItems: [
-                {
-                    label: "Joined",
-                    path: `/${activeOrganization?.slug}/members/joined`,
-                },
-                {
-                    label: "Invited",
-                    path: `/${activeOrganization?.slug}/members/invited`,
-                },
-            ],
-        },
+        ...(membersMenuItem ? [membersMenuItem] : []),
         {
             icon: FolderKanbanIcon,
             label: "Projects",
@@ -98,24 +132,33 @@ const Sidebar = () => {
             icon: FileText,
             label: "Reports",
             permission: "report_view",
-            subItems: [
-                {
-                    label: "Project Report",
-                    path: `/${activeOrganization?.slug}/reports/project`,
-                },
-                {
-                    label: "Phase Report",
-                    path: `/${activeOrganization?.slug}/reports/phase`,
-                },
-                {
-                    label: "Sprint Report",
-                    path: `/${activeOrganization?.slug}/reports/sprint`,
-                },
-                {
-                    label: "Member Activity Report",
-                    path: `/${activeOrganization?.slug}/reports/member-activity`,
-                },
-            ],
+            badge: !isBasicOrAbove ? "BASIC" : undefined,
+            ...(isBasicOrAbove
+                ? {
+                      subItems: [
+                          {
+                              label: "Project Report",
+                              path: `/${activeOrganization?.slug}/reports/project`,
+                          },
+                          {
+                              label: "Phase Report",
+                              path: `/${activeOrganization?.slug}/reports/phase`,
+                          },
+                          {
+                              label: "Sprint Report",
+                              path: `/${activeOrganization?.slug}/reports/sprint`,
+                          },
+                          {
+                              label: "Member Activity Report",
+                              path: `/${activeOrganization?.slug}/reports/member-activity`,
+                          },
+                      ],
+                  }
+                : {
+                      path: isOrgOwner
+                          ? `/${activeOrganization?.slug}/billing`
+                          : `/${activeOrganization?.slug}/reports/project`,
+                  }),
         },
     ];
 
@@ -200,7 +243,15 @@ const Sidebar = () => {
                         <Icon size={20} />
 
                         {sidebarOpen && (
-                            <span className="font-medium">{item.label}</span>
+                            <span className="font-medium flex items-center gap-2">
+                                <span>{item.label}</span>
+                                {item.badge && (
+                                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center gap-0.5">
+                                        <Sparkles className="w-2.5 h-2.5 inline" />
+                                        {item.badge}
+                                    </span>
+                                )}
+                            </span>
                         )}
                     </div>
 
@@ -254,7 +305,6 @@ const Sidebar = () => {
                 sidebarOpen ? "w-64" : "w-16",
             )}
         >
-            {/* Top: Org Switcher */}
             <div
                 className={cn(
                     "flex items-center px-3 pt-3 pb-2 shrink-0",

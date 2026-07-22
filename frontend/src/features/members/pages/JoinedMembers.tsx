@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
     Search,
     UserPlus,
@@ -8,10 +9,20 @@ import {
     ChevronRight,
     Eye,
     Edit,
+    Phone,
+    Video,
+    ChevronDown,
+    Sparkles,
 } from "lucide-react";
+import { useCall } from "@/features/call/context/CallContext";
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 import { getColor, getInitials, formatDate, useDebounce } from "@/lib/utils";
 import { InviteMembersModal } from "../components/InviteMembersModal";
 import { EditMemberModal } from "../components/EditMemberModal";
@@ -21,11 +32,123 @@ import { useMembersQuery, useRemoveMemberMutation } from "../hooks/useMembers";
 import type { Member } from "@/features/members/types/members.types";
 import { usePermission } from "@/features/rbac/hooks/usePermission";
 import { PERMISSIONS } from "@/features/rbac/types/rbac.types";
+import { useSubscriptionQuery } from "@/features/subscriptions/hooks/useSubscription";
+import { isAtLeastPlan } from "@/features/subscriptions/utils/subscriptionHelpers";
+import { useOrganizationStore } from "@/store/organization.store";
 
 const ROLE_STYLES: Record<string, string> = {
     Admin: "bg-primary/10 text-primary border-primary/20",
     Member: "bg-secondary text-secondary-foreground",
     Viewer: "bg-muted text-muted-foreground",
+};
+
+const MemberCallButton = ({
+    member,
+    onInitiateCall,
+    hasProPlan,
+    isOrgOwner,
+    billingPath,
+}: {
+    member: Member;
+    onInitiateCall: (type: "voice" | "video") => void;
+    hasProPlan: boolean;
+    isOrgOwner: boolean;
+    billingPath: string;
+}) => {
+    const [open, setOpen] = useState(false);
+    const navigate = useNavigate();
+
+    const handleLockedClick = () => {
+        setOpen(false);
+        if (isOrgOwner) {
+            navigate(billingPath);
+        } else {
+            toast.info(
+                "Member calling requires a Pro or Premium plan. Ask your organization owner to upgrade.",
+            );
+        }
+    };
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <button
+                    title={`Call ${member.name}`}
+                    className={`inline-flex items-center gap-0.5 px-2 py-1.5 rounded-lg border transition-colors cursor-pointer text-xs font-medium ${
+                        hasProPlan
+                            ? "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 border-emerald-500/20"
+                            : "text-muted-foreground hover:bg-muted border-border/60"
+                    }`}
+                >
+                    <Phone className="size-3.5" />
+                    <ChevronDown className="size-3 opacity-70" />
+                </button>
+            </PopoverTrigger>
+            <PopoverContent
+                align="end"
+                className="w-44 p-1 bg-card border-border shadow-lg"
+            >
+                {!hasProPlan && (
+                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 mb-1 rounded-md bg-violet-500/10 border border-violet-500/20">
+                        <Sparkles className="size-3 text-violet-500 shrink-0" />
+                        <span className="text-[10px] font-semibold text-violet-600 dark:text-violet-400">
+                            Pro Plan Required
+                        </span>
+                    </div>
+                )}
+                <button
+                    onClick={() => {
+                        if (!hasProPlan) {
+                            handleLockedClick();
+                            return;
+                        }
+                        setOpen(false);
+                        onInitiateCall("voice");
+                    }}
+                    className={`w-full flex items-center justify-between gap-2 px-2.5 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                        hasProPlan
+                            ? "text-foreground hover:bg-muted"
+                            : "text-muted-foreground hover:bg-muted/60"
+                    }`}
+                >
+                    <span className="flex items-center gap-2">
+                        <Phone className="size-3.5 text-emerald-500" />
+                        Voice Call
+                    </span>
+                    {!hasProPlan && (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-violet-500/20 text-violet-600 dark:text-violet-400 uppercase tracking-wide">
+                            Pro
+                        </span>
+                    )}
+                </button>
+                <button
+                    onClick={() => {
+                        if (!hasProPlan) {
+                            handleLockedClick();
+                            return;
+                        }
+                        setOpen(false);
+                        onInitiateCall("video");
+                    }}
+                    className={`w-full flex items-center justify-between gap-2 px-2.5 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
+                        hasProPlan
+                            ? "text-foreground hover:bg-muted"
+                            : "text-muted-foreground hover:bg-muted/60"
+                    }`}
+                >
+                    <span className="flex items-center gap-2">
+                        <Video className="size-3.5 text-blue-500" />
+                        Video Call
+                    </span>
+                    {!hasProPlan && (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-violet-500/20 text-violet-600 dark:text-violet-400 uppercase tracking-wide">
+                            Pro
+                        </span>
+                    )}
+                </button>
+            </PopoverContent>
+        </Popover>
+    );
 };
 
 const JoinedMembers = () => {
@@ -41,11 +164,20 @@ const JoinedMembers = () => {
 
     const confirm = useConfirm();
     const { mutate: removeMemberMutation } = useRemoveMemberMutation();
-    const { hasPermission } = usePermission();
-    const canView = hasPermission(PERMISSIONS.MEMBERS.VIEW);
-    const canEdit = hasPermission(PERMISSIONS.MEMBERS.EDIT);
-    const canDelete = hasPermission(PERMISSIONS.MEMBERS.DELETE);
-    const hasAnyAction = canView || canEdit || canDelete;
+    const { initiateCall } = useCall();
+    const { hasPermission, isOrgOwner } = usePermission();
+    const canList = hasPermission(PERMISSIONS.MEMBERS_JOINED.LIST);
+    const canView = hasPermission(PERMISSIONS.MEMBERS_JOINED.VIEW);
+    const canEdit = hasPermission(PERMISSIONS.MEMBERS_JOINED.EDIT);
+    const canDelete = hasPermission(PERMISSIONS.MEMBERS_JOINED.DELETE);
+    const hasAnyAction = canView || canEdit || canDelete || canList;
+
+    const activeOrganization = useOrganizationStore(
+        (s) => s.activeOrganization,
+    );
+    const { data: subscription } = useSubscriptionQuery();
+    const hasProPlan = isAtLeastPlan(subscription?.plan, "pro");
+    const billingPath = `/${activeOrganization?.slug}/billing`;
 
     const { data: joinedMembers, isLoading } = useMembersQuery(
         "joined",
@@ -63,6 +195,7 @@ const JoinedMembers = () => {
         const mappedMembers: Member[] =
             joinedMembers?.data?.data?.map((item: any) => ({
                 id: item.id,
+                userId: item.memberId ?? item.userId ?? item.id,
                 name: item.username,
                 email: item.email,
                 role: item.roleName,
@@ -191,9 +324,27 @@ const JoinedMembers = () => {
                       {
                           key: "actions" as const,
                           label: "Actions",
-                          className: "w-24 text-right",
+                          className: "w-28 text-right",
                           render: (member: Member) => (
                               <div className="flex items-center justify-end gap-1">
+                                  {canList &&
+                                      member.email !==
+                                          localStorage.getItem("email") && (
+                                          <MemberCallButton
+                                              member={member}
+                                              onInitiateCall={(type) =>
+                                                  initiateCall(
+                                                      member.userId ??
+                                                          member.id,
+                                                      member.name,
+                                                      type,
+                                                  )
+                                              }
+                                              hasProPlan={hasProPlan}
+                                              isOrgOwner={isOrgOwner}
+                                              billingPath={billingPath}
+                                          />
+                                      )}
                                   {canView && (
                                       <button
                                           title={`View ${member.name}`}
@@ -267,7 +418,7 @@ const JoinedMembers = () => {
                 </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                    {hasPermission(PERMISSIONS.MEMBERS.ADD) && (
+                    {hasPermission(PERMISSIONS.MEMBERS_INVITED.ADD) && (
                         <Button
                             onClick={() => setModalOpen(true)}
                             className="gap-1.5"

@@ -17,6 +17,12 @@ const envSchema = z.object({
     AWS_BUCKET_NAME: z.string().default("mock-bucket"),
     GEMINI_API_KEY: z.string().optional(),
     REDIS_URL: z.string().default("redis://localhost:6379"),
+    RAZORPAY_KEY_ID: z.string().default("rzp_test_mockkeyid"),
+    RAZORPAY_KEY_SECRET: z.string().default("rzp_test_mockkeysecret"),
+    RAZORPAY_WEBHOOK_SECRET: z.string().default("webhook_secret_mock"),
+    SUBSCRIPTION_AMOUNT_PAISE: z.coerce.number().default(99900),
+    SUPPORT_EMAIL: z.string().default("support@unifiedpm.com"),
+    SUPPORT_PHONE: z.string().default("+1 (800) 555-0199"),
 });
 
 const parsed = envSchema.safeParse(process.env);

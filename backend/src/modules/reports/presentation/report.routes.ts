@@ -8,6 +8,7 @@ import {
 import { validateRequest } from "../../../shared/validators/index.js";
 import { authenticate } from "../../../shared/middleware/authenticate.js";
 import { requireOrgId } from "../../../shared/middleware/require-org-id.js";
+import { requirePlan } from "../../../shared/middleware/require-premium.js";
 import { requirePermission } from "../../../shared/middleware/require-permission.js";
 import { reportQuerySchema } from "./report.validation.js";
 
@@ -15,6 +16,7 @@ const router = Router({ mergeParams: true });
 
 router.use(authenticate);
 router.use(requireOrgId);
+router.use(requirePlan("basic"));
 
 router.get(
     "/project-overview",

@@ -6,6 +6,7 @@ import { lazy, Suspense } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import MainLayout from "@/layout/MainLayout";
 import { ProtectedRoute } from "@/features/rbac/components/ProtectedRoute";
+import { PremiumRoute } from "@/components/common/PremiumRoute";
 import { PERMISSIONS } from "@/features/rbac/types/rbac.types";
 import PhaseReport from "@/features/reports/pages/PhaseReport";
 
@@ -18,6 +19,9 @@ const Login = lazy(() => import("@/features/auth/pages/Login"));
 const Register = lazy(() => import("@/features/auth/pages/Register"));
 const VerifyOtp = lazy(() => import("@/features/auth/pages/VerifyOtp"));
 const Dashboard = lazy(() => import("@/features/dashboard/pages/Dashboard"));
+const BillingPage = lazy(
+    () => import("@/features/subscriptions/pages/BillingPage"),
+);
 const CreateOrganization = lazy(
     () => import("@/features/organization/pages/CreateOrganization"),
 );
@@ -269,7 +273,7 @@ export const router = createBrowserRouter([
                         <MainLayout>
                             <PrivateRoute>
                                 <ProtectedRoute
-                                    permission={PERMISSIONS.MEMBERS.LIST}
+                                    permission={PERMISSIONS.MEMBERS_JOINED.LIST}
                                 >
                                     <JoinedMembers />
                                 </ProtectedRoute>
@@ -285,7 +289,9 @@ export const router = createBrowserRouter([
                         <MainLayout>
                             <PrivateRoute>
                                 <ProtectedRoute
-                                    permission={PERMISSIONS.MEMBERS.LIST}
+                                    permission={
+                                        PERMISSIONS.MEMBERS_INVITED.LIST
+                                    }
                                 >
                                     <InvitedMembers />
                                 </ProtectedRoute>
@@ -407,6 +413,18 @@ export const router = createBrowserRouter([
                 ),
             },
             {
+                path: "/:slug/billing",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <MainLayout>
+                            <PrivateRoute>
+                                <BillingPage />
+                            </PrivateRoute>
+                        </MainLayout>
+                    </Suspense>
+                ),
+            },
+            {
                 path: "/:slug/reports/project",
                 element: (
                     <Suspense fallback={<Loading />}>
@@ -415,7 +433,9 @@ export const router = createBrowserRouter([
                                 <ProtectedRoute
                                     permission={PERMISSIONS.REPORTS.VIEW}
                                 >
-                                    <ProjectReport />
+                                    <PremiumRoute>
+                                        <ProjectReport />
+                                    </PremiumRoute>
                                 </ProtectedRoute>
                             </PrivateRoute>
                         </MainLayout>
@@ -431,7 +451,9 @@ export const router = createBrowserRouter([
                                 <ProtectedRoute
                                     permission={PERMISSIONS.REPORTS.VIEW}
                                 >
-                                    <PhaseReport />
+                                    <PremiumRoute>
+                                        <PhaseReport />
+                                    </PremiumRoute>
                                 </ProtectedRoute>
                             </PrivateRoute>
                         </MainLayout>
@@ -447,7 +469,9 @@ export const router = createBrowserRouter([
                                 <ProtectedRoute
                                     permission={PERMISSIONS.REPORTS.VIEW}
                                 >
-                                    <SprintReport />
+                                    <PremiumRoute>
+                                        <SprintReport />
+                                    </PremiumRoute>
                                 </ProtectedRoute>
                             </PrivateRoute>
                         </MainLayout>
@@ -463,7 +487,9 @@ export const router = createBrowserRouter([
                                 <ProtectedRoute
                                     permission={PERMISSIONS.REPORTS.VIEW}
                                 >
-                                    <MemberActivity />
+                                    <PremiumRoute>
+                                        <MemberActivity />
+                                    </PremiumRoute>
                                 </ProtectedRoute>
                             </PrivateRoute>
                         </MainLayout>

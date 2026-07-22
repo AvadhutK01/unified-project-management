@@ -9,6 +9,8 @@ export const organizations = pgTable("organizations", {
     websiteUrl: varchar("website_url", { length: 1000 }),
     description: text("description"),
     status: varchar("status", { length: 50 }).default("active").notNull(),
+    plan: varchar("plan", { length: 50 }).default("free").notNull(),
+    subscriptionExpiresAt: timestamp("subscription_expires_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

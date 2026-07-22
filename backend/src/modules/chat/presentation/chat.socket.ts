@@ -1,6 +1,7 @@
 import { Socket } from "socket.io";
 import { getDeepOrganizationContext } from "../application/chat.use-cases.js";
 import { streamOrganizationChatResponse } from "../../../shared/services/ai.socket.service.js";
+import { isOrganizationOnPlan } from "../../../shared/middleware/require-premium.js";
 
 export const handleChatConnection = (socket: Socket) => {
     socket.on("chat:message", async (payload: { message: string }) => {
@@ -10,6 +11,14 @@ export const handleChatConnection = (socket: Socket) => {
         if (!organizationId || !message) {
             socket.emit("chat:error", {
                 error: "Organization ID and message are required",
+            });
+            return;
+        }
+
+        const isPremium = await isOrganizationOnPlan(organizationId, "premium");
+        if (!isPremium) {
+            socket.emit("chat:error", {
+                error: "Premium subscription required. Upgrade your organization to access AI Assistant features.",
             });
             return;
         }

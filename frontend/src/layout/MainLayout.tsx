@@ -1,15 +1,13 @@
 import Header from "@/components/common/Header";
 import Sidebar from "@/components/common/Sidebar";
 import ChatBot from "@/components/common/ChatBot";
+import CallModal from "@/components/common/CallModal";
+import { CallProvider } from "@/features/call/context/CallContext";
 import { useNotificationSocket } from "@/features/notifications/hooks/useNotificationSocket";
 import { useNotificationInit } from "@/features/notifications/hooks/useNotificationInit";
 import type { ReactNode } from "react";
 
-const MainLayout = ({
-    children,
-}: Readonly<{
-    children: ReactNode;
-}>) => {
+const MainLayoutContent = ({ children }: { children: ReactNode }) => {
     useNotificationInit();
     useNotificationSocket();
 
@@ -23,7 +21,20 @@ const MainLayout = ({
                 </div>
             </main>
             <ChatBot />
+            <CallModal />
         </div>
+    );
+};
+
+const MainLayout = ({
+    children,
+}: Readonly<{
+    children: ReactNode;
+}>) => {
+    return (
+        <CallProvider>
+            <MainLayoutContent>{children}</MainLayoutContent>
+        </CallProvider>
     );
 };
 

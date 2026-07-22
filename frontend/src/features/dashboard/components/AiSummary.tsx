@@ -1,5 +1,8 @@
-import { Brain, RefreshCw, Sparkles, Loader2 } from "lucide-react";
+import { Brain, RefreshCw, Sparkles, Loader2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSubscriptionQuery } from "@/features/subscriptions/hooks/useSubscription";
+import { useOrganizationStore } from "@/store/organization.store";
+import { usePermission } from "@/features/rbac/hooks/usePermission";
 import type { DashboardData } from "../types/dashboard.types";
 
 interface Props {
@@ -9,7 +12,6 @@ interface Props {
     onGenerate?: () => void;
 }
 
-// Render inline markdown: **bold** and `code`
 function renderInline(text: string): React.ReactNode {
     const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
     return parts.map((part, i) => {
@@ -122,6 +124,52 @@ function formatSummary(text: string) {
 }
 
 const AiSummary = ({ summary, isPending, onGenerate }: Props) => {
+    const activeOrganization = useOrganizationStore(
+        (s) => s.activeOrganization,
+    );
+    const { data: subscription } = useSubscriptionQuery();
+    const { isOrgOwner } = usePermission();
+    const isPremium = subscription?.isPremium ?? false;
+
+    if (!isPremium) {
+        return (
+            <div className="overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-card to-background p-6 shadow-md">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-500">
+                            <Sparkles size={20} className="animate-pulse" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                <span>AI Workspace Insights</span>
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                                    PRO
+                                </span>
+                            </h3>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                                {isOrgOwner
+                                    ? "Upgrade your organization plan to generate automated AI summaries and intelligent metric breakdowns."
+                                    : "This feature requires an Organization Premium subscription. Contact your organization owner to upgrade."}
+                            </p>
+                        </div>
+                    </div>
+                    {isOrgOwner && (
+                        <Button
+                            asChild
+                            size="sm"
+                            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold shadow-sm shrink-0 cursor-pointer"
+                        >
+                            <a href={`/${activeOrganization?.slug}/billing`}>
+                                Upgrade Plan
+                                <ArrowRight size={13} className="ml-1.5" />
+                            </a>
+                        </Button>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-br from-background via-card to-primary/[0.04] shadow-[0_20px_45px_-24px_rgba(15,23,42,0.20)]">
             <div className="flex items-center justify-between border-b border-border/70 bg-gradient-to-r from-primary/[0.08] via-transparent to-transparent px-5 py-3.5">
@@ -145,7 +193,7 @@ const AiSummary = ({ summary, isPending, onGenerate }: Props) => {
                     size="sm"
                     onClick={onGenerate}
                     disabled={isPending}
-                    className="bg-linear-to-r from-primary to-primary/80 text-primary-foreground shadow-sm hover:opacity-90"
+                    className="bg-linear-to-r from-primary to-primary/80 text-primary-foreground shadow-sm hover:opacity-90 cursor-pointer"
                 >
                     {isPending ? (
                         <>

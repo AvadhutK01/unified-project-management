@@ -69,7 +69,7 @@ router.get(
 router.post(
     "/members/invite",
     requireOrgId,
-    requirePermission("members_add"),
+    requirePermission("members_invited_add"),
     validateRequest(inviteMembersSchema),
     handleInviteMembers,
 );
@@ -89,7 +89,7 @@ router.put(
 router.delete(
     "/invitations/:id",
     requireOrgId,
-    requirePermission("members_delete"),
+    requirePermission("members_invited_delete"),
     validateRequest(revokeInvitationSchema),
     handleRevokeInvitation,
 );
@@ -97,7 +97,12 @@ router.delete(
 router.get(
     "/members",
     requireOrgId,
-    requirePermission("members_list"),
+    (req, res, next) => {
+        const type = req.query["type"] as string;
+        const requiredPermission =
+            type === "invited" ? "members_invited_list" : "members_joined_list";
+        return requirePermission(requiredPermission)(req, res, next);
+    },
     validateRequest(organizationMembersQuerySchema),
     handleGetOrganizationMembers,
 );
@@ -105,7 +110,7 @@ router.get(
 router.get(
     "/members/project/:projectId",
     requireOrgId,
-    requirePermission("members_list"),
+    requirePermission("members_joined_list"),
     validateRequest(projectMembersQuerySchema),
     handleGetProjectMembersPaginated,
 );
@@ -113,7 +118,7 @@ router.get(
 router.post(
     "/members/re-invite",
     requireOrgId,
-    requirePermission("members_add"),
+    requirePermission("members_invited_add"),
     validateRequest(reInviteMemberSchema),
     handleReInviteMember,
 );
@@ -129,7 +134,7 @@ router.patch(
 router.get(
     "/members/:id",
     requireOrgId,
-    requirePermission("members_view"),
+    requirePermission("members_joined_view"),
     validateRequest(getMemberDetailsSchema),
     handleGetMemberDetails,
 );
@@ -137,7 +142,7 @@ router.get(
 router.put(
     "/members/:id",
     requireOrgId,
-    requirePermission("members_edit"),
+    requirePermission("members_joined_edit"),
     validateRequest(editMemberDetailsSchema),
     handleEditMemberDetails,
 );
@@ -145,7 +150,7 @@ router.put(
 router.delete(
     "/members/:id",
     requireOrgId,
-    requirePermission("members_delete"),
+    requirePermission("members_joined_delete"),
     validateRequest(deleteMemberSchema),
     handleDeleteMember,
 );

@@ -60,7 +60,7 @@ const InvitedMembers = () => {
     const confirm = useConfirm();
     const { mutate: revokeInvitationMutation } = useRevokeInvitationMutation();
     const { hasPermission } = usePermission();
-    const canDelete = hasPermission(PERMISSIONS.MEMBERS.DELETE);
+    const canDelete = hasPermission(PERMISSIONS.MEMBERS_INVITED.DELETE);
 
     const { data: invitedMembers, isLoading } = useMembersQuery(
         "invited",
@@ -259,7 +259,7 @@ const InvitedMembers = () => {
                 </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                    {hasPermission(PERMISSIONS.MEMBERS.ADD) && (
+                    {hasPermission(PERMISSIONS.MEMBERS_INVITED.ADD) && (
                         <Button
                             onClick={() => setModalOpen(true)}
                             className="gap-1.5"
