@@ -164,7 +164,7 @@ const WorkItems = () => {
     const canDelete = hasPermission(PERMISSIONS.WORKITEM.DELETE);
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-6">
             {/* Header Area */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/40">
                 <div className="flex items-center gap-3">
@@ -262,15 +262,15 @@ const WorkItems = () => {
             </div>
 
             {/* Toolbar Row */}
-            <div className="flex flex-row items-center justify-between">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <AddWorkItemModal onAddWorkItem={() => {}} canAdd={canAdd} />
 
                 {/* View switcher */}
-                <div className="flex items-center gap-1 bg-secondary/60 p-1 rounded-xl border border-border/40 shadow-inner">
+                <div className="flex items-center gap-1 bg-secondary/60 p-1 rounded-xl border border-border/40 shadow-inner w-full sm:w-auto">
                     <button
                         onClick={() => setView("kanban")}
                         className={cn(
-                            "flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 ease-out cursor-pointer select-none",
+                            "flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 ease-out cursor-pointer select-none",
                             view === "kanban"
                                 ? "bg-card text-primary shadow-sm scale-102 border border-border/30"
                                 : "text-muted-foreground hover:text-foreground hover:bg-secondary/40",
@@ -282,7 +282,7 @@ const WorkItems = () => {
                     <button
                         onClick={() => setView("list")}
                         className={cn(
-                            "flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 ease-out cursor-pointer select-none",
+                            "flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 ease-out cursor-pointer select-none",
                             view === "list"
                                 ? "bg-card text-primary shadow-sm scale-102 border border-border/30"
                                 : "text-muted-foreground hover:text-foreground hover:bg-secondary/40",

@@ -6,7 +6,7 @@ const Skeleton = ({ className }: { className?: string }) => (
 
 const SprintDetailsLoading = () => {
     return (
-        <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
+        <div className="p-4 sm:p-6 space-y-6 max-w-[1400px] mx-auto">
             {/* Breadcrumb skeleton */}
             <div className="flex items-center gap-2">
                 <Skeleton className="h-3 w-16" />

@@ -95,7 +95,7 @@ export function ProjectImageUploader({
                         />
 
                         {/* Hover Overlay */}
-                        <div className="absolute inset-0 bg-background/80 backdrop-blur-xs flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <div className="absolute inset-0 bg-background/80 backdrop-blur-xs flex flex-wrap items-center justify-center gap-2 px-2 sm:gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                             <Button
                                 type="button"
                                 variant="secondary"

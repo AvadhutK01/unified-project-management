@@ -39,6 +39,7 @@ const SprintList = ({
             {
                 key: "startDate",
                 label: "Start Date",
+                className: "hidden sm:table-cell",
                 render: (sprint) => (
                     <span className="text-sm text-muted-foreground">
                         {sprint.startDate ?? "-"}
@@ -48,6 +49,7 @@ const SprintList = ({
             {
                 key: "endDate",
                 label: "End Date",
+                className: "hidden sm:table-cell",
                 render: (sprint) => (
                     <span className="text-sm text-muted-foreground">
                         {sprint.endDate ?? "-"}

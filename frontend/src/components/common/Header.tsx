@@ -8,7 +8,7 @@ import NotificationBell from "./NotificationBell";
 import NotificationPanel from "./NotificationPanel";
 import { useNotificationStore } from "@/store/notification.store";
 
-import { Sparkles } from "lucide-react";
+import { Menu, Sparkles } from "lucide-react";
 import { useSubscriptionQuery } from "@/features/subscriptions/hooks/useSubscription";
 
 interface User {
@@ -28,6 +28,7 @@ const Header = () => {
         email: "",
     });
     const { isOrgOwner, memberStatus, setMemberStatus } = useStore();
+    const toggleMobileSidebar = useStore((s) => s.toggleMobileSidebar);
     const [isOnLeave, setIsOnLeave] = useState(
         () => memberStatus === "onleave",
     );
@@ -113,17 +114,25 @@ const Header = () => {
     };
 
     return (
-        <div className="bg-card h-16 pr-4 pl-6 flex items-center justify-end shadow-sm border-b dark:border-gray-700">
-            <div className="flex items-center gap-3">
+        <div className="bg-card h-16 px-3 sm:pr-4 sm:pl-6 flex items-center justify-between gap-2 shadow-sm border-b dark:border-gray-700">
+            <button
+                onClick={() => toggleMobileSidebar()}
+                className="flex md:hidden items-center justify-center h-9 w-9 shrink-0 rounded-lg text-muted-foreground hover:text-foreground hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                aria-label="Toggle sidebar"
+            >
+                <Menu className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center gap-2 sm:gap-3 ml-auto">
                 {!isPremium && isOrgOwner && activeOrganization && (
                     <button
                         onClick={() =>
                             navigate(`/${activeOrganization.slug}/billing`)
                         }
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 shadow-sm transition-all cursor-pointer"
+                        className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-xs font-semibold bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 shadow-sm transition-all cursor-pointer"
                     >
                         <Sparkles className="w-3.5 h-3.5" />
-                        <span>Upgrade Plan</span>
+                        <span className="hidden sm:inline">Upgrade Plan</span>
                     </button>
                 )}
 

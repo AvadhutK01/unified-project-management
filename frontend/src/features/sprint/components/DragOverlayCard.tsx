@@ -9,7 +9,7 @@ interface DragOverlayCardProps {
 function DragOverlayCard({ sprint }: DragOverlayCardProps) {
     return (
         <div
-            className={`rounded-lg border border-border bg-card shadow-xl border-t-2 ${STATUS_COLORS[sprint.status]} rotate-3`}
+            className={`w-70 rounded-lg border border-border bg-card shadow-xl border-t-2 ${STATUS_COLORS[sprint.status]} rotate-3`}
         >
             <div className="p-3 space-y-2">
                 <div className="flex items-center gap-1.5 min-w-0">

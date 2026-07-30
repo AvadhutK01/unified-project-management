@@ -38,7 +38,7 @@ const Dashboard = () => {
     }
 
     return (
-        <div className="space-y-6 p-6">
+        <div className="space-y-6 p-4 sm:p-6">
             <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
                     <LayoutDashboard size={18} className="text-primary" />
@@ -75,7 +75,7 @@ const Dashboard = () => {
                 onGenerate={() => summaryMutation.mutate()}
             />
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <ProjectProgressList projects={data.projects} />
                 <RecentWorkItems workItems={data.recentWorkItems} />
             </div>

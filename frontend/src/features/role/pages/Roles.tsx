@@ -77,7 +77,7 @@ const Roles = () => {
     );
 
     return (
-        <div className="p-6 space-y-5">
+        <div className="p-4 sm:p-6 space-y-5">
             <div className="bg-card overflow-hidden">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
@@ -90,14 +90,17 @@ const Roles = () => {
                     </div>
                 </div>
 
-                <div className="py-4 flex justify-between">
+                <div className="py-4 flex gap-3 sm:justify-between">
                     {hasPermission(PERMISSIONS.ROLES.ADD) && (
-                        <Button onClick={() => navigate(`/${slug}/roles/add`)}>
+                        <Button
+                            className="w-auto"
+                            onClick={() => navigate(`/${slug}/roles/add`)}
+                        >
                             <Plus className="w-4 h-4" />
                             Add Role
                         </Button>
                     )}
-                    <div className="relative min-w-xs">
+                    <div className="relative w-full sm:w-auto sm:min-w-xs">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                         <input
                             type="text"

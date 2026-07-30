@@ -150,15 +150,15 @@ const WorkItemCommentsTab = ({
                                 </Avatar>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between gap-2">
-                                        <div className="flex items-baseline gap-2">
-                                            <span className="text-sm font-semibold text-foreground">
+                                        <div className="flex items-baseline gap-2 min-w-0">
+                                            <span className="text-sm font-semibold text-foreground truncate">
                                                 {d.authorName}
                                             </span>
-                                            <span className="text-xs text-muted-foreground hidden sm:inline">
+                                            <span className="text-xs text-muted-foreground hidden sm:inline truncate">
                                                 {d.authorEmail}
                                             </span>
                                         </div>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 shrink-0">
                                             <span className="text-[10px] text-muted-foreground">
                                                 {d.createdAt
                                                     ? formatDistanceToNow(
@@ -182,7 +182,7 @@ const WorkItemCommentsTab = ({
                                     </div>
                                     <MentionText
                                         text={d.comment}
-                                        className="text-sm text-foreground/90 mt-1"
+                                        className="text-sm text-foreground/90 mt-1 wrap-break-word"
                                     />
                                 </div>
                             </div>

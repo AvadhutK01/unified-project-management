@@ -10,6 +10,7 @@ import {
     FileText,
     CreditCard,
     Sparkles,
+    X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -52,12 +53,16 @@ const Sidebar = () => {
     const pathname = location.pathname;
     const sidebarOpen = useStore((s) => s.sidebarOpen);
     const toggleSidebar = useStore((s) => s.toggleSidebar);
+    const mobileSidebarOpen = useStore((s) => s.mobileSidebarOpen);
+    const setMobileSidebarOpen = useStore((s) => s.setMobileSidebarOpen);
     const { hasPermission, isOrgOwner } = usePermission();
 
     const { activeOrganization } = useOrganizationStore();
     const { data: subscription } = useSubscriptionQuery();
     const currentPlan = subscription?.plan ?? "free";
     const isBasicOrAbove = isAtLeastPlan(currentPlan, "basic");
+
+    const contentExpanded = sidebarOpen || mobileSidebarOpen;
 
     const [activeItem, setActiveItem] = useState("Dashboard");
     const [expandedItems, setExpandedItems] = useState<string[]>([]);
@@ -177,6 +182,15 @@ const Sidebar = () => {
     };
 
     useEffect(() => {
+        const mediaQuery = window.matchMedia("(min-width: 768px)");
+        const handleChange = (e: MediaQueryListEvent) => {
+            if (e.matches) setMobileSidebarOpen(false);
+        };
+        mediaQuery.addEventListener("change", handleChange);
+        return () => mediaQuery.removeEventListener("change", handleChange);
+    }, [setMobileSidebarOpen]);
+
+    useEffect(() => {
         for (const item of visibleMenuItems) {
             if ("subItems" in item) {
                 const hasActiveSubItem =
@@ -213,12 +227,13 @@ const Sidebar = () => {
         }
 
         const handleClick = (e: React.MouseEvent) => {
-            if (hasSubItems && sidebarOpen) {
+            if (hasSubItems && contentExpanded) {
                 e.preventDefault();
                 toggleExpanded(item.label);
             } else if ("path" in item) {
                 setActiveItem(item.label);
                 navigate((item as unknown as MenuItemWithPath).path);
+                setMobileSidebarOpen(false);
             }
         };
 
@@ -228,7 +243,7 @@ const Sidebar = () => {
                     onClick={handleClick}
                     className={cn(
                         "w-full flex items-center rounded-lg px-3 py-2 transition-colors cursor-pointer",
-                        sidebarOpen ? "justify-between" : "justify-center",
+                        contentExpanded ? "justify-between" : "justify-center",
                         isActive
                             ? "bg-primary/10 text-primary"
                             : "text-muted-foreground hover:bg-primary/5",
@@ -237,12 +252,12 @@ const Sidebar = () => {
                     <div
                         className={cn(
                             "flex items-center",
-                            sidebarOpen ? "gap-3" : "gap-0",
+                            contentExpanded ? "gap-3" : "gap-0",
                         )}
                     >
                         <Icon size={20} />
 
-                        {sidebarOpen && (
+                        {contentExpanded && (
                             <span className="font-medium flex items-center gap-2">
                                 <span>{item.label}</span>
                                 {item.badge && (
@@ -255,7 +270,7 @@ const Sidebar = () => {
                         )}
                     </div>
 
-                    {sidebarOpen && hasSubItems && (
+                    {contentExpanded && hasSubItems && (
                         <ChevronRight
                             className={cn(
                                 "h-4 w-4 transition-transform duration-200",
@@ -265,7 +280,7 @@ const Sidebar = () => {
                     )}
                 </button>
 
-                {sidebarOpen && hasSubItems && isExpanded && (
+                {contentExpanded && hasSubItems && isExpanded && (
                     <div className="ml-6 space-y-0.5 border-l border-border pl-2">
                         {"subItems" in item &&
                             (item as MenuItemWithSubItems).subItems?.map(
@@ -279,6 +294,7 @@ const Sidebar = () => {
                                             onClick={() => {
                                                 setActiveItem(item.label);
                                                 navigate(subItem.path);
+                                                setMobileSidebarOpen(false);
                                             }}
                                             className={cn(
                                                 "w-full flex items-center rounded-lg px-3 py-1.5 text-sm transition-colors cursor-pointer",
@@ -299,41 +315,61 @@ const Sidebar = () => {
     };
 
     return (
-        <div
-            className={cn(
-                "relative h-full flex flex-col border-r dark:border-gray-700 bg-background transition-[width] duration-300 ease-in-out will-change-[width]",
-                sidebarOpen ? "w-64" : "w-16",
+        <>
+            {mobileSidebarOpen && (
+                <div
+                    className="fixed inset-0 z-60 bg-black/50 md:hidden"
+                    onClick={() => setMobileSidebarOpen(false)}
+                />
             )}
-        >
+
             <div
                 className={cn(
-                    "flex items-center px-3 pt-3 pb-2 shrink-0",
-                    sidebarOpen ? "gap-2" : "justify-center",
+                    "fixed inset-y-0 left-0 z-70 h-full flex flex-col border-r dark:border-gray-700 bg-background transition-transform duration-300 ease-in-out md:relative md:z-auto md:transition-[width] md:will-change-[width]",
+                    mobileSidebarOpen
+                        ? "translate-x-0"
+                        : "-translate-x-full md:translate-x-0",
+                    "w-64",
+                    sidebarOpen ? "md:w-64" : "md:w-16",
                 )}
             >
-                <div className="flex-1 min-w-0">
-                    <OrgSwitcher collapsed={!sidebarOpen} />
+                <div
+                    className={cn(
+                        "flex items-center px-3 pt-3 pb-2 shrink-0",
+                        contentExpanded ? "gap-2" : "md:justify-center",
+                    )}
+                >
+                    <div className="flex-1 min-w-0">
+                        <OrgSwitcher collapsed={!contentExpanded} />
+                    </div>
+
+                    <Button
+                        onClick={() => setMobileSidebarOpen(false)}
+                        className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-gray-200 dark:hover:bg-gray-700 transition md:hidden"
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
+
+                    <Button
+                        onClick={() => toggleSidebar()}
+                        className="hidden md:flex absolute top-3.5 -right-3.5 z-10 border border-gray-200 dark:border-gray-600 bg-white dark:bg-black h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                    >
+                        <ChevronLeft
+                            className={cn(
+                                "h-4 w-4 transition-transform duration-300",
+                                !sidebarOpen && "rotate-180",
+                            )}
+                        />
+                    </Button>
                 </div>
 
-                <Button
-                    onClick={() => toggleSidebar()}
-                    className="absolute top-3.5 -right-3.5 z-10 border border-gray-200 dark:border-gray-600 bg-white dark:bg-black flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-gray-200 dark:hover:bg-gray-700 transition"
-                >
-                    <ChevronLeft
-                        className={cn(
-                            "h-4 w-4 transition-transform duration-300",
-                            !sidebarOpen && "rotate-180",
-                        )}
-                    />
-                </Button>
+                <div className="px-2 flex-1 overflow-y-auto">
+                    <nav className="space-y-1">
+                        {visibleMenuItems.map(renderMenuItem)}
+                    </nav>
+                </div>
             </div>
-
-            <div className="px-2 flex-1 overflow-y-auto">
-                <nav className="space-y-1">
-                    {visibleMenuItems.map(renderMenuItem)}
-                </nav>
-            </div>
-        </div>
+        </>
     );
 };
 

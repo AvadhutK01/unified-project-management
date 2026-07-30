@@ -120,12 +120,15 @@ const EditSprintModal = ({
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent showCloseButton={false} className="w-150! max-w-150!">
+            <SheetContent
+                showCloseButton={false}
+                className="w-full! max-w-full! sm:w-150! sm:max-w-150!"
+            >
                 <SheetHeader>
                     <SheetTitle>Edit Sprint</SheetTitle>
                     <SheetDescription>Update sprint details.</SheetDescription>
                 </SheetHeader>
-                <div className="grid flex-1 auto-rows-min gap-6 px-4 overflow-y-auto">
+                <div className="grid flex-1 min-h-0 auto-rows-min gap-6 px-4 overflow-y-auto">
                     <Form {...form}>
                         <form
                             onSubmit={form.handleSubmit(onSubmit)}
@@ -149,7 +152,7 @@ const EditSprintModal = ({
                                 )}
                             />
 
-                            <div className="flex items-center gap-2 w-full">
+                            <div className="grid grid-cols-1 gap-2 w-full sm:grid-cols-2 sm:items-center">
                                 <FormField
                                     control={form.control}
                                     name="startDate"
@@ -299,7 +302,7 @@ const EditSprintModal = ({
                                 )}
                             />
 
-                            <div className="flex items-center gap-2 w-full">
+                            <div className="grid grid-cols-1 gap-2 w-full sm:grid-cols-2 sm:items-center">
                                 <FormField
                                     control={form.control}
                                     name="status"
@@ -375,11 +378,20 @@ const EditSprintModal = ({
                                 />
                             </div>
 
-                            <SheetFooter className="flex flex-row justify-end gap-2 px-0 mt-6">
+                            <SheetFooter className="flex flex-col-reverse gap-2 px-0 mt-6 sm:flex-row sm:justify-end">
                                 <SheetClose asChild>
-                                    <Button variant="outline">Close</Button>
+                                    <Button
+                                        variant="outline"
+                                        className="flex-1 sm:flex-none"
+                                    >
+                                        Close
+                                    </Button>
                                 </SheetClose>
-                                <Button type="submit" disabled={isSubmitting}>
+                                <Button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="flex-1 sm:flex-none"
+                                >
                                     {isSubmitting ? (
                                         <>
                                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />

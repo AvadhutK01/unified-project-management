@@ -112,13 +112,13 @@ export function EditMemberModal({
                 onClick={handleClose}
             />
 
-            <div className="relative z-10 w-full max-w-lg bg-card rounded-2xl shadow-2xl border border-border overflow-hidden animate-in fade-in-0 zoom-in-95 duration-200">
-                <div className="flex items-start justify-between p-6 pb-5">
-                    <div className="flex items-start gap-3">
+            <div className="relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200">
+                <div className="flex shrink-0 items-start justify-between p-4 pb-5 sm:p-6 sm:pb-5">
+                    <div className="flex items-start gap-3 min-w-0">
                         <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                             <UserCog className="size-5 text-primary" />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                             <h2 className="text-base font-semibold text-foreground">
                                 Edit Member
                             </h2>
@@ -129,20 +129,20 @@ export function EditMemberModal({
                     </div>
                     <button
                         onClick={handleClose}
-                        className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                        className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 shrink-0"
                     >
                         <X className="size-4" />
                     </button>
                 </div>
 
-                <div className="h-px bg-border mx-6" />
+                <div className="h-px bg-border mx-4 sm:mx-6 shrink-0" />
 
                 {isLoadingMember ? (
                     <div className="flex items-center justify-center py-16">
                         <Loader2 className="size-6 animate-spin text-muted-foreground" />
                     </div>
                 ) : member ? (
-                    <div className="p-6 space-y-6">
+                    <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-4 sm:p-6">
                         <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/30 border border-border/50">
                             <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-sm font-semibold text-primary">
                                 {initials}
@@ -238,14 +238,20 @@ export function EditMemberModal({
                     </div>
                 )}
 
-                <div className="h-px bg-border mx-6" />
+                <div className="h-px bg-border mx-4 sm:mx-6 shrink-0" />
 
-                <div className="flex items-center justify-end gap-2 p-6 pt-4">
-                    <Button variant="outline" size="sm" onClick={handleClose}>
+                <div className="flex shrink-0 items-center justify-end gap-2 p-4 pt-4 sm:p-6 sm:pt-4">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 sm:flex-none"
+                        onClick={handleClose}
+                    >
                         Cancel
                     </Button>
                     <Button
                         size="sm"
+                        className="flex-1 sm:flex-none"
                         onClick={handleSave}
                         disabled={isUpdating || isLoadingMember || !member}
                     >

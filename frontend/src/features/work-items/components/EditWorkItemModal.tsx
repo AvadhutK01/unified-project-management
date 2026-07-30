@@ -168,7 +168,10 @@ const EditWorkItemModal = ({
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent showCloseButton={false} className="w-150! max-w-150!">
+            <SheetContent
+                showCloseButton={false}
+                className="w-full max-w-full sm:w-150! sm:max-w-150!"
+            >
                 <SheetHeader>
                     <SheetTitle>Edit Work Item</SheetTitle>
                     <SheetDescription>
@@ -199,7 +202,7 @@ const EditWorkItemModal = ({
                                 )}
                             />
 
-                            <div className="flex items-center gap-2 w-full">
+                            <div className="flex flex-col gap-2 w-full sm:flex-row sm:items-center">
                                 <FormField
                                     control={form.control}
                                     name="type"
@@ -334,7 +337,7 @@ const EditWorkItemModal = ({
                                 />
                             </div>
 
-                            <div className="flex items-center gap-2 w-full">
+                            <div className="flex flex-col gap-2 w-full sm:flex-row sm:items-center">
                                 <FormField
                                     control={form.control}
                                     name="estimatedTime"
@@ -542,11 +545,20 @@ const EditWorkItemModal = ({
                                 )}
                             />
 
-                            <SheetFooter className="flex flex-row justify-end gap-2 px-0 mt-6">
+                            <SheetFooter className="flex flex-col-reverse gap-2 px-0 mt-6 sm:flex-row sm:justify-end">
                                 <SheetClose asChild>
-                                    <Button variant="outline">Close</Button>
+                                    <Button
+                                        variant="outline"
+                                        className="flex-1 sm:flex-none"
+                                    >
+                                        Close
+                                    </Button>
                                 </SheetClose>
-                                <Button type="submit" disabled={isSubmitting}>
+                                <Button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="flex-1 sm:flex-none"
+                                >
                                     {isSubmitting ? (
                                         <>
                                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />

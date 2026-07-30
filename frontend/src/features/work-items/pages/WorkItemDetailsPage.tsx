@@ -279,7 +279,7 @@ const WorkItemDetailsPage = () => {
     const mediaCount = mediaList.length;
 
     return (
-        <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
+        <div className="p-4 sm:p-6 space-y-6 max-w-[1400px] mx-auto">
             <WorkItemDetailsHeader
                 workItem={workItem}
                 project={project}
@@ -408,7 +408,7 @@ const WorkItemDetailsPage = () => {
                     </Tabs>
                 </div>
 
-                <div className="space-y-6 sticky top-6 self-start">
+                <div className="space-y-6 lg:sticky lg:top-6 self-start">
                     <WorkItemDetailsCard
                         workItem={workItem}
                         project={project}

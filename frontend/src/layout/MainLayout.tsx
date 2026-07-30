@@ -14,7 +14,7 @@ const MainLayoutContent = ({ children }: { children: ReactNode }) => {
     return (
         <div className="flex h-screen">
             <Sidebar />
-            <main className="flex-1 w-[calc(100%-260px)] bg-card">
+            <main className="flex-1 min-w-0 w-full bg-card">
                 <Header />
                 <div className="h-[calc(100vh-65px)]! overflow-y-auto">
                     {children}

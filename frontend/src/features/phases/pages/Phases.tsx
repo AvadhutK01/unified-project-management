@@ -112,8 +112,16 @@ const Phases = () => {
                     </Badge>
                 ),
             },
-            { key: "startDate", label: "Start Date" },
-            { key: "endDate", label: "End Date" },
+            {
+                key: "startDate",
+                label: "Start Date",
+                className: "hidden sm:table-cell",
+            },
+            {
+                key: "endDate",
+                label: "End Date",
+                className: "hidden sm:table-cell",
+            },
             ...(hasAnyAction
                 ? [
                       {
@@ -197,7 +205,7 @@ const Phases = () => {
     );
 
     return (
-        <div className="p-6 space-y-5">
+        <div className="p-4 sm:p-6 space-y-5">
             <div>
                 <h1 className="text-lg font-semibold text-foreground">
                     Phases
@@ -207,10 +215,10 @@ const Phases = () => {
                 </p>
             </div>
 
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <AddPhaseModal />
 
-                <div className="relative min-w-xs">
+                <div className="relative w-full sm:w-auto sm:min-w-xs">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                     <input
                         type="text"
@@ -232,7 +240,7 @@ const Phases = () => {
             />
 
             {totalPages > 0 && (
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
                     <p className="text-xs text-muted-foreground px-1">
                         Showing{" "}
                         <span className="font-medium text-foreground">

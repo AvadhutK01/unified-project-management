@@ -10,7 +10,7 @@ const SprintDetailsError = ({
     sprintError,
 }: SprintDetailsErrorProps) => {
     return (
-        <div className="p-6 max-w-2xl mx-auto mt-12 text-center bg-card/60 backdrop-blur-md rounded-2xl border border-destructive/20 shadow-lg">
+        <div className="p-4 sm:p-6 max-w-2xl mx-auto mt-12 text-center bg-card/60 backdrop-blur-md rounded-2xl border border-destructive/20 shadow-lg">
             <AlertCircle className="size-12 mx-auto text-destructive mb-4" />
             <h2 className="text-lg font-bold text-foreground">
                 Failed to Load Sprint

@@ -117,7 +117,7 @@ export default function OrganizationSelector() {
     };
 
     return (
-        <div className="min-h-screen bg-background flex justify-center px-8 py-12">
+        <div className="min-h-screen bg-background flex justify-center px-4 py-8 sm:px-8 sm:py-12">
             <div className="flex flex-col gap-5 w-full">
                 {/* Header */}
                 <div className="flex items-center gap-3">
@@ -324,7 +324,7 @@ function InvitationCard({
                 </div>
 
                 {/* Bottom row: date + actions */}
-                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/40">
+                <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-border/40">
                     <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
                         <Clock className="size-3 shrink-0" />
                         <span className="whitespace-nowrap">

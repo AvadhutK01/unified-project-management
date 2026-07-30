@@ -31,7 +31,8 @@ const AddRole = () => {
     const navigate = useNavigate();
     const { slug } = useParams<{ slug: string }>();
 
-    const { data: rolePermissions } = useFetchRolePermissionsQuery();
+    const { data: rolePermissions, isPending: isFetchingPermissions } =
+        useFetchRolePermissionsQuery();
     const { mutate: createRole, isPending: isSubmitting } =
         useCreateRoleMutation();
 
@@ -221,7 +222,7 @@ const AddRole = () => {
     };
 
     return (
-        <div className="p-6 space-y-5">
+        <div className="p-4 sm:p-6 space-y-5">
             <div className="flex items-center gap-3">
                 <Button
                     type="button"
@@ -290,12 +291,12 @@ const AddRole = () => {
                 </Card>
 
                 <div className="space-y-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                         <h3 className="text-xl font-semibold">Permissions</h3>
 
                         <div className="flex items-center gap-3">
                             <span className="text-sm text-muted-foreground">
-                                Select All Permissions
+                                Select All
                             </span>
 
                             <Switch
@@ -317,6 +318,7 @@ const AddRole = () => {
                         data={permissions}
                         getRowId={(row) => row.module}
                         showDefaultFooter={false}
+                        loading={isFetchingPermissions}
                     />
                 </div>
 

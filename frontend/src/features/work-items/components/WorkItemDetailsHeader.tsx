@@ -51,7 +51,7 @@ const WorkItemDetailsHeader = ({
 }: WorkItemDetailsHeaderProps) => {
     return (
         <div className="space-y-2">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <div className="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <Link
                     to={`/${slug}/projects/${projectId}/phases`}
                     className="hover:text-foreground transition-colors"
@@ -94,7 +94,7 @@ const WorkItemDetailsHeader = ({
                         <ArrowLeft className="size-4" />
                     </Link>
                     <div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
                             <h1 className="text-2xl font-bold tracking-tight text-foreground">
                                 {workItem.title}
                             </h1>
@@ -117,7 +117,7 @@ const WorkItemDetailsHeader = ({
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2.5">
+                <div className="flex flex-wrap items-center gap-2.5">
                     {canChangeStatus && (
                         <div className="flex items-center gap-2">
                             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden sm:inline">

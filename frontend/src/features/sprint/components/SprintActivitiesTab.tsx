@@ -47,7 +47,7 @@ const SprintActivitiesTab = ({
                 ) : (
                     activities.map((act: any) => (
                         <div key={act.id} className="flex gap-4 relative">
-                            <div className="size-9 rounded-full bg-background border border-border/80 flex items-center justify-center z-10 text-primary/80 shadow-xs">
+                            <div className="size-9 shrink-0 rounded-full bg-background border border-border/80 flex items-center justify-center z-10 text-primary/80 shadow-xs">
                                 <Sparkles className="size-3.5" />
                             </div>
                             <div className="flex-1 pt-1 min-w-0">

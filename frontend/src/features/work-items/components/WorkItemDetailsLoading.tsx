@@ -6,7 +6,7 @@ const Skeleton = ({ className }: { className?: string }) => (
 
 const WorkItemDetailsLoading = () => {
     return (
-        <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
+        <div className="p-4 sm:p-6 space-y-6 max-w-[1400px] mx-auto">
             <div className="flex items-center gap-2">
                 <Skeleton className="h-3 w-16" />
                 <Skeleton className="h-3 w-3" />
@@ -28,7 +28,7 @@ const WorkItemDetailsLoading = () => {
                         <Skeleton className="h-3 w-32" />
                     </div>
                 </div>
-                <div className="flex items-center gap-2.5">
+                <div className="flex flex-wrap items-center gap-2.5">
                     <Skeleton className="h-9 w-[130px]" />
                     <Skeleton className="h-9 w-20" />
                     <Skeleton className="h-9 w-24" />

@@ -212,13 +212,13 @@ export function InviteMembersModal({
                 onClick={handleClose}
             />
 
-            <div className="relative z-10 w-full max-w-lg bg-card rounded-2xl shadow-2xl border border-border overflow-hidden">
-                <div className="flex items-start justify-between p-6 pb-5">
-                    <div className="flex items-start gap-3">
+            <div className="relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
+                <div className="flex shrink-0 items-start justify-between p-4 pb-5 sm:p-6 sm:pb-5">
+                    <div className="flex items-start gap-3 min-w-0">
                         <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                             <UserPlus className="size-5 text-primary" />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                             <h2 className="text-base font-semibold text-foreground">
                                 {reInviteMode
                                     ? "Re-invite Team Member"
@@ -233,20 +233,20 @@ export function InviteMembersModal({
                     </div>
                     <button
                         onClick={handleClose}
-                        className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
                     >
                         <X className="size-4" />
                     </button>
                 </div>
 
-                <div className="h-px bg-border mx-6" />
+                <div className="h-px bg-border mx-4 sm:mx-6 shrink-0" />
 
-                <div className="p-6 space-y-2.5 max-h-72 overflow-y-auto">
-                    <div className="flex items-center gap-2 px-0.5 mb-1">
+                <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-2.5">
+                    <div className="hidden sm:flex items-center gap-2 px-0.5 mb-1">
                         <span className="flex-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                             Email Address
                         </span>
-                        <span className="w-30 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        <span className="w-36 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                             Role
                         </span>
                         <span className="size-8 shrink-0" />
@@ -256,7 +256,7 @@ export function InviteMembersModal({
                         const errors = entryErrors[entry.id] ?? {};
                         return (
                             <div key={entry.id} className="flex flex-col gap-1">
-                                <div className="flex items-center gap-2">
+                                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                                     <div className="flex-1 relative">
                                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
                                         <input
@@ -282,50 +282,59 @@ export function InviteMembersModal({
                                         />
                                     </div>
 
-                                    <Select
-                                        value={entry.role}
-                                        onValueChange={(v) =>
-                                            updateRole(entry.id, v)
-                                        }
-                                    >
-                                        <SelectTrigger
-                                            className={cn(
-                                                "w-36 shrink-0",
-                                                errors.role
-                                                    ? "border-destructive"
-                                                    : "border-border",
-                                            )}
+                                    <div className="flex items-center gap-2">
+                                        <Select
+                                            value={entry.role}
+                                            onValueChange={(v) =>
+                                                updateRole(entry.id, v)
+                                            }
                                         >
-                                            <SelectValue placeholder="Select role" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {roleOptions.map((roleOption) => (
-                                                <SelectItem
-                                                    key={roleOption.id}
-                                                    value={roleOption.id}
-                                                >
-                                                    {roleOption.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                            <SelectTrigger
+                                                className={cn(
+                                                    "w-full sm:w-36 shrink-0",
+                                                    errors.role
+                                                        ? "border-destructive"
+                                                        : "border-border",
+                                                )}
+                                            >
+                                                <SelectValue placeholder="Select role" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {roleOptions.map(
+                                                    (roleOption) => (
+                                                        <SelectItem
+                                                            key={roleOption.id}
+                                                            value={
+                                                                roleOption.id
+                                                            }
+                                                        >
+                                                            {roleOption.name}
+                                                        </SelectItem>
+                                                    ),
+                                                )}
+                                            </SelectContent>
+                                        </Select>
 
-                                    <button
-                                        onClick={() => removeEntry(entry.id)}
-                                        disabled={
-                                            entries.length === 1 || reInviteMode
-                                        }
-                                        title={
-                                            reInviteMode
-                                                ? "Cannot remove in re-invite mode"
-                                                : entries.length === 1
-                                                  ? "Need at least one entry"
-                                                  : `Remove row ${idx + 1}`
-                                        }
-                                        className="size-8 shrink-0 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                        <Trash2 className="size-3.5" />
-                                    </button>
+                                        <button
+                                            onClick={() =>
+                                                removeEntry(entry.id)
+                                            }
+                                            disabled={
+                                                entries.length === 1 ||
+                                                reInviteMode
+                                            }
+                                            title={
+                                                reInviteMode
+                                                    ? "Cannot remove in re-invite mode"
+                                                    : entries.length === 1
+                                                      ? "Need at least one entry"
+                                                      : `Remove row ${idx + 1}`
+                                            }
+                                            className="size-8 shrink-0 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                        >
+                                            <Trash2 className="size-3.5" />
+                                        </button>
+                                    </div>
                                 </div>
 
                                 {(errors.email || errors.role) && (
@@ -345,13 +354,11 @@ export function InviteMembersModal({
                             </div>
                         );
                     })}
-                </div>
 
-                <div className="px-6 pb-1">
                     {!reInviteMode && (
                         <button
                             onClick={addEntry}
-                            className="flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 font-medium transition-colors"
+                            className="flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 font-medium transition-colors pt-1"
                         >
                             <Plus className="size-3.5" />
                             Add another member
@@ -359,10 +366,10 @@ export function InviteMembersModal({
                     )}
                 </div>
 
-                <div className="h-px bg-border mx-6 mt-5" />
+                <div className="h-px bg-border mx-4 sm:mx-6 shrink-0" />
 
-                <div className="flex items-center justify-between p-6 pt-4">
-                    <p className="text-xs text-muted-foreground">
+                <div className="flex shrink-0 flex-col-reverse gap-3 p-4 pt-4 sm:flex-row sm:items-center sm:justify-between sm:p-6 sm:pt-4">
+                    <p className="text-xs text-muted-foreground text-center sm:text-left">
                         {reInviteMode
                             ? "Re-invite 1 member"
                             : `${entries.length} ${entries.length === 1 ? "invite" : "invites"} ready`}
@@ -371,12 +378,14 @@ export function InviteMembersModal({
                         <Button
                             variant="outline"
                             size="sm"
+                            className="flex-1 sm:flex-none"
                             onClick={handleClose}
                         >
                             Cancel
                         </Button>
                         <Button
                             size="sm"
+                            className="flex-1 sm:flex-none"
                             onClick={handleSubmit}
                             disabled={isInviting || isReInviting}
                         >

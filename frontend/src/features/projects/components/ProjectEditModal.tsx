@@ -183,12 +183,15 @@ const ProjectEditModal = ({
                 }
             }}
         >
-            <SheetContent showCloseButton={false} className="w-150! max-w-150!">
+            <SheetContent
+                showCloseButton={false}
+                className="sm:w-150! sm:max-w-150!"
+            >
                 <SheetHeader>
                     <SheetTitle>Edit Project</SheetTitle>
                     <SheetDescription>Update project details.</SheetDescription>
                 </SheetHeader>
-                <div className="grid flex-1 auto-rows-min gap-6 px-4 overflow-y-auto">
+                <div className="grid flex-1 min-h-0 auto-rows-min gap-6 px-4 overflow-y-auto">
                     {isLoadingProject ? (
                         <div className="flex items-center justify-center py-16">
                             <Loader2 className="h-6 w-6 animate-spin" />
@@ -475,13 +478,19 @@ const ProjectEditModal = ({
                                     )}
                                 />
 
-                                <SheetFooter className="flex flex-row justify-end gap-2 px-0 mt-6">
+                                <SheetFooter className="flex flex-col-reverse gap-2 px-0 mt-6 sm:flex-row sm:justify-end">
                                     <SheetClose asChild>
-                                        <Button variant="outline">Close</Button>
+                                        <Button
+                                            variant="outline"
+                                            className="w-full sm:w-auto"
+                                        >
+                                            Close
+                                        </Button>
                                     </SheetClose>
                                     <Button
                                         type="submit"
                                         disabled={isSubmitting}
+                                        className="w-full sm:w-auto"
                                     >
                                         {isSubmitting ? (
                                             <>

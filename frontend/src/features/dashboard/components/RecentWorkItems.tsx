@@ -56,7 +56,7 @@ const RecentWorkItems = ({ workItems }: Props) => {
                                     <p className="truncate text-sm font-medium text-foreground">
                                         {item.title}
                                     </p>
-                                    <div className="mt-1 flex items-center gap-2">
+                                    <div className="mt-1 flex flex-wrap items-center gap-2">
                                         <span className="text-xs text-muted-foreground">
                                             {name}
                                         </span>

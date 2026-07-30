@@ -12,12 +12,14 @@ const WorkItemOverviewTab = ({ workItem }: WorkItemOverviewTabProps) => {
                     Description
                 </h3>
                 {workItem.description ? (
-                    <div
-                        className="prose dark:prose-invert max-w-none text-sm leading-relaxed text-foreground"
-                        dangerouslySetInnerHTML={{
-                            __html: workItem.description,
-                        }}
-                    />
+                    <div className="overflow-x-auto">
+                        <div
+                            className="prose dark:prose-invert max-w-none text-sm leading-relaxed text-foreground"
+                            dangerouslySetInnerHTML={{
+                                __html: workItem.description,
+                            }}
+                        />
+                    </div>
                 ) : (
                     <p className="text-sm text-muted-foreground italic">
                         No description provided for this work item.
@@ -30,12 +32,14 @@ const WorkItemOverviewTab = ({ workItem }: WorkItemOverviewTabProps) => {
                     Acceptance Criteria
                 </h3>
                 {workItem.acceptanceCriteria ? (
-                    <div
-                        className="prose dark:prose-invert max-w-none text-sm leading-relaxed text-foreground"
-                        dangerouslySetInnerHTML={{
-                            __html: workItem.acceptanceCriteria,
-                        }}
-                    />
+                    <div className="overflow-x-auto">
+                        <div
+                            className="prose dark:prose-invert max-w-none text-sm leading-relaxed text-foreground"
+                            dangerouslySetInnerHTML={{
+                                __html: workItem.acceptanceCriteria,
+                            }}
+                        />
+                    </div>
                 ) : (
                     <p className="text-sm text-muted-foreground italic">
                         No acceptance criteria defined for this work item.

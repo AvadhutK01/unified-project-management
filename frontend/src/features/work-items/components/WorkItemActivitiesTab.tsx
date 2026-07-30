@@ -58,18 +58,18 @@ const WorkItemActivitiesTab = ({
                                 <Sparkles className="size-3.5" />
                             </div>
                             <div className="flex-1 pt-1 min-w-0">
-                                <p className="text-sm text-foreground/90 font-medium leading-relaxed">
+                                <p className="text-sm text-foreground/90 font-medium leading-relaxed wrap-break-word">
                                     {act.description}
                                 </p>
-                                <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
-                                    <div className="flex items-center gap-1">
-                                        <User className="size-3" />
-                                        <span>
+                                <div className="flex flex-wrap items-center gap-2 mt-1 text-[11px] text-muted-foreground">
+                                    <div className="flex items-center gap-1 min-w-0">
+                                        <User className="size-3 shrink-0" />
+                                        <span className="truncate">
                                             {act.user?.username || "System"}
                                         </span>
                                     </div>
                                     <span>•</span>
-                                    <div className="flex items-center gap-1">
+                                    <div className="flex items-center gap-1 shrink-0">
                                         <Clock className="size-3" />
                                         <span>
                                             {act.createdAt

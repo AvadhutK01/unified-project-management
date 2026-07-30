@@ -193,7 +193,7 @@ const ProjectDashboardPage = () => {
     const logoUrl = getLogoUrl(data.logoUrl);
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-6">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2">
                 <button
@@ -271,7 +271,7 @@ const ProjectDashboardPage = () => {
             </div>
 
             {/* Stats row */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {STAT_CARDS.map(
                     ({
                         key,

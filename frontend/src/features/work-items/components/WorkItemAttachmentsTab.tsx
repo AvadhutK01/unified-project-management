@@ -135,7 +135,7 @@ const WorkItemAttachmentsTab = ({
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-1.5 ml-4">
+                                <div className="flex items-center gap-1.5 ml-4 shrink-0">
                                     <a
                                         href={m.url}
                                         target="_blank"

@@ -80,6 +80,7 @@ const WorkItemList = ({
             {
                 key: "originalEstimation",
                 label: "Est.",
+                className: "hidden md:table-cell",
                 render: (item) => (
                     <span className="text-sm text-muted-foreground">
                         {formatHours(item.originalEstimation ?? 0)}
@@ -89,6 +90,7 @@ const WorkItemList = ({
             {
                 key: "remaining",
                 label: "Rem.",
+                className: "hidden md:table-cell",
                 render: (item) => (
                     <span className="text-sm text-muted-foreground">
                         {formatHours(item.remaining ?? 0)}
@@ -98,6 +100,7 @@ const WorkItemList = ({
             {
                 key: "completed",
                 label: "Completed",
+                className: "hidden lg:table-cell",
                 render: (item) => (
                     <span className="text-sm text-muted-foreground">
                         {item.completed !== undefined
@@ -109,6 +112,7 @@ const WorkItemList = ({
             {
                 key: "assignedTo",
                 label: "Assigned To",
+                className: "hidden sm:table-cell",
                 render: (item) => {
                     const member = projectMembers?.find(
                         (m) => m.id === item.assignedTo,

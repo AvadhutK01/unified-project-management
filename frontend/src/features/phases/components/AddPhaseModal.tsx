@@ -102,19 +102,22 @@ const AddPhaseModal = () => {
             }}
         >
             <SheetTrigger asChild>
-                <Button>
+                <Button className="w-full sm:w-auto">
                     <Plus className="size-4" />
                     Add Phase
                 </Button>
             </SheetTrigger>
-            <SheetContent showCloseButton={false} className="w-150! max-w-150!">
+            <SheetContent
+                showCloseButton={false}
+                className="max-sm:w-full! sm:w-150! sm:max-w-150!"
+            >
                 <SheetHeader>
                     <SheetTitle>Add Phase</SheetTitle>
                     <SheetDescription>
                         Add a new phase to your project.
                     </SheetDescription>
                 </SheetHeader>
-                <div className="grid flex-1 auto-rows-min gap-6 px-4 overflow-y-auto">
+                <div className="grid flex-1 min-h-0 auto-rows-min gap-6 px-4 sm:px-6 overflow-y-auto">
                     <Form {...form}>
                         <form
                             onSubmit={form.handleSubmit(onSubmit)}
@@ -371,11 +374,20 @@ const AddPhaseModal = () => {
                                 />
                             </div>
 
-                            <SheetFooter className="flex flex-row justify-end gap-2 px-0 mt-6">
+                            <SheetFooter className="flex flex-col-reverse gap-2 px-0 mt-6 sm:flex-row sm:justify-end">
                                 <SheetClose asChild>
-                                    <Button variant="outline">Close</Button>
+                                    <Button
+                                        variant="outline"
+                                        className="flex-1 sm:flex-none"
+                                    >
+                                        Close
+                                    </Button>
                                 </SheetClose>
-                                <Button type="submit" disabled={isSubmitting}>
+                                <Button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="flex-1 sm:flex-none"
+                                >
                                     {isSubmitting ? (
                                         <>
                                             <Loader2 className="h-4 w-4 mr-2" />

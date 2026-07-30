@@ -229,16 +229,21 @@ export const BillingPage = () => {
     >[];
 
     return (
-        <div className="p-6 space-y-8 max-w-7xl mx-auto">
+        <div className="p-4 space-y-6 sm:p-6 sm:space-y-8 max-w-7xl mx-auto">
             {/* Page Header */}
-            <div>
-                <h1 className="text-2xl font-bold text-foreground">
-                    Billing & Subscriptions
-                </h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                    Manage your organization's subscription plan and payment
-                    history.
-                </p>
+            <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                    <CreditCard className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                    <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+                        Billing & Subscriptions
+                    </h1>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                        Manage your organization's subscription plan and payment
+                        history.
+                    </p>
+                </div>
             </div>
 
             {/* Current Plan Status */}
@@ -247,12 +252,12 @@ export const BillingPage = () => {
                     <div
                         className={`absolute top-0 left-0 right-0 h-1 ${
                             currentPlan === "premium"
-                                ? "bg-gradient-to-r from-amber-400 to-orange-400"
+                                ? "bg-linear-to-r from-amber-400 to-orange-400"
                                 : currentPlan === "pro"
-                                  ? "bg-gradient-to-r from-violet-500 to-purple-500"
+                                  ? "bg-linear-to-r from-violet-500 to-purple-500"
                                   : currentPlan === "basic"
-                                    ? "bg-gradient-to-r from-blue-400 to-blue-500"
-                                    : "bg-gradient-to-r from-slate-300 to-slate-400"
+                                    ? "bg-linear-to-r from-blue-400 to-blue-500"
+                                    : "bg-linear-to-r from-slate-300 to-slate-400"
                         }`}
                     />
                     <CardHeader className="pb-3">
@@ -306,13 +311,13 @@ export const BillingPage = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Free Plan Card */}
                     <Card
-                        className={`border-border/60 shadow-sm flex flex-col relative overflow-hidden transition-all ${
+                        className={`border-border/60 shadow-sm flex flex-col relative overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5 ${
                             currentPlan === "free"
                                 ? "ring-2 ring-slate-400/40"
                                 : ""
                         }`}
                     >
-                        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-slate-300 to-slate-400" />
+                        <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-slate-300 to-slate-400" />
                         <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
@@ -366,14 +371,14 @@ export const BillingPage = () => {
                         return (
                             <Card
                                 key={plan}
-                                className={`border-border/60 shadow-sm flex flex-col relative overflow-hidden transition-all ${
+                                className={`border-border/60 shadow-sm flex flex-col relative overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5 ${
                                     isCurrentPlan
                                         ? `ring-2 ring-offset-1 ${cfg.activeBorder.replace("border-", "ring-")}`
                                         : ""
                                 } ${plan === "premium" ? "shadow-amber-500/10" : ""}`}
                             >
                                 <div
-                                    className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r ${
+                                    className={`absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r ${
                                         plan === "basic"
                                             ? "from-blue-400 to-blue-500"
                                             : plan === "pro"
@@ -518,20 +523,20 @@ export const BillingPage = () => {
                             </p>
                             {supportContact && (
                                 <div className="space-y-1 pt-1 border-t border-border/40 text-xs font-medium text-foreground">
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 min-w-0">
                                         <Mail className="w-3.5 h-3.5 text-primary shrink-0" />
                                         <a
                                             href={`mailto:${supportContact.email}`}
-                                            className="hover:underline truncate"
+                                            className="hover:underline truncate min-w-0"
                                         >
                                             {supportContact.email}
                                         </a>
                                     </div>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 min-w-0">
                                         <Phone className="w-3.5 h-3.5 text-primary shrink-0" />
                                         <a
                                             href={`tel:${supportContact.phone}`}
-                                            className="hover:underline"
+                                            className="hover:underline truncate min-w-0"
                                         >
                                             {supportContact.phone}
                                         </a>
@@ -560,7 +565,7 @@ export const BillingPage = () => {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                             <div className="flex items-start gap-2">
                                 <FileText className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
                                 <div>
@@ -646,7 +651,7 @@ export const BillingPage = () => {
                                         <TableRow className="bg-secondary/40">
                                             <TableHead>Date</TableHead>
                                             <TableHead>Description</TableHead>
-                                            <TableHead>
+                                            <TableHead className="hidden md:table-cell">
                                                 Razorpay Order ID
                                             </TableHead>
                                             <TableHead>Amount</TableHead>
@@ -662,11 +667,11 @@ export const BillingPage = () => {
                                                         "MMM dd, yyyy HH:mm",
                                                     )}
                                                 </TableCell>
-                                                <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">
+                                                <TableCell className="text-xs text-muted-foreground max-w-35 sm:max-w-50 truncate">
                                                     {tx.description ||
                                                         "Subscription"}
                                                 </TableCell>
-                                                <TableCell className="font-mono text-xs text-muted-foreground">
+                                                <TableCell className="hidden md:table-cell font-mono text-xs text-muted-foreground">
                                                     {tx.razorpayOrderId}
                                                 </TableCell>
                                                 <TableCell className="font-semibold text-xs">

@@ -36,9 +36,9 @@ export function OrganizationEditModal({
 }: OrganizationEditModalProps) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-3xl overflow-hidden rounded-3xl border border-border bg-card shadow-2xl">
-                <div className="flex items-center justify-between border-b border-border px-6 py-4">
-                    <div>
+            <div className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-2xl">
+                <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-4 sm:px-6">
+                    <div className="min-w-0">
                         <p className="text-sm font-semibold text-foreground">
                             Update organization
                         </p>
@@ -46,11 +46,16 @@ export function OrganizationEditModal({
                             Edit organization details and save changes.
                         </p>
                     </div>
-                    <Button variant="ghost" type="button" onClick={onClose}>
+                    <Button
+                        variant="ghost"
+                        type="button"
+                        onClick={onClose}
+                        className="shrink-0"
+                    >
                         <X size={18} />
                     </Button>
                 </div>
-                <div className="space-y-5 px-6 py-6">
+                <div className="space-y-5 overflow-y-auto px-4 py-6 sm:px-6">
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
                             <Label htmlFor="org-name">Organization Name</Label>
@@ -130,7 +135,7 @@ export function OrganizationEditModal({
                         />
                     </div>
                 </div>
-                <div className="flex flex-col gap-3 border-t border-border bg-background px-6 py-4 sm:flex-row sm:justify-end">
+                <div className="flex shrink-0 flex-col gap-3 border-t border-border bg-background px-4 py-4 sm:flex-row sm:justify-end sm:px-6">
                     <Button variant="outline" type="button" onClick={onClose}>
                         Cancel
                     </Button>

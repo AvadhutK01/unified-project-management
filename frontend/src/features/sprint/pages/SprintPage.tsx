@@ -96,7 +96,7 @@ const SprintPage = () => {
     const safePage = Math.min(currentPage, totalPages || 1);
 
     return (
-        <div className="p-6 space-y-5">
+        <div className="p-4 sm:p-6 space-y-5">
             {/* Breadcrumbs */}
             <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <Link
@@ -209,11 +209,11 @@ const SprintPage = () => {
             </div>
 
             {/* Toolbar Row */}
-            <div className="flex flex-row items-center justify-between">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <AddSprintModal onAddSprint={() => {}} canAdd={canAdd} />
 
                 {/* View switcher Segmented Control */}
-                <div className="flex items-center gap-1 bg-secondary/60 p-1 rounded-xl border border-border/40 shadow-inner">
+                <div className="flex items-center gap-1 self-start bg-secondary/60 p-1 rounded-xl border border-border/40 shadow-inner sm:self-auto">
                     <button
                         onClick={() => setView("kanban")}
                         className={cn(
@@ -282,7 +282,7 @@ const SprintPage = () => {
                         />
 
                         {totalPages > 0 && (
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-4">
+                            <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between mt-4">
                                 <p className="text-xs text-muted-foreground px-1">
                                     Showing{" "}
                                     <span className="font-medium text-foreground">

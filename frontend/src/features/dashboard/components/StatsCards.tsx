@@ -48,7 +48,7 @@ const valueMap: Record<(typeof stats)[number]["key"], keyof Props> = {
 
 const StatsCards = (props: Props) => {
     return (
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {stats.map((stat) => {
                 const Icon = stat.icon;
                 const value = props[valueMap[stat.key]];

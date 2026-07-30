@@ -166,7 +166,7 @@ const PhaseDashboardPage = () => {
     }
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-6">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2">
                 <button
@@ -185,7 +185,7 @@ const PhaseDashboardPage = () => {
             </div>
 
             {/* Hero card */}
-            <div className="rounded-xl border bg-card shadow-sm p-6">
+            <div className="rounded-xl border bg-card shadow-sm p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-start gap-5">
                     {/* Icon */}
                     <div className="size-14 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center border">

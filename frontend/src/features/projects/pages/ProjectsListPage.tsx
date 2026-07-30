@@ -261,7 +261,7 @@ const ProjectsListPage = () => {
 
     return (
         <>
-            <div className="p-6 space-y-5">
+            <div className="p-4 sm:p-6 space-y-5">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
                         <h1 className="text-lg font-semibold text-foreground">
@@ -288,10 +288,10 @@ const ProjectsListPage = () => {
                     </div>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <ProjectCreateModal />
 
-                    <div className="relative min-w-xs">
+                    <div className="relative w-full sm:w-auto sm:min-w-xs">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                         <input
                             type="text"
@@ -335,7 +335,7 @@ const ProjectsListPage = () => {
                     }
                 />
 
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
                     <p className="text-xs text-muted-foreground px-1">
                         Showing{" "}
                         <span className="font-medium text-foreground">

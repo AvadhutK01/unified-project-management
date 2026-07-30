@@ -98,7 +98,7 @@ export function OrgSwitcher({ collapsed }: OrgSwitcherProps) {
 
                         {!collapsed && (
                             <div className="flex flex-col items-start min-w-0">
-                                <span className="text-xs font-semibold text-foreground truncate max-w-[130px] leading-tight">
+                                <span className="text-xs font-semibold text-foreground truncate max-w-32.5 leading-tight">
                                     {activeOrganization?.name ?? "No workspace"}
                                 </span>
                                 <span className="text-[10px] text-muted-foreground leading-tight">
@@ -116,9 +116,9 @@ export function OrgSwitcher({ collapsed }: OrgSwitcherProps) {
 
             <PopoverContent
                 align="start"
-                side="right"
+                side="bottom"
                 sideOffset={8}
-                className="w-64 p-2 shadow-xl rounded-xl border border-border/80"
+                className="z-80 w-64 p-2 shadow-xl rounded-xl border border-border/80"
             >
                 {/* Header */}
                 <div className="px-2 py-1.5 mb-1">

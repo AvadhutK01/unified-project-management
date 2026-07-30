@@ -313,6 +313,7 @@ const JoinedMembers = () => {
             {
                 key: "joinedAt",
                 label: "Joined",
+                className: "hidden sm:table-cell",
                 render: (member) => (
                     <span className="text-sm text-muted-foreground">
                         {formatDate(member.joinedAt)}
@@ -324,7 +325,7 @@ const JoinedMembers = () => {
                       {
                           key: "actions" as const,
                           label: "Actions",
-                          className: "w-28 text-right",
+                          className: "w-36 text-right",
                           render: (member: Member) => (
                               <div className="flex items-center justify-end gap-1">
                                   {canList &&
@@ -387,7 +388,7 @@ const JoinedMembers = () => {
 
     return (
         <>
-            <div className="p-6 space-y-5">
+            <div className="p-4 sm:p-6 space-y-5">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
                         <h1 className="text-lg font-semibold text-foreground">
@@ -417,18 +418,18 @@ const JoinedMembers = () => {
                     </div>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
                     {hasPermission(PERMISSIONS.MEMBERS_INVITED.ADD) && (
                         <Button
                             onClick={() => setModalOpen(true)}
-                            className="gap-1.5"
+                            className="w-full gap-1.5 sm:w-auto"
                         >
                             <UserPlus className="size-4" />
                             Invite Members
                         </Button>
                     )}
 
-                    <div className="relative min-w-xs">
+                    <div className="relative w-full sm:w-auto sm:min-w-xs">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                         <input
                             type="text"
@@ -464,7 +465,7 @@ const JoinedMembers = () => {
                     }
                 />
 
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
                     <p className="text-xs text-muted-foreground px-1">
                         Showing{" "}
                         <span className="font-medium text-foreground">

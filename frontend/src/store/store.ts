@@ -9,6 +9,10 @@ interface Store {
     sidebarOpen: boolean;
     toggleSidebar: () => void;
 
+    mobileSidebarOpen: boolean;
+    toggleMobileSidebar: () => void;
+    setMobileSidebarOpen: (open: boolean) => void;
+
     permissions: string[];
     isOrgOwner: boolean;
     memberStatus: string;
@@ -26,6 +30,11 @@ interface Store {
 export const useStore = create<Store>((set) => ({
     sidebarOpen: true,
     toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+
+    mobileSidebarOpen: false,
+    toggleMobileSidebar: () =>
+        set((state) => ({ mobileSidebarOpen: !state.mobileSidebarOpen })),
+    setMobileSidebarOpen: (open) => set({ mobileSidebarOpen: open }),
 
     permissions: [],
     isOrgOwner: false,

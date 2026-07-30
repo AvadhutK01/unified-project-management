@@ -165,7 +165,7 @@ const OrganizationInfo = () => {
     const statusKey = activeOrganization.status?.toLowerCase() ?? "active";
 
     return (
-        <div className="space-y-6 p-6">
+        <div className="space-y-6 p-4 sm:p-6">
             {/* Header */}
             <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
@@ -290,7 +290,7 @@ const OrganizationInfo = () => {
                                     href={activeOrganization.websiteUrl}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                                    className="inline-flex items-center gap-1 text-sm text-primary hover:underline break-all"
                                 >
                                     {activeOrganization.websiteUrl}
                                     <ExternalLink className="size-3 shrink-0" />

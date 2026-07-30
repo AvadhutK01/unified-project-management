@@ -93,7 +93,7 @@ const SprintDetailsHeader = ({
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2.5">
+                <div className="flex flex-wrap items-center gap-2.5">
                     <div className="flex items-center gap-2">
                         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden sm:inline">
                             Status:
