@@ -7,6 +7,9 @@ import {
     generateResetPwdOtp,
     verifyPwdResetOtp,
     resetPassword,
+    googleAuthUser,
+    sendPhoneOtp,
+    verifyPhoneOtp,
 } from "../application/user.use-cases.js";
 
 /**
@@ -188,6 +191,78 @@ export const handleResetPassword = async (
     try {
         const { token, password } = req.body;
         const result = await resetPassword({ token, password });
+        return res.status(200).json({
+            status: "success",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Handles Google SSO authentication request.
+ */
+export const handleGoogleAuth = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    try {
+        const { idToken, id_token } = req.body;
+        const normalizedToken = idToken || id_token;
+        const result = await googleAuthUser({ idToken: normalizedToken });
+        return res.status(200).json({
+            status: "success",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Handles sending Phone OTP for phone binding.
+ */
+export const handleSendPhoneOtp = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    try {
+        const { email, phoneNumber, phone_number } = req.body;
+        const normalizedPhone = phoneNumber || phone_number;
+        const result = await sendPhoneOtp({
+            email,
+            phoneNumber: normalizedPhone,
+        });
+        return res.status(200).json({
+            status: "success",
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Handles verifying Phone OTP.
+ */
+export const handleVerifyPhoneOtp = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+): Promise<Response | void> => {
+    try {
+        const { email, phoneNumber, phone_number, phoneOtp, phone_otp } =
+            req.body;
+        const normalizedPhone = phoneNumber || phone_number;
+        const normalizedOtp = phoneOtp || phone_otp;
+        const result = await verifyPhoneOtp({
+            email,
+            phoneNumber: normalizedPhone,
+            phoneOtp: normalizedOtp,
+        });
         return res.status(200).json({
             status: "success",
             data: result,

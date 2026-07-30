@@ -17,6 +17,9 @@ vi.mock("react-router-dom", async () => {
 
 vi.mock("../hooks/useAuth", () => ({
     useRegisterUser: vi.fn(),
+    useGoogleAuth: vi
+        .fn()
+        .mockReturnValue({ mutate: vi.fn(), isPending: false }),
 }));
 
 vi.mock("sonner", () => ({

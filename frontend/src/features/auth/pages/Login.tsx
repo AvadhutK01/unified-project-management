@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { LoginBrandPanel } from "@/features/auth/components/LoginBrandPanel";
+import { GoogleSsoButton } from "@/features/auth/components/GoogleSsoButton";
 import {
     loginSchema,
     type LoginFormData,
@@ -99,27 +100,15 @@ const Login = () => {
                         </p>
                     </div>
 
-                    {/* <Button
-                        variant="outline"
-                        className="w-full h-10 gap-2.5 font-medium"
-                        type="button"
-                        onClick={() =>
-                            toast.info("Google SSO coming soon", {
-                                description: "Use email & password for now.",
-                            })
-                        }
-                    >
-                        <GoogleIcon />
-                        Continue with Google
-                    </Button> */}
+                    <GoogleSsoButton text="Continue with Google" />
 
-                    {/* <div className="relative flex items-center gap-3">
+                    <div className="relative flex items-center gap-3">
                         <div className="flex-1 border-t border-border" />
                         <span className="text-xs text-muted-foreground uppercase tracking-wide">
                             or
                         </span>
                         <div className="flex-1 border-t border-border" />
-                    </div> */}
+                    </div>
 
                     <form
                         onSubmit={handleSubmit(onSubmit)}

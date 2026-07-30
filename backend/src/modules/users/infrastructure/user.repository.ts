@@ -10,24 +10,43 @@ import { eq, or } from "drizzle-orm";
 export const createUser = async (data: {
     username: string;
     email: string;
-    phoneNumber: string;
-    password: string;
-    emailOtp: string;
-    phoneOtp: string;
+    phoneNumber?: string | null;
+    password?: string | null;
+    googleId?: string | null;
+    authProvider?: string;
+    emailOtp?: string | null;
+    phoneOtp?: string | null;
+    isVerified?: boolean;
 }) => {
     const [user] = await db
         .insert(users)
         .values({
             username: data.username,
             email: data.email,
-            phoneNumber: data.phoneNumber,
-            password: data.password,
-            emailOtp: data.emailOtp,
-            phoneOtp: data.phoneOtp,
-            isVerified: false,
+            phoneNumber: data.phoneNumber ?? null,
+            password: data.password ?? null,
+            googleId: data.googleId ?? null,
+            authProvider: data.authProvider ?? "local",
+            emailOtp: data.emailOtp ?? null,
+            phoneOtp: data.phoneOtp ?? null,
+            isVerified: data.isVerified ?? false,
         })
         .returning();
     return user;
+};
+
+/**
+ * Finds a user by Google ID.
+ * @param googleId The Google user ID.
+ * @returns The user object if found, otherwise null.
+ */
+export const findUserByGoogleId = async (googleId: string) => {
+    const results = await db
+        .select()
+        .from(users)
+        .where(eq(users.googleId, googleId))
+        .limit(1);
+    return results[0] || null;
 };
 
 /**
@@ -79,7 +98,7 @@ export const findUserByPhone = async (phoneNumber: string) => {
 /**
  * Updates a user's verification OTPs or details.
  * @param id The user ID.
- * @param otps The partial values (OTPs, password) to update.
+ * @param otps The partial values to update.
  * @returns The updated user object.
  */
 export const updateUserOtp = async (
@@ -87,11 +106,14 @@ export const updateUserOtp = async (
     otps: {
         username?: string;
         email?: string;
-        phoneNumber?: string;
-        password?: string;
+        phoneNumber?: string | null;
+        password?: string | null;
+        googleId?: string | null;
+        authProvider?: string;
         emailOtp?: string | null;
         phoneOtp?: string | null;
         pwdResetOtp?: string | null;
+        isVerified?: boolean;
     },
 ) => {
     const [user] = await db

@@ -116,3 +116,53 @@ export const resetPasswordSchema = z.object({
             ),
     }),
 });
+
+export const googleAuthSchema = z.object({
+    body: z.object({
+        idToken: z.string().min(1, "Google ID token is required"),
+    }),
+});
+
+export const sendPhoneOtpSchema = z.object({
+    body: z
+        .object({
+            email: z.string().email(),
+            phoneNumber: z
+                .string()
+                .regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format")
+                .optional(),
+            phone_number: z
+                .string()
+                .regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format")
+                .optional(),
+        })
+        .refine((data) => data.phoneNumber || data.phone_number, {
+            message: "Phone number is required",
+            path: ["phoneNumber"],
+        }),
+});
+
+export const verifyPhoneOtpSchema = z.object({
+    body: z
+        .object({
+            email: z.string().email(),
+            phoneNumber: z.string().optional(),
+            phone_number: z.string().optional(),
+            phoneOtp: z
+                .string()
+                .regex(/^\d{6}$/, "OTP must be exactly 6 digits")
+                .optional(),
+            phone_otp: z
+                .string()
+                .regex(/^\d{6}$/, "OTP must be exactly 6 digits")
+                .optional(),
+        })
+        .refine((data) => data.phoneNumber || data.phone_number, {
+            message: "Phone number is required",
+            path: ["phoneNumber"],
+        })
+        .refine((data) => data.phoneOtp || data.phone_otp, {
+            message: "Phone OTP is required",
+            path: ["phoneOtp"],
+        }),
+});

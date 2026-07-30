@@ -7,6 +7,9 @@ import {
     generateResetPwdOtp,
     verifyPwdResetOtp,
     resetPassword,
+    googleAuthUser,
+    sendPhoneOtp,
+    verifyPhoneOtp,
 } from "../src/modules/users/application/user.use-cases.js";
 
 describe("User Flow Integration Tests", () => {
@@ -376,5 +379,43 @@ describe("User Flow Integration Tests", () => {
             body: { token: "", password: "pwd" },
         });
         expect(resetResult.success).toBe(false);
+    });
+
+    it("should handle Google SSO flow: new user -> phone required -> send phone OTP -> verify phone OTP -> verified", async () => {
+        const unique = Date.now() + 100;
+        const googleEmail = `google_user_${unique}@example.com`;
+        const mockToken = `mock-google-token_${googleEmail}`;
+        const phone = `1234${String(unique).slice(-6)}`;
+
+        // 1. First Google SSO login should return requiresPhone: true
+        const ssoResult = await googleAuthUser({ idToken: mockToken });
+        expect(ssoResult.isVerified).toBe(false);
+        expect(ssoResult.requiresPhone).toBe(true);
+        expect(ssoResult.email).toBe(googleEmail);
+
+        // 2. Send Phone OTP
+        const sendOtpResult = await sendPhoneOtp({
+            email: googleEmail,
+            phoneNumber: phone,
+        });
+        expect(sendOtpResult.email).toBe(googleEmail);
+        expect(sendOtpResult.phoneNumber).toBe(phone);
+        expect(sendOtpResult.phoneOtp).toBe("123456");
+
+        // 3. Verify Phone OTP
+        const verifyResult = await verifyPhoneOtp({
+            email: googleEmail,
+            phoneNumber: phone,
+            phoneOtp: "123456",
+        });
+        expect(verifyResult.isVerified).toBe(true);
+        expect(verifyResult.token).toBeTypeOf("string");
+        expect(verifyResult.phoneNumber).toBe(phone);
+
+        // 4. Subsequent Google SSO login for verified user returns token directly
+        const secondSsoResult = await googleAuthUser({ idToken: mockToken });
+        expect(secondSsoResult.isVerified).toBe(true);
+        expect(secondSsoResult.requiresPhone).toBe(false);
+        expect(secondSsoResult.token).toBeTypeOf("string");
     });
 });

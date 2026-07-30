@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { RegisterBrandPanel } from "@/features/auth/components/RegisterBrandPanel";
 import { StepIndicator } from "@/features/auth/components/StepIndicator";
+import { GoogleSsoButton } from "@/features/auth/components/GoogleSsoButton";
 import {
     registerSchema,
     type RegisterFormData,
@@ -144,22 +145,9 @@ const Register = () => {
                     </div>
 
                     {/* Google SSO — only on step 0 */}
-                    {/* {step === 0 && (
+                    {step === 0 && (
                         <>
-                            <Button
-                                variant="outline"
-                                className="w-full h-10 gap-2.5 font-medium"
-                                type="button"
-                                onClick={() =>
-                                    toast.info("Google SSO coming soon", {
-                                        description:
-                                            "Use email & password for now.",
-                                    })
-                                }
-                            >
-                                <GoogleIcon />
-                                Sign up with Google
-                            </Button>
+                            <GoogleSsoButton text="Sign up with Google" />
 
                             <div className="relative flex items-center gap-3">
                                 <div className="flex-1 border-t border-border" />
@@ -169,7 +157,7 @@ const Register = () => {
                                 <div className="flex-1 border-t border-border" />
                             </div>
                         </>
-                    )} */}
+                    )}
 
                     <form
                         onSubmit={handleSubmit(onSubmit)}

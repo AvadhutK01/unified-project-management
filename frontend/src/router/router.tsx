@@ -18,6 +18,9 @@ const ForgotPassword = lazy(
 const Login = lazy(() => import("@/features/auth/pages/Login"));
 const Register = lazy(() => import("@/features/auth/pages/Register"));
 const VerifyOtp = lazy(() => import("@/features/auth/pages/VerifyOtp"));
+const CompleteGoogleSso = lazy(
+    () => import("@/features/auth/pages/CompleteGoogleSso"),
+);
 const Dashboard = lazy(() => import("@/features/dashboard/pages/Dashboard"));
 const BillingPage = lazy(
     () => import("@/features/subscriptions/pages/BillingPage"),
@@ -120,6 +123,16 @@ export const router = createBrowserRouter([
                     <Suspense fallback={<Loading />}>
                         <PublicRoute>
                             <VerifyOtp />
+                        </PublicRoute>
+                    </Suspense>
+                ),
+            },
+            {
+                path: "/complete-google-sso",
+                element: (
+                    <Suspense fallback={<Loading />}>
+                        <PublicRoute>
+                            <CompleteGoogleSso />
                         </PublicRoute>
                     </Suspense>
                 ),

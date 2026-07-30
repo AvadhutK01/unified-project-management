@@ -2,9 +2,11 @@ import {
     createUser,
     findUserByEmail,
     findUserByPhone,
+    findUserByGoogleId,
     updateUserOtp,
     markUserAsVerified,
 } from "../infrastructure/user.repository.js";
+import { verifyGoogleIdToken } from "../../../shared/utils/google-auth.js";
 import {
     badRequestError,
     notFoundError,
@@ -371,4 +373,146 @@ export const resetPassword = async (data: {
         }
         throw error;
     }
+};
+
+/**
+ * Authenticates or registers a user via Google SSO.
+ * @param data Object containing the Google ID Token.
+ * @returns Object indicating verification status, token (if fully verified), or requiresPhone flag.
+ */
+export const googleAuthUser = async (data: { idToken: string }) => {
+    const googleProfile = await verifyGoogleIdToken(data.idToken);
+
+    let user = await findUserByGoogleId(googleProfile.googleId);
+
+    if (!user) {
+        const existingByEmail = await findUserByEmail(googleProfile.email);
+
+        if (existingByEmail) {
+            const updated = await updateUserOtp(existingByEmail.id, {
+                googleId: googleProfile.googleId,
+                authProvider: "google",
+            });
+            user = updated || null;
+        } else {
+            const created = await createUser({
+                username:
+                    googleProfile.name ||
+                    googleProfile.email.split("@")[0] ||
+                    "user",
+                email: googleProfile.email,
+                googleId: googleProfile.googleId,
+                authProvider: "google",
+                isVerified: false,
+            });
+            user = created || null;
+        }
+    }
+
+    if (!user) {
+        throw internalServerError("Failed to authenticate user via Google");
+    }
+
+    if (user.isVerified && user.phoneNumber) {
+        const token = generateToken({ id: user.id, email: user.email });
+        return {
+            isVerified: true,
+            requiresPhone: false,
+            token,
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            phoneNumber: user.phoneNumber,
+        };
+    }
+
+    return {
+        isVerified: false,
+        requiresPhone: true,
+        email: user.email,
+        username: user.username,
+    };
+};
+
+/**
+ * Binds a phone number to a user and generates a 6-digit phone OTP.
+ * @param data Object containing email and target phone number.
+ * @returns Object containing email, phone number, and generated phone OTP.
+ */
+export const sendPhoneOtp = async (data: {
+    email: string;
+    phoneNumber: string;
+}) => {
+    const user = await findUserByEmail(data.email);
+    if (!user) {
+        throw notFoundError("User not found");
+    }
+
+    const existingUserWithPhone = await findUserByPhone(data.phoneNumber);
+    if (
+        existingUserWithPhone &&
+        existingUserWithPhone.id !== user.id &&
+        existingUserWithPhone.isVerified
+    ) {
+        throw badRequestError("Phone number already exists");
+    }
+
+    const phoneOtp = "123456";
+    const updated = await updateUserOtp(user.id, {
+        phoneNumber: data.phoneNumber,
+        phoneOtp,
+    });
+
+    if (!updated) {
+        throw internalServerError("Failed to send phone OTP");
+    }
+
+    return {
+        email: updated.email,
+        phoneNumber: updated.phoneNumber,
+        phoneOtp: updated.phoneOtp,
+    };
+};
+
+/**
+ * Verifies a phone OTP for a user whose email is already verified (e.g. Google SSO).
+ * @param data Object containing email, phone number, and phone OTP.
+ * @returns Object containing verified status, session token, and user details.
+ */
+export const verifyPhoneOtp = async (data: {
+    email: string;
+    phoneNumber: string;
+    phoneOtp: string;
+}) => {
+    const user = await findUserByEmail(data.email);
+    if (!user) {
+        throw notFoundError("User not found");
+    }
+
+    if (user.phoneNumber !== data.phoneNumber) {
+        throw badRequestError("Phone number does not match registered phone");
+    }
+
+    if (!user.phoneOtp || user.phoneOtp !== data.phoneOtp) {
+        throw badRequestError("Invalid phone OTP");
+    }
+
+    const verifiedUser = await markUserAsVerified(user.id);
+    if (!verifiedUser) {
+        throw internalServerError("Failed to verify phone OTP");
+    }
+
+    const token = generateToken({
+        id: verifiedUser.id,
+        email: verifiedUser.email,
+    });
+
+    return {
+        isVerified: true,
+        token,
+        id: verifiedUser.id,
+        username: verifiedUser.username,
+        email: verifiedUser.email,
+        phoneNumber: verifiedUser.phoneNumber,
+    };
 };

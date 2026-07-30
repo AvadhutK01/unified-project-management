@@ -107,3 +107,34 @@ export const resetPassword = async (payload: {
     const { data } = await api.post("/users/reset-password", payload);
     return data;
 };
+
+/**
+ * Authenticate with Google SSO using Google ID Token.
+ */
+export const googleAuth = async (payload: { idToken: string }) => {
+    const { data } = await api.post("/users/google-auth", payload);
+    return data;
+};
+
+/**
+ * Request Phone OTP for binding phone number to user account.
+ */
+export const sendPhoneOtp = async (payload: {
+    email: string;
+    phoneNumber: string;
+}) => {
+    const { data } = await api.post("/users/send-phone-otp", payload);
+    return data;
+};
+
+/**
+ * Verify Phone OTP for Google SSO onboarding.
+ */
+export const verifyPhoneOtp = async (payload: {
+    email: string;
+    phoneNumber: string;
+    phoneOtp: string;
+}) => {
+    const { data } = await api.post("/users/verify-phone-otp", payload);
+    return data;
+};
