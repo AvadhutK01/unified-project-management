@@ -46,6 +46,7 @@ export interface WorkItem {
     assignedTo: string | null;
     assignedToName: string | null;
     assignedToEmail: string | null;
+    assignedToStatus?: string | null;
     projectId?: string | null;
     phaseId?: string | null;
     projectTitle?: string | null;
@@ -66,7 +67,12 @@ export interface WorkItemListProps {
     onEditRequest?: (workItem: WorkItem) => void;
     onStatusChange?: (workItem: WorkItem, newStatus: string) => void;
     onDeleteRequest?: (workItem: WorkItem) => void;
-    projectMembers?: Array<{ id: string; name: string; email: string }>;
+    projectMembers?: Array<{
+        id: string;
+        name: string;
+        email: string;
+        status?: string;
+    }>;
     canEdit?: boolean;
     canDelete?: boolean;
     canView?: boolean;

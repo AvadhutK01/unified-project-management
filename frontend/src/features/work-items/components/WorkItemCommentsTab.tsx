@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Loader2, Send, Trash2 } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { getInitials, getAvatarColorClass } from "../utils/workitem.utils";
 import MentionInput from "@/components/common/MentionInput";
 import MentionText from "@/components/common/MentionText";
+import { MemberAvatar } from "@/components/common/MemberAvatar";
 
 interface WorkItemCommentsTabProps {
     workItemId: string;
@@ -80,16 +78,11 @@ const WorkItemCommentsTab = ({
                 onSubmit={handleSubmit}
                 className="flex gap-3 items-start border-b border-border/40 pb-6"
             >
-                <Avatar
-                    className={cn(
-                        "size-9 shadow-inner",
-                        getAvatarColorClass(currentUserEmail),
-                    )}
-                >
-                    <AvatarFallback className="font-bold text-xs">
-                        {getInitials(localStorage.getItem("name") || "Me")}
-                    </AvatarFallback>
-                </Avatar>
+                <MemberAvatar
+                    name={localStorage.getItem("name") || "Me"}
+                    status="active"
+                    size="default"
+                />
                 <div className="flex-1 space-y-3">
                     <MentionInput
                         users={users}
@@ -138,16 +131,11 @@ const WorkItemCommentsTab = ({
                                 key={d.id}
                                 className="flex gap-3 items-start p-4 rounded-xl border border-border/40 bg-secondary/10 group transition-all duration-200"
                             >
-                                <Avatar
-                                    className={cn(
-                                        "size-8 shadow-inner",
-                                        getAvatarColorClass(d.authorEmail),
-                                    )}
-                                >
-                                    <AvatarFallback className="font-bold text-xs">
-                                        {getInitials(d.authorName)}
-                                    </AvatarFallback>
-                                </Avatar>
+                                <MemberAvatar
+                                    name={d.authorName}
+                                    status={d.authorStatus || "active"}
+                                    size="sm"
+                                />
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between gap-2">
                                         <div className="flex items-baseline gap-2 min-w-0">

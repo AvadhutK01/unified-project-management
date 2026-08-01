@@ -182,10 +182,13 @@ const SprintDetailsPage = () => {
 
     const users = useMemo(() => {
         const members = projectMembersRes?.data?.data ?? [];
-        return members.map((m: { memberId: string; name: string }) => ({
-            id: m.memberId,
-            name: m.name,
-        }));
+        return members.map(
+            (m: { memberId: string; name: string; status?: string }) => ({
+                id: m.memberId,
+                name: m.name,
+                status: m.status,
+            }),
+        );
     }, [projectMembersRes]);
 
     const currentUserEmail = localStorage.getItem("email") || "";

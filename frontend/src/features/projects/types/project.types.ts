@@ -16,6 +16,7 @@ export interface ProjectDashboardPhase {
 export interface ProjectDashboardTeamMember {
     id: string;
     name: string;
+    status: string;
 }
 
 export interface ProjectDashboardData {

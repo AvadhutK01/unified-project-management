@@ -104,8 +104,29 @@ export const getOrganizationDashboardMetrics = async (
         const userProjectMemberIds = userProjectMembers.map((pm) => pm.id);
         if (userProjectMemberIds.length > 0) {
             recentWorkItems = await db
-                .select()
+                .select({
+                    id: workitems.id,
+                    title: workitems.title,
+                    status: workitems.status,
+                    type: workitems.workitemType,
+                    createdAt: workitems.createdAt,
+                    assignedToName: users.username,
+                    assignedToEmail: users.email,
+                    assignedToStatus: organizationMembers.status,
+                })
                 .from(workitems)
+                .leftJoin(
+                    projectMembers,
+                    eq(workitems.assignedTo, projectMembers.id),
+                )
+                .leftJoin(
+                    organizationMembers,
+                    eq(
+                        projectMembers.organizationMemberId,
+                        organizationMembers.id,
+                    ),
+                )
+                .leftJoin(users, eq(organizationMembers.memberId, users.id))
                 .where(inArray(workitems.assignedTo, userProjectMemberIds))
                 .orderBy(desc(workitems.createdAt))
                 .limit(5);
@@ -148,6 +169,7 @@ export const getProjectDashboardMetrics = async (projectId: string) => {
         .select({
             id: users.id,
             name: users.username,
+            status: organizationMembers.status,
         })
         .from(projectMembers)
         .innerJoin(

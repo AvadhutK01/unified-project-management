@@ -49,6 +49,7 @@ import {
     useProjectByIdQuery,
     useProjectMembersQuery,
 } from "../../projects/hooks/useProjects";
+import { MemberAvatar } from "@/components/common/MemberAvatar";
 
 const EditWorkItemModal = ({
     open,
@@ -76,6 +77,7 @@ const EditWorkItemModal = ({
                     id: pm?.id || "",
                     name: m.name,
                     email: m.email,
+                    status: m.status,
                 };
             })
             .filter((m: any) => m.id);
@@ -494,7 +496,22 @@ const EditWorkItemModal = ({
                                                             key={member.id}
                                                             value={member.id}
                                                         >
-                                                            {member.name}
+                                                            <div className="flex items-center gap-2">
+                                                                <MemberAvatar
+                                                                    name={
+                                                                        member.name
+                                                                    }
+                                                                    status={
+                                                                        member.status
+                                                                    }
+                                                                    size="sm"
+                                                                />
+                                                                <span>
+                                                                    {
+                                                                        member.name
+                                                                    }
+                                                                </span>
+                                                            </div>
                                                         </SelectItem>
                                                     ),
                                                 )}

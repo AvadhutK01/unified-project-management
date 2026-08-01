@@ -19,6 +19,7 @@ import AiSummary from "@/features/dashboard/components/AiSummary";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import { STATUS_STYLES, STATUS_LABELS } from "../constants/projects.constants";
+import { MemberAvatar } from "@/components/common/MemberAvatar";
 
 function getLogoUrl(logoPath: string | null): string {
     if (!logoPath) return "";
@@ -45,29 +46,6 @@ function overallColor(pct: number) {
     if (pct >= 75) return { ring: "#10b981", text: "text-emerald-500" };
     if (pct >= 25) return { ring: "#f59e0b", text: "text-amber-500" };
     return { ring: "#ef4444", text: "text-red-500" };
-}
-
-const AVATAR_COLORS = [
-    "bg-violet-500",
-    "bg-blue-500",
-    "bg-emerald-500",
-    "bg-orange-500",
-    "bg-pink-500",
-    "bg-cyan-500",
-];
-
-function avatarColor(name: string) {
-    const hash = name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-    return AVATAR_COLORS[hash % AVATAR_COLORS.length];
-}
-
-function getInitials(name: string) {
-    return name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase();
 }
 
 function CompletionRing({ pct }: { pct: number }) {
@@ -383,11 +361,11 @@ const ProjectDashboardPage = () => {
                                     key={member.id}
                                     className="flex items-center gap-3 px-5 py-3.5"
                                 >
-                                    <div
-                                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white text-xs font-semibold ${avatarColor(member.name)}`}
-                                    >
-                                        {getInitials(member.name)}
-                                    </div>
+                                    <MemberAvatar
+                                        name={member.name}
+                                        status={member.status}
+                                        size="sm"
+                                    />
                                     <span className="text-sm font-medium text-foreground truncate">
                                         {member.name}
                                     </span>

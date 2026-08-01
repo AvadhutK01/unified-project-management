@@ -79,6 +79,7 @@ export const findDiscussionsPaginated = async (
             deletedAt: workitemDiscussions.deletedAt,
             authorName: users.username,
             authorEmail: users.email,
+            authorStatus: organizationMembers.status,
         })
         .from(workitemDiscussions)
         .innerJoin(

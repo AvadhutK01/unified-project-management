@@ -10,6 +10,7 @@ export interface DashboardWorkItem {
     status: string;
     assignedTo: string | null;
     assignedToName: string | null;
+    assignedToStatus?: string | null;
     createdAt: string;
 }
 

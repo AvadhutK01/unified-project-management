@@ -7,7 +7,8 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ListChecks, Clock, ArrowRight } from "lucide-react";
-import { getColor, getInitials, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { MemberAvatar } from "@/components/common/MemberAvatar";
 import type { DashboardWorkItem } from "../types/dashboard.types";
 
 interface Props {
@@ -40,18 +41,16 @@ const RecentWorkItems = ({ workItems }: Props) => {
                             item.assignedToName ||
                             item.assignedTo ||
                             "Unassigned";
-                        const color = getColor(name);
                         return (
                             <div
                                 key={item.id}
                                 className="flex items-start gap-3 rounded-lg border border-border/60 bg-secondary/30 p-3 transition-colors hover:bg-accent/60 hover:border-border"
                             >
-                                <div
-                                    className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                                    style={{ backgroundColor: color }}
-                                >
-                                    {getInitials(name)}
-                                </div>
+                                <MemberAvatar
+                                    name={name}
+                                    status={item.assignedToStatus || "active"}
+                                    size="sm"
+                                />
                                 <div className="flex-1 min-w-0">
                                     <p className="truncate text-sm font-medium text-foreground">
                                         {item.title}

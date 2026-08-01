@@ -48,7 +48,7 @@ export const requirePermission = (permissionCodename: string) => {
                 return;
             }
 
-            if (member.status !== "active") {
+            if (member.status !== "active" && member.status !== "onleave") {
                 next(forbiddenError("Your membership is not active"));
                 return;
             }

@@ -359,6 +359,7 @@ export const findProjectMembersPaginated = async (
             userId: users.id,
             name: users.username,
             email: users.email,
+            status: organizationMembers.status,
         })
         .from(projectMembers)
         .innerJoin(

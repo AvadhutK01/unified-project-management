@@ -14,6 +14,7 @@ import { type WorkItem, type WorkItemListProps } from "../types/workitem.types";
 import { TYPE_LABELS, TYPE_STYLES } from "../constants/workitem.constants";
 import { formatHours } from "../utils/workitem.utils";
 import StatusSelectCell from "./StatusSelectCell";
+import { MemberAvatar } from "@/components/common/MemberAvatar";
 
 const WorkItemList = ({
     workItems,
@@ -117,10 +118,24 @@ const WorkItemList = ({
                     const member = projectMembers?.find(
                         (m) => m.id === item.assignedTo,
                     );
+                    if (!member) {
+                        return (
+                            <span className="text-sm text-muted-foreground/60 italic">
+                                Unassigned
+                            </span>
+                        );
+                    }
                     return (
-                        <span className="text-sm text-muted-foreground">
-                            {member ? member.name : "-"}
-                        </span>
+                        <div className="flex items-center gap-2 min-w-0">
+                            <MemberAvatar
+                                name={member.name}
+                                status={member.status}
+                                size="sm"
+                            />
+                            <span className="text-sm text-muted-foreground truncate">
+                                {member.name}
+                            </span>
+                        </div>
                     );
                 },
             },

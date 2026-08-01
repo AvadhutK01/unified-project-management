@@ -1,12 +1,8 @@
 import { Clock, User, ClipboardList, Layers, Disc } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { cn } from "@/lib/utils";
-import {
-    getInitials,
-    getAvatarColorClass,
-    formatHours,
-} from "../utils/workitem.utils";
+import { formatHours } from "../utils/workitem.utils";
 import { TYPE_LABELS, TYPE_STYLES } from "../constants/workitem.constants";
 import type { WorkItem, WorkItemType } from "../types/workitem.types";
 
@@ -101,18 +97,13 @@ const WorkItemDetailsCard = ({
                         </span>
                         {workItem.assignedToName ? (
                             <div className="flex items-center gap-2">
-                                <Avatar
-                                    className={cn(
-                                        "size-6 shadow-inner",
-                                        getAvatarColorClass(
-                                            workItem.assignedToEmail!,
-                                        ),
-                                    )}
-                                >
-                                    <AvatarFallback className="font-bold text-[9px]">
-                                        {getInitials(workItem.assignedToName)}
-                                    </AvatarFallback>
-                                </Avatar>
+                                <MemberAvatar
+                                    name={workItem.assignedToName}
+                                    status={
+                                        workItem.assignedToStatus || "active"
+                                    }
+                                    size="sm"
+                                />
                                 <span className="font-semibold text-foreground/90 text-right">
                                     {workItem.assignedToName}
                                 </span>

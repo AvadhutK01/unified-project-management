@@ -10,7 +10,7 @@ import {
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getColor, getInitials, formatDate, useDebounce } from "@/lib/utils";
+import { formatDate, useDebounce } from "@/lib/utils";
 import { InviteMembersModal } from "../components/InviteMembersModal";
 import { toast } from "sonner";
 import {
@@ -20,6 +20,7 @@ import {
 import { useConfirm } from "@/providers/ConfirmProvider";
 import { usePermission } from "@/features/rbac/hooks/usePermission";
 import { PERMISSIONS } from "@/features/rbac/types/rbac.types";
+import { MemberAvatar } from "@/components/common/MemberAvatar";
 
 type InviteStatus = "Pending" | "Accepted" | "Rejected" | "Revoked";
 
@@ -124,28 +125,22 @@ const InvitedMembers = () => {
             {
                 key: "name",
                 label: "Invited Person",
-                render: (member) => {
-                    const color = getColor(member.name);
-                    const initials = getInitials(member.name);
-                    return (
-                        <div className="flex items-center gap-3 min-w-0">
-                            <div
-                                className="size-9 rounded-xl flex items-center justify-center text-white text-xs font-bold shrink-0 select-none"
-                                style={{ backgroundColor: color }}
-                            >
-                                {initials}
-                            </div>
-                            <div className="min-w-0">
-                                <p className="text-sm font-medium text-foreground truncate">
-                                    {member.name}
-                                </p>
-                                <p className="text-xs text-muted-foreground truncate">
-                                    {member.email}
-                                </p>
-                            </div>
+                render: (member) => (
+                    <div className="flex items-center gap-3 min-w-0">
+                        <MemberAvatar
+                            name={member.name}
+                            status={member.status}
+                        />
+                        <div className="min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">
+                                {member.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                                {member.email}
+                            </p>
                         </div>
-                    );
-                },
+                    </div>
+                ),
             },
             {
                 key: "role",
@@ -163,27 +158,18 @@ const InvitedMembers = () => {
                 key: "invitedBy",
                 label: "Invited By",
                 className: "hidden md:table-cell",
-                render: (member) => {
-                    const color = getColor(member.invitedBy);
-                    const initials = getInitials(member.invitedBy);
-                    return (
-                        <div className="flex items-center gap-2">
-                            <div
-                                className="size-5 rounded-full flex items-center justify-center text-white shrink-0 select-none"
-                                style={{
-                                    backgroundColor: color,
-                                    fontSize: "9px",
-                                    fontWeight: 700,
-                                }}
-                            >
-                                {initials}
-                            </div>
-                            <span className="text-sm text-foreground truncate">
-                                {member.invitedBy}
-                            </span>
-                        </div>
-                    );
-                },
+                render: (member) => (
+                    <div className="flex items-center gap-2">
+                        <MemberAvatar
+                            name={member.invitedBy}
+                            status="active"
+                            size="sm"
+                        />
+                        <span className="text-sm text-foreground truncate">
+                            {member.invitedBy}
+                        </span>
+                    </div>
+                ),
             },
             {
                 key: "status",

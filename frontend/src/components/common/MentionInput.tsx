@@ -1,9 +1,11 @@
 import { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { MemberAvatar } from "@/components/common/MemberAvatar";
 
 export type MentionUser = {
     id: string;
     name: string;
+    status?: string;
 };
 
 export type Mention = {
@@ -162,7 +164,14 @@ const MentionInput = ({
                             }}
                             onMouseEnter={() => setHighlightedIndex(idx)}
                         >
-                            {user.name}
+                            <div className="flex items-center gap-2">
+                                <MemberAvatar
+                                    name={user.name}
+                                    status={user.status || "active"}
+                                    size="sm"
+                                />
+                                <span>{user.name}</span>
+                            </div>
                         </div>
                     ))}
                 </div>

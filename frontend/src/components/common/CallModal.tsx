@@ -11,7 +11,7 @@ import {
     MonitorOff,
 } from "lucide-react";
 import { useCall } from "@/features/call/context/CallContext";
-import { getColor, getInitials } from "@/lib/utils";
+import { MemberAvatar } from "@/components/common/MemberAvatar";
 
 const formatDuration = (sec: number) => {
     const mins = Math.floor(sec / 60);
@@ -51,9 +51,6 @@ export const CallModal: React.FC = () => {
     if (callStatus === "idle" || !activeCall) {
         return null;
     }
-
-    const color = getColor(activeCall.targetName);
-    const initials = getInitials(activeCall.targetName);
 
     const bindVideo =
         (stream: MediaStream | null) => (el: HTMLVideoElement | null) => {
@@ -120,12 +117,12 @@ export const CallModal: React.FC = () => {
                             />
                         ) : (
                             <div className="flex flex-col items-center justify-center">
-                                <div
-                                    className="flex h-16 w-16 items-center justify-center rounded-full text-lg font-bold text-white shadow-lg ring-4 ring-white/10 mb-3"
-                                    style={{ backgroundColor: color }}
-                                >
-                                    {initials}
-                                </div>
+                                <MemberAvatar
+                                    name={activeCall.targetName}
+                                    status="active"
+                                    size="lg"
+                                    className="mb-3"
+                                />
                                 <p className="text-xs text-slate-400 font-medium">
                                     Waiting for {activeCall.targetName}'s
                                     camera...
@@ -186,12 +183,12 @@ export const CallModal: React.FC = () => {
                             callStatus === "connected") && (
                             <div className="absolute inset-0 animate-ping rounded-full bg-primary/20 duration-1000" />
                         )}
-                        <div
-                            className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full text-xl font-bold text-white shadow-lg ring-4 ring-white/10"
-                            style={{ backgroundColor: color }}
-                        >
-                            {initials}
-                        </div>
+                        <MemberAvatar
+                            name={activeCall.targetName}
+                            status="active"
+                            size="lg"
+                            className="scale-125"
+                        />
                     </div>
                 )}
 

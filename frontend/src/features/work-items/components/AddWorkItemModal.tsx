@@ -47,6 +47,7 @@ import {
     useProjectByIdQuery,
     useProjectMembersQuery,
 } from "../../projects/hooks/useProjects";
+import { MemberAvatar } from "@/components/common/MemberAvatar";
 
 const AddWorkItemModal = ({ onAddWorkItem, canAdd }: AddWorkItemModalProps) => {
     const [open, setOpen] = useState(false);
@@ -73,6 +74,7 @@ const AddWorkItemModal = ({ onAddWorkItem, canAdd }: AddWorkItemModalProps) => {
                     id: pm?.id || "",
                     name: m.name,
                     email: m.email,
+                    status: m.status,
                 };
             })
             .filter((m: any) => m.id);
@@ -392,7 +394,22 @@ const AddWorkItemModal = ({ onAddWorkItem, canAdd }: AddWorkItemModalProps) => {
                                                             key={member.id}
                                                             value={member.id}
                                                         >
-                                                            {member.name}
+                                                            <div className="flex items-center gap-2">
+                                                                <MemberAvatar
+                                                                    name={
+                                                                        member.name
+                                                                    }
+                                                                    status={
+                                                                        member.status
+                                                                    }
+                                                                    size="sm"
+                                                                />
+                                                                <span>
+                                                                    {
+                                                                        member.name
+                                                                    }
+                                                                </span>
+                                                            </div>
                                                         </SelectItem>
                                                     ),
                                                 )}

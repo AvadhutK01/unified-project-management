@@ -43,7 +43,10 @@ export const verifyProjectAccess = async (
     }
 
     const orgMember = await findMemberByOrgAndUserId(organizationId, userId);
-    if (!orgMember || orgMember.status !== "active") {
+    if (
+        !orgMember ||
+        (orgMember.status !== "active" && orgMember.status !== "onleave")
+    ) {
         throw forbiddenError(
             "You are not an active member of this organization",
         );

@@ -90,6 +90,7 @@ export const findDiscussionsPaginated = async (
             updatedAt: sprintDiscussions.updatedAt,
             authorName: users.username,
             authorEmail: users.email,
+            authorStatus: organizationMembers.status,
         })
         .from(sprintDiscussions)
         .innerJoin(

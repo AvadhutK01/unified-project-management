@@ -23,7 +23,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { getColor, getInitials, formatDate, useDebounce } from "@/lib/utils";
+import { formatDate, useDebounce } from "@/lib/utils";
 import { InviteMembersModal } from "../components/InviteMembersModal";
 import { EditMemberModal } from "../components/EditMemberModal";
 import { toast } from "sonner";
@@ -35,6 +35,8 @@ import { PERMISSIONS } from "@/features/rbac/types/rbac.types";
 import { useSubscriptionQuery } from "@/features/subscriptions/hooks/useSubscription";
 import { isAtLeastPlan } from "@/features/subscriptions/utils/subscriptionHelpers";
 import { useOrganizationStore } from "@/store/organization.store";
+
+import { MemberAvatar } from "@/components/common/MemberAvatar";
 
 const ROLE_STYLES: Record<string, string> = {
     Admin: "bg-primary/10 text-primary border-primary/20",
@@ -247,28 +249,22 @@ const JoinedMembers = () => {
             {
                 key: "name",
                 label: "Member",
-                render: (member) => {
-                    const color = getColor(member.name);
-                    const initials = getInitials(member.name);
-                    return (
-                        <div className="flex items-center gap-3 min-w-0">
-                            <div
-                                className="size-9 rounded-xl flex items-center justify-center text-white text-xs font-bold shrink-0 select-none"
-                                style={{ backgroundColor: color }}
-                            >
-                                {initials}
-                            </div>
-                            <div className="min-w-0">
-                                <p className="text-sm font-medium text-foreground truncate">
-                                    {member.name}
-                                </p>
-                                <p className="text-xs text-muted-foreground truncate">
-                                    {member.email}
-                                </p>
-                            </div>
+                render: (member) => (
+                    <div className="flex items-center gap-3 min-w-0">
+                        <MemberAvatar
+                            name={member.name}
+                            status={member.status}
+                        />
+                        <div className="min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">
+                                {member.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                                {member.email}
+                            </p>
                         </div>
-                    );
-                },
+                    </div>
+                ),
             },
             {
                 key: "role",
