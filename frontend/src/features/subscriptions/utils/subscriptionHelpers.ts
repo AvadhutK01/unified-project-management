@@ -26,7 +26,7 @@ export const PLAN_LABELS: Record<SubscriptionPlan, string> = {
 };
 
 export const PLAN_DESCRIPTIONS: Record<SubscriptionPlan, string> = {
-    free: "Core project management for individuals and small teams.",
+    free: "Free forever with unlimited access to core project management features.",
     basic: "Everything in Free, plus full Reports & Analytics access.",
     pro: "Everything in Basic, plus Voice & Video calling between members.",
     premium: "Everything in Pro, plus full AI Chat Assistant & AI Summaries.",

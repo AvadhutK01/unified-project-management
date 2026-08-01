@@ -17,7 +17,11 @@ import {
     internalServerError,
 } from "../../../shared/errors/app-error.js";
 import { createRole } from "../../roles/infrastructure/role.repository.js";
+import { deleteRolesByOrganizationId } from "../../roles/infrastructure/role.repository.js";
 import { createMember } from "../infrastructure/organization-member.repository.js";
+import { db } from "../../../infrastructure/database/client.js";
+import { organizationMembers } from "../../../infrastructure/database/schema/index.js";
+import { eq } from "drizzle-orm";
 
 /**
  * Creates a new organization for the authenticated user.
@@ -201,6 +205,7 @@ export const updateOrganization = async (
 
 /**
  * Deletes an organization. Only the owner can perform this action.
+ * Cascades by removing org members and roles first to avoid FK violations.
  * @param id The organization UUID.
  * @param requesterId The authenticated user's ID.
  * @throws AppError if not found or not authorized.
@@ -217,6 +222,14 @@ export const deleteOrganization = async (id: string, requesterId: string) => {
             "You are not authorized to delete this organization",
         );
     }
+
+    // Hard-delete all org members first (they reference roles)
+    await db
+        .delete(organizationMembers)
+        .where(eq(organizationMembers.organizationId, id));
+
+    // Delete all roles (and their permissions) for this org
+    await deleteRolesByOrganizationId(id);
 
     const deleted = await deleteOrgRepo(id);
     if (!deleted) {

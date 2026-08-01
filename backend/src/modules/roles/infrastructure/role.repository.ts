@@ -268,3 +268,25 @@ export const findRoleByIdRaw = async (id: string) => {
         .limit(1);
     return results[0] ?? null;
 };
+
+/**
+ * Deletes all roles (and their permissions) belonging to an organization.
+ * Used as part of cascaded organization deletion.
+ * @param organizationId The organization UUID.
+ */
+export const deleteRolesByOrganizationId = async (
+    organizationId: string,
+): Promise<void> => {
+    // First detach all permissions from every role in this org
+    const orgRoles = await db
+        .select({ id: roles.id })
+        .from(roles)
+        .where(eq(roles.organizationId, organizationId));
+
+    for (const role of orgRoles) {
+        await detachAllPermissionsFromRole(role.id);
+    }
+
+    // Then delete all roles for the org
+    await db.delete(roles).where(eq(roles.organizationId, organizationId));
+};

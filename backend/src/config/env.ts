@@ -20,7 +20,6 @@ const envSchema = z.object({
     RAZORPAY_KEY_ID: z.string().default("rzp_test_mockkeyid"),
     RAZORPAY_KEY_SECRET: z.string().default("rzp_test_mockkeysecret"),
     RAZORPAY_WEBHOOK_SECRET: z.string().default("webhook_secret_mock"),
-    SUBSCRIPTION_AMOUNT_PAISE: z.coerce.number().default(99900),
     SUPPORT_EMAIL: z.string().default("support@unifiedpm.com"),
     SUPPORT_PHONE: z.string().default("+1 (800) 555-0199"),
 });

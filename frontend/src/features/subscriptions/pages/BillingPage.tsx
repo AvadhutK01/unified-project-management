@@ -335,7 +335,7 @@ export const BillingPage = () => {
                             <p className="text-2xl font-bold text-foreground mt-1">
                                 ₹0
                                 <span className="text-sm font-normal text-muted-foreground ml-1">
-                                    /mo
+                                    /forever
                                 </span>
                             </p>
                             <p className="text-xs text-muted-foreground leading-relaxed">
@@ -676,7 +676,7 @@ export const BillingPage = () => {
                                                 </TableCell>
                                                 <TableCell className="font-semibold text-xs">
                                                     ₹
-                                                    {(tx.amount / 100).toFixed(
+                                                    {Number(tx.amount).toFixed(
                                                         2,
                                                     )}
                                                 </TableCell>

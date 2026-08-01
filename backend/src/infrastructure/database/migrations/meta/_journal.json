@@ -183,6 +183,13 @@
             "when": 1785436002963,
             "tag": "0025_fixed_killmonger",
             "breakpoints": true
+        },
+        {
+            "idx": 26,
+            "version": "7",
+            "when": 1785608736145,
+            "tag": "0026_faithful_pretty_boy",
+            "breakpoints": true
         }
     ]
 }

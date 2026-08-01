@@ -22,32 +22,30 @@ const razorpay = new Razorpay({
 });
 
 /**
- * Plan prices in paise (1 INR = 100 paise).
+ * Plan prices in INR/Rupees.
  */
-export const PLAN_PRICES_PAISE: Record<
+export const PLAN_PRICES_RS: Record<
     Exclude<SubscriptionPlan, "free">,
     number
 > = {
-    basic: 50000, // ₹500
-    pro: 100000, // ₹1000
-    premium: 150000, // ₹1500
+    basic: 500,
+    pro: 1000,
+    premium: 1500,
 };
 
 /**
- * Computes the amount in paise the organization must pay to upgrade from
+ * Computes the amount in INR/Rupees the organization must pay to upgrade from
  * their current plan to the target plan (differential pricing).
  */
-const computeUpgradeAmountPaise = (
+const computeUpgradeAmountRs = (
     currentPlan: SubscriptionPlan,
     targetPlan: Exclude<SubscriptionPlan, "free">,
 ): number => {
     const currentPrice =
         currentPlan === "free"
             ? 0
-            : PLAN_PRICES_PAISE[
-                  currentPlan as Exclude<SubscriptionPlan, "free">
-              ];
-    const targetPrice = PLAN_PRICES_PAISE[targetPlan];
+            : PLAN_PRICES_RS[currentPlan as Exclude<SubscriptionPlan, "free">];
+    const targetPrice = PLAN_PRICES_RS[targetPlan];
     return Math.max(targetPrice - currentPrice, 0);
 };
 
@@ -60,7 +58,6 @@ export const createSubscriptionOrderUseCase = async (
     userId: string,
     targetPlan: Exclude<SubscriptionPlan, "free">,
 ) => {
-    // Validate targetPlan
     if (!["basic", "pro", "premium"].includes(targetPlan)) {
         throw badRequestError(
             "Invalid target plan. Must be basic, pro, or premium.",
@@ -69,7 +66,6 @@ export const createSubscriptionOrderUseCase = async (
 
     const { plan: currentPlan } = await getOrganizationPlan(organizationId);
 
-    // Prevent downgrade
     const currentIndex = PLAN_HIERARCHY.indexOf(currentPlan);
     const targetIndex = PLAN_HIERARCHY.indexOf(targetPlan);
     if (targetIndex <= currentIndex && currentPlan !== "free") {
@@ -78,7 +74,8 @@ export const createSubscriptionOrderUseCase = async (
         );
     }
 
-    const amount = computeUpgradeAmountPaise(currentPlan, targetPlan);
+    const amountRs = computeUpgradeAmountRs(currentPlan, targetPlan);
+    const amountPaise = amountRs * 100;
     const currency = "INR";
     const receipt = `order_${organizationId.slice(0, 8)}_${Date.now()}`;
 
@@ -89,7 +86,7 @@ export const createSubscriptionOrderUseCase = async (
     };
 
     const orderOptions = {
-        amount,
+        amount: amountPaise,
         currency,
         receipt,
         notes: {
@@ -106,9 +103,9 @@ export const createSubscriptionOrderUseCase = async (
         organizationId,
         userId,
         razorpayOrderId: razorpayOrder.id,
-        amount,
+        amount: amountRs,
         currency,
-        description: `Upgrade to ${planLabels[targetPlan]} Plan (₹${PLAN_PRICES_PAISE[targetPlan] / 100}/month)`,
+        description: `Upgrade to ${planLabels[targetPlan]} Plan (₹${PLAN_PRICES_RS[targetPlan]}/month)`,
     });
 
     return {
@@ -188,7 +185,7 @@ export const verifyPaymentUseCase = async (
         organizationId,
         razorpayOrderId,
         plan: targetPlan,
-        amount: PLAN_PRICES_PAISE[targetPlan],
+        amount: PLAN_PRICES_RS[targetPlan],
         periodStart: now,
         periodEnd,
     });
@@ -296,7 +293,9 @@ export const handleWebhookUseCase = async (
                 organizationId: orgId,
                 razorpayOrderId: orderId,
                 plan: targetPlan,
-                amount: paymentEntity?.amount || PLAN_PRICES_PAISE[targetPlan],
+                amount: paymentEntity
+                    ? paymentEntity.amount / 100
+                    : PLAN_PRICES_RS[targetPlan],
                 periodStart: now,
                 periodEnd,
             });

@@ -1,0 +1,1 @@
+CREATE INDEX "idx_subscriptions_active_period_end" ON "subscriptions" USING btree ("current_period_end") WHERE status = 'active';

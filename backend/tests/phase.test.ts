@@ -27,6 +27,7 @@ describe("Phase Flow Integration Tests", () => {
     let otherProjectId: string;
     let createdPhaseId: string;
     let ownerOrgMemberId: string;
+    let nonMemberOrgMemberId: string;
 
     const uniqueTime = Date.now();
     const ownerEmail = `owner_phase_${uniqueTime}@example.com`;
@@ -112,6 +113,18 @@ describe("Phase Flow Integration Tests", () => {
             roleId: role!.id,
             status: "active",
         });
+
+        // nonMember is an org member but will NOT be added to any project
+        const [nonMemberRow] = await db
+            .insert(organizationMembers)
+            .values({
+                organizationId,
+                memberId: nonMemberId,
+                roleId: role!.id,
+                status: "active",
+            })
+            .returning();
+        nonMemberOrgMemberId = nonMemberRow!.id;
 
         // Create a project the owner and member both have access to
         const project = await createProject({
@@ -599,8 +612,8 @@ describe("Phase Flow Integration Tests", () => {
         expect(result.success).toBe(false);
         if (!result.success) {
             const paths = result.error.issues.map((i) => i.path.join("."));
-            expect(paths).toContain("startDate");
-            expect(paths).toContain("endDate");
+            expect(paths).toContain("body.startDate");
+            expect(paths).toContain("body.endDate");
         }
     });
 
@@ -659,8 +672,8 @@ describe("Phase Flow Integration Tests", () => {
         expect(result.success).toBe(false);
         if (!result.success) {
             const paths = result.error.issues.map((i) => i.path.join("."));
-            expect(paths).toContain("startDate");
-            expect(paths).toContain("endDate");
+            expect(paths).toContain("body.startDate");
+            expect(paths).toContain("body.endDate");
         }
     });
 

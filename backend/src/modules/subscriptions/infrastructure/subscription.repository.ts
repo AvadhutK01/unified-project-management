@@ -4,8 +4,9 @@ import {
     transactions,
     organizations,
 } from "../../../infrastructure/database/schema/index.js";
-import { eq, desc, count } from "drizzle-orm";
+import { eq, desc, count, lte, and } from "drizzle-orm";
 import type { SubscriptionPlan } from "../../../shared/middleware/require-premium.js";
+import type { DatabaseOrTransaction } from "../../../infrastructure/database/client.js";
 
 /**
  * Creates a new transaction record in the database.
@@ -156,8 +157,7 @@ export const findSubscriptionByOrgId = async (organizationId: string) => {
     return {
         plan: effectivePlan,
         subscriptionExpiresAt: org.subscriptionExpiresAt,
-        isActive: effectivePlan !== "free",
-        // Convenience booleans
+        isActive: true,
         isBasic: effectivePlan !== "free",
         isPro: effectivePlan === "pro" || effectivePlan === "premium",
         isPremium: effectivePlan === "premium",
@@ -198,4 +198,90 @@ export const findTransactionsByOrgId = async (
             totalPages: Math.ceil(total / limit),
         },
     };
+};
+
+/**
+ * Fetches a batch of subscriptions whose period has ended and are still
+ * marked active.
+ *
+ * @param batchSize Maximum number of rows to return per call.
+ * @param asOf      Point-in-time to compare against (defaults to NOW()).
+ */
+export const findExpiredActiveSubscriptions = async (
+    batchSize: number,
+    asOf: Date = new Date(),
+): Promise<
+    Array<{
+        id: string;
+        organizationId: string;
+        currentPeriodEnd: Date;
+    }>
+> => {
+    return db
+        .select({
+            id: subscriptions.id,
+            organizationId: subscriptions.organizationId,
+            currentPeriodEnd: subscriptions.currentPeriodEnd,
+        })
+        .from(subscriptions)
+        .where(
+            and(
+                eq(subscriptions.status, "active"),
+                lte(subscriptions.currentPeriodEnd, asOf),
+            ),
+        )
+        .limit(batchSize);
+};
+
+/**
+ * Atomically marks a single subscription as expired.
+ *
+ * @param subscriptionId  UUID of the subscription to expire.
+ * @param tx              Optional Drizzle transaction context.
+ * @returns               The updated row, or null if already expired.
+ */
+export const markSubscriptionExpired = async (
+    subscriptionId: string,
+    tx?: DatabaseOrTransaction,
+): Promise<{ id: string; organizationId: string } | null> => {
+    const client = tx ?? db;
+    const now = new Date();
+
+    const [updated] = await (client as typeof db)
+        .update(subscriptions)
+        .set({ status: "expired", updatedAt: now })
+        .where(
+            and(
+                eq(subscriptions.id, subscriptionId),
+                eq(subscriptions.status, "active"),
+            ),
+        )
+        .returning({
+            id: subscriptions.id,
+            organizationId: subscriptions.organizationId,
+        });
+
+    return updated ?? null;
+};
+
+/**
+ * Downgrades an organization's plan back to "free" and clears the expiry
+ * timestamp. Called inside the same transaction as markSubscriptionExpired.
+ *
+ * @param organizationId UUID of the organization to downgrade.
+ * @param tx             Optional Drizzle transaction context.
+ */
+export const downgradeOrganizationToFree = async (
+    organizationId: string,
+    tx?: DatabaseOrTransaction,
+): Promise<void> => {
+    const client = tx ?? db;
+    await (client as typeof db)
+        .update(organizations)
+        .set({
+            plan: "free",
+            subscriptionExpiresAt: null,
+            updatedAt: new Date(),
+        })
+        .where(eq(organizations.id, organizationId));
 };

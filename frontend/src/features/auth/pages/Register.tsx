@@ -110,7 +110,7 @@ const Register = () => {
     const stepHeadings = [
         {
             title: "Create your account",
-            sub: "Free for 14 days — no credit card required",
+            sub: "Free forever — no credit card required",
         },
         { title: "Secure your account", sub: "Choose a strong password" },
     ];

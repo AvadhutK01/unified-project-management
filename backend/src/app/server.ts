@@ -4,6 +4,8 @@ import { logger } from "../config/logger.js";
 import { initializeSocket } from "./socket.js";
 import { initializeNotificationWorker } from "../modules/notifications/application/notification.worker.js";
 import { notificationQueue } from "../modules/notifications/application/notification.queue.js";
+import { initializeSubscriptionExpiryWorker } from "../modules/subscriptions/application/subscription.expiry.worker.js";
+import { initializeSubscriptionExpiryScheduler } from "../modules/subscriptions/application/subscription.expiry.scheduler.js";
 
 export const startServer = (): void => {
     const app = createApp();
@@ -16,6 +18,9 @@ export const startServer = (): void => {
     initializeSocket(server);
 
     initializeNotificationWorker();
+
+    initializeSubscriptionExpiryWorker();
+    initializeSubscriptionExpiryScheduler();
 
     notificationQueue
         .add(

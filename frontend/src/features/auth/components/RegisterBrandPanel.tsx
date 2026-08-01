@@ -35,7 +35,7 @@ export const RegisterBrandPanel = () => (
                 <div className="inline-flex items-center gap-2 bg-white/15 border border-white/20 rounded-full px-3.5 py-1.5">
                     <span className="w-2 h-2 rounded-full bg-green-300 animate-pulse" />
                     <span className="text-white text-xs font-medium">
-                        Free 14-day trial — no credit card needed
+                        Free tier available forever — no credit card needed
                     </span>
                 </div>
                 <h1 className="text-[2.6rem] font-bold text-white leading-[1.15] tracking-tight">

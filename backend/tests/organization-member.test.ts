@@ -157,9 +157,11 @@ describe("Organization Membership and Invitation Integration Tests", () => {
             1,
             10,
         );
-        expect(members.data.length).toBe(1);
-        expect(members.data[0]!!.memberId).toBe(user2Id);
-        expect(members.data[0]!.status).toBe("active");
+        // Joined list includes the org owner + user2 who just accepted = 2
+        expect(members.data.length).toBe(2);
+        expect(members.data.some((m) => m.memberId === user2Id)).toBe(true);
+        const user2Member = members.data.find((m) => m.memberId === user2Id);
+        expect(user2Member!.status).toBe("active");
     });
 
     it("should allow a user to reject their pending invitation", async () => {
@@ -281,7 +283,8 @@ describe("Organization Membership and Invitation Integration Tests", () => {
             1,
             10,
         );
-        expect(updatedMembersList.data.length).toBe(0);
+        // Only the org owner remains after deleting user2
+        expect(updatedMembersList.data.length).toBe(1);
     });
 
     it("should successfully revoke a pending invitation", async () => {
@@ -409,12 +412,19 @@ describe("Organization Membership and Invitation Integration Tests", () => {
             10,
         );
 
-        expect(projectMembers.data.length).toBe(1);
-        expect(projectMembers.data[0]!!.memberId).toBe(orgMember!.id);
-        expect(projectMembers.data[0]!.userId).toBe(testUser.id);
-        expect(projectMembers.data[0]!!.name).toBeDefined();
-        expect(projectMembers.data[0]!.email).toBe(testUserEmail);
-        expect(projectMembers.pagination.total).toBe(1);
+        // Owner is auto-added by createProject + testUser via addProjectMember = 2
+        // But we filter to only those matching orgMember to assert the specific member
+        expect(projectMembers.data.length).toBe(2);
+        expect(
+            projectMembers.data.some((m) => m.memberId === orgMember!.id),
+        ).toBe(true);
+        const testMember = projectMembers.data.find(
+            (m) => m.memberId === orgMember!.id,
+        );
+        expect(testMember!.userId).toBe(testUser.id);
+        expect(testMember!.name).toBeDefined();
+        expect(testMember!.email).toBe(testUserEmail);
+        expect(projectMembers.pagination.total).toBe(2);
         expect(projectMembers.pagination.page).toBe(1);
         expect(projectMembers.pagination.limit).toBe(10);
         expect(projectMembers.pagination.totalPages).toBe(1);

@@ -64,11 +64,9 @@ export const initializeSocket = (httpServer: HttpServer) => {
         const orgId = (socket as any).orgId;
         if (user && user.id && orgId) {
             const roomName = `user:${user.id}:org:${orgId}`;
-            console.log({ roomName });
             socket.join(roomName);
 
             socket.on("disconnect", () => {
-                console.log("discconnnef");
                 socket.leave(roomName);
             });
         }

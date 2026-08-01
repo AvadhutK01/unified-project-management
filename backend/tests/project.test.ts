@@ -168,8 +168,11 @@ describe("Project Flow Integration Tests", () => {
             organizationId,
             ownerId,
         );
-        expect(members.length).toBe(1);
-        expect(members[0]!.organizationMemberId).toBe(member1OrgMemberId);
+        // Owner is auto-added + member1 explicitly passed = 2
+        expect(members.length).toBe(2);
+        expect(
+            members.some((m) => m.organizationMemberId === member1OrgMemberId),
+        ).toBe(true);
     });
 
     /**
@@ -222,7 +225,8 @@ describe("Project Flow Integration Tests", () => {
             ownerId,
         );
         expect(fetched.id).toBe(createdProjectId);
-        expect(fetched.members.length).toBe(1);
+        // Owner is auto-added + member1 explicitly = 2 members
+        expect(fetched.members.length).toBe(2);
 
         const fetchedByMember = await getProjectById(
             createdProjectId,
@@ -231,6 +235,7 @@ describe("Project Flow Integration Tests", () => {
         );
         expect(fetchedByMember.id).toBe(createdProjectId);
 
+        // nonMemberId is an org member but not mapped to this project
         await expect(
             getProjectById(createdProjectId, organizationId, nonMemberId),
         ).rejects.toThrow("You do not have access to this project");
