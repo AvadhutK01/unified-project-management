@@ -47,6 +47,7 @@ export interface WorkItem {
     assignedToName: string | null;
     assignedToEmail: string | null;
     assignedToStatus?: string | null;
+    assignedToUserId?: string | null;
     projectId?: string | null;
     phaseId?: string | null;
     projectTitle?: string | null;
@@ -72,6 +73,7 @@ export interface WorkItemListProps {
         name: string;
         email: string;
         status?: string;
+        memberId?: string;
     }>;
     canEdit?: boolean;
     canDelete?: boolean;

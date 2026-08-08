@@ -192,6 +192,7 @@ export const findOrganizationInvitations = async (
             username: users.username,
             roleName: roles.name,
             invitedByName: inviter.username,
+            invitedByUserId: inviter.id,
             createdAt: organizationInvitations.createdAt,
             updatedAt: organizationInvitations.updatedAt,
         })

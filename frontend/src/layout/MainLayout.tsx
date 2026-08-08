@@ -3,13 +3,17 @@ import Sidebar from "@/components/common/Sidebar";
 import ChatBot from "@/components/common/ChatBot";
 import CallModal from "@/components/common/CallModal";
 import { CallProvider } from "@/features/call/context/CallContext";
+import { DirectChatProvider } from "@/features/chat/context/DirectChatContext";
+import { DirectChatDrawer } from "@/features/chat/components/DirectChatDrawer";
 import { useNotificationSocket } from "@/features/notifications/hooks/useNotificationSocket";
 import { useNotificationInit } from "@/features/notifications/hooks/useNotificationInit";
+import { useUserActivityTracker } from "@/features/presence/hooks/useUserActivityTracker";
 import type { ReactNode } from "react";
 
 const MainLayoutContent = ({ children }: { children: ReactNode }) => {
     useNotificationInit();
     useNotificationSocket();
+    useUserActivityTracker();
 
     return (
         <div className="flex h-screen">
@@ -22,6 +26,7 @@ const MainLayoutContent = ({ children }: { children: ReactNode }) => {
             </main>
             <ChatBot />
             <CallModal />
+            <DirectChatDrawer />
         </div>
     );
 };
@@ -33,7 +38,9 @@ const MainLayout = ({
 }>) => {
     return (
         <CallProvider>
-            <MainLayoutContent>{children}</MainLayoutContent>
+            <DirectChatProvider>
+                <MainLayoutContent>{children}</MainLayoutContent>
+            </DirectChatProvider>
         </CallProvider>
     );
 };

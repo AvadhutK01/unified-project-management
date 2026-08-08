@@ -8,10 +8,13 @@ import { useMarkAsReadMutation } from "./useNotifications";
 import { getNotificationRoute } from "../utils/notification-router";
 import type { Notification } from "../types/notification.types";
 
+import { useDirectChat } from "@/features/chat/context/DirectChatContext";
+
 export const useNotificationSocket = () => {
     const socket = useSocket();
     const queryClient = useQueryClient();
     const navigate = useNavigate();
+    const { isOpen, activeRecipient } = useDirectChat();
     const addNotification = useNotificationStore((s) => s.addNotification);
     const markReadLocal = useNotificationStore((s) => s.markRead);
     const markAsReadMutation = useMarkAsReadMutation();
@@ -24,6 +27,16 @@ export const useNotificationSocket = () => {
 
             addNotification(notification);
             queryClient.invalidateQueries({ queryKey: ["notifications"] });
+
+            const isDirectChatNotif =
+                notification.entityType === "direct_chat" ||
+                notification.type === "direct_message";
+            const senderId =
+                notification.metadata?.senderUserId || notification.entityId;
+            const isReadingCurrentChat =
+                isDirectChatNotif && isOpen && activeRecipient?.id === senderId;
+
+            if (isReadingCurrentChat) return;
 
             const audio = new Audio("/notification.mp3");
             audio.play().catch(() => {});
@@ -64,6 +77,8 @@ export const useNotificationSocket = () => {
             markAsReadMutation,
             navigate,
             queryClient,
+            isOpen,
+            activeRecipient,
         ],
     );
 

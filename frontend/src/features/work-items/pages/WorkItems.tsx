@@ -100,6 +100,7 @@ const WorkItems = () => {
                     id: pm?.id || "",
                     name: m.name,
                     email: m.email,
+                    memberId: m.memberId,
                 };
             })
             .filter((m: any) => m.id);
@@ -165,7 +166,6 @@ const WorkItems = () => {
 
     return (
         <div className="p-4 sm:p-6 space-y-6">
-            {/* Header Area */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/40">
                 <div className="flex items-center gap-3">
                     <div className="p-2.5 bg-primary/10 text-primary rounded-xl border border-primary/20 shadow-xs">
@@ -181,8 +181,6 @@ const WorkItems = () => {
                     </div>
                 </div>
             </div>
-
-            {/* Stats Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="p-4 rounded-2xl border border-border/60 bg-card/60 backdrop-blur-md shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group">
                     <div className="flex items-center justify-between">
@@ -260,12 +258,8 @@ const WorkItems = () => {
                     </div>
                 </div>
             </div>
-
-            {/* Toolbar Row */}
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <AddWorkItemModal onAddWorkItem={() => {}} canAdd={canAdd} />
-
-                {/* View switcher */}
                 <div className="flex items-center gap-1 bg-secondary/60 p-1 rounded-xl border border-border/40 shadow-inner w-full sm:w-auto">
                     <button
                         onClick={() => setView("kanban")}

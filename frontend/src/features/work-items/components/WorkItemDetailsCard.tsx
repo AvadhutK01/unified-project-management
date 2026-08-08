@@ -103,6 +103,9 @@ const WorkItemDetailsCard = ({
                                         workItem.assignedToStatus || "active"
                                     }
                                     size="sm"
+                                    memberId={
+                                        workItem.assignedToUserId || undefined
+                                    }
                                 />
                                 <span className="font-semibold text-foreground/90 text-right">
                                     {workItem.assignedToName}

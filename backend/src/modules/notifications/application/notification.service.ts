@@ -9,9 +9,10 @@ import {
     workitems,
     projects,
     organizations,
+    notifications,
 } from "../../../infrastructure/database/schema/index.js";
 import { phases } from "../../../infrastructure/database/schema/phase.js";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 export const sendNotification = async (
     userId: string,
@@ -345,4 +346,59 @@ export const checkUpcomingSprintDeadlines = async () => {
             );
         }
     }
+};
+
+export const notifyDirectMessage = async (
+    senderUserId: string,
+    receiverUserId: string,
+    organizationId: string,
+    messageSnippet: string,
+    senderName: string,
+) => {
+    if (senderUserId === receiverUserId) return;
+
+    const [org] = await db
+        .select({ slug: organizations.slug })
+        .from(organizations)
+        .where(eq(organizations.id, organizationId));
+
+    const cleanSnippet = messageSnippet.replace(/<[^>]*>/g, "");
+    const preview =
+        cleanSnippet.length > 60
+            ? `${cleanSnippet.substring(0, 60)}...`
+            : cleanSnippet;
+
+    await sendNotification(
+        receiverUserId,
+        organizationId,
+        "direct_message",
+        `New Message from ${senderName}`,
+        preview,
+        senderUserId,
+        "direct_chat",
+        {
+            orgSlug: org?.slug,
+            senderUserId,
+            senderName,
+        },
+    );
+};
+
+export const markDirectMessageNotificationsAsRead = async (
+    organizationId: string,
+    senderUserId: string,
+    receiverUserId: string,
+) => {
+    await db
+        .update(notifications)
+        .set({ isRead: true, updatedAt: new Date() })
+        .where(
+            and(
+                eq(notifications.organizationId, organizationId),
+                eq(notifications.userId, receiverUserId),
+                eq(notifications.entityId, senderUserId),
+                eq(notifications.entityType, "direct_chat"),
+                eq(notifications.isRead, false),
+            ),
+        );
 };

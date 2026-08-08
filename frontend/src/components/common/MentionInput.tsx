@@ -169,6 +169,7 @@ const MentionInput = ({
                                     name={user.name}
                                     status={user.status || "active"}
                                     size="sm"
+                                    memberId={user.id}
                                 />
                                 <span>{user.name}</span>
                             </div>

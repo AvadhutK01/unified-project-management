@@ -30,6 +30,8 @@ interface InvitedMember {
     email: string;
     role: string;
     invitedBy: string;
+    invitedByUserId: string;
+    memberId: string;
     status: InviteStatus;
     invitedAt: string;
 }
@@ -83,6 +85,8 @@ const InvitedMembers = () => {
                 email: item.email,
                 role: item.roleName,
                 invitedBy: item.invitedByName ?? "-",
+                invitedByUserId: item.invitedByUserId ?? "",
+                memberId: item.memberId,
                 status:
                     item.status === "pending"
                         ? "Pending"
@@ -130,6 +134,7 @@ const InvitedMembers = () => {
                         <MemberAvatar
                             name={member.name}
                             status={member.status}
+                            memberId={member.memberId}
                         />
                         <div className="min-w-0">
                             <p className="text-sm font-medium text-foreground truncate">
@@ -164,6 +169,7 @@ const InvitedMembers = () => {
                             name={member.invitedBy}
                             status="active"
                             size="sm"
+                            memberId={member.invitedByUserId}
                         />
                         <span className="text-sm text-foreground truncate">
                             {member.invitedBy}

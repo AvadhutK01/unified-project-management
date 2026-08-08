@@ -46,13 +46,12 @@ export const getOrganizationPlan = async (
 
     const plan = (org.plan as SubscriptionPlan) || "free";
 
-    // Free plan is always "active" (no expiry needed)
-    if (plan === "free") return { plan: "free", isActive: true };
-
-    // Paid plans require a valid (non-expired) subscriptionExpiresAt
-    const isActive =
+    const isExpired =
         org.subscriptionExpiresAt !== null &&
-        new Date(org.subscriptionExpiresAt) > new Date();
+        org.subscriptionExpiresAt !== undefined &&
+        new Date(org.subscriptionExpiresAt) <= new Date();
+
+    const isActive = !isExpired;
 
     return { plan: isActive ? plan : "free", isActive };
 };

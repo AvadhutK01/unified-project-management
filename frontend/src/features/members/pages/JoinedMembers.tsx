@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
     Search,
     UserPlus,
@@ -9,20 +9,12 @@ import {
     ChevronRight,
     Eye,
     Edit,
-    Phone,
-    Video,
-    ChevronDown,
-    Sparkles,
+    MessageSquare,
 } from "lucide-react";
-import { useCall } from "@/features/call/context/CallContext";
+import { useDirectChat } from "@/features/chat/context/DirectChatContext";
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
 import { formatDate, useDebounce } from "@/lib/utils";
 import { InviteMembersModal } from "../components/InviteMembersModal";
 import { EditMemberModal } from "../components/EditMemberModal";
@@ -35,7 +27,6 @@ import { PERMISSIONS } from "@/features/rbac/types/rbac.types";
 import { useSubscriptionQuery } from "@/features/subscriptions/hooks/useSubscription";
 import { isAtLeastPlan } from "@/features/subscriptions/utils/subscriptionHelpers";
 import { useOrganizationStore } from "@/store/organization.store";
-
 import { MemberAvatar } from "@/components/common/MemberAvatar";
 
 const ROLE_STYLES: Record<string, string> = {
@@ -44,112 +35,62 @@ const ROLE_STYLES: Record<string, string> = {
     Viewer: "bg-muted text-muted-foreground",
 };
 
-const MemberCallButton = ({
+const MemberChatButton = ({
     member,
-    onInitiateCall,
+    onOpenChat,
     hasProPlan,
     isOrgOwner,
     billingPath,
 }: {
     member: Member;
-    onInitiateCall: (type: "voice" | "video") => void;
+    onOpenChat: () => void;
     hasProPlan: boolean;
     isOrgOwner: boolean;
     billingPath: string;
 }) => {
-    const [open, setOpen] = useState(false);
     const navigate = useNavigate();
+    const { unreadCounts } = useDirectChat();
 
-    const handleLockedClick = () => {
-        setOpen(false);
-        if (isOrgOwner) {
-            navigate(billingPath);
-        } else {
-            toast.info(
-                "Member calling requires a Pro or Premium plan. Ask your organization owner to upgrade.",
-            );
+    const memberUserId = (member as any).memberId || member.userId || member.id;
+
+    const unreadCount =
+        unreadCounts[memberUserId] || unreadCounts[member.id] || 0;
+
+    const handleClick = () => {
+        if (!hasProPlan) {
+            if (isOrgOwner) {
+                toast.info(
+                    "Direct chat requires a Pro or Premium plan. Redirecting to billing page...",
+                );
+                navigate(billingPath);
+            } else {
+                toast.info(
+                    "Direct chat requires a Pro or Premium plan. Ask your organization owner to upgrade.",
+                );
+            }
+            return;
         }
+        onOpenChat();
     };
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-                <button
-                    title={`Call ${member.name}`}
-                    className={`inline-flex items-center gap-0.5 px-2 py-1.5 rounded-lg border transition-colors cursor-pointer text-xs font-medium ${
-                        hasProPlan
-                            ? "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 border-emerald-500/20"
-                            : "text-muted-foreground hover:bg-muted border-border/60"
-                    }`}
-                >
-                    <Phone className="size-3.5" />
-                    <ChevronDown className="size-3 opacity-70" />
-                </button>
-            </PopoverTrigger>
-            <PopoverContent
-                align="end"
-                className="w-44 p-1 bg-card border-border shadow-lg"
-            >
-                {!hasProPlan && (
-                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 mb-1 rounded-md bg-violet-500/10 border border-violet-500/20">
-                        <Sparkles className="size-3 text-violet-500 shrink-0" />
-                        <span className="text-[10px] font-semibold text-violet-600 dark:text-violet-400">
-                            Pro Plan Required
-                        </span>
-                    </div>
-                )}
-                <button
-                    onClick={() => {
-                        if (!hasProPlan) {
-                            handleLockedClick();
-                            return;
-                        }
-                        setOpen(false);
-                        onInitiateCall("voice");
-                    }}
-                    className={`w-full flex items-center justify-between gap-2 px-2.5 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-                        hasProPlan
-                            ? "text-foreground hover:bg-muted"
-                            : "text-muted-foreground hover:bg-muted/60"
-                    }`}
-                >
-                    <span className="flex items-center gap-2">
-                        <Phone className="size-3.5 text-emerald-500" />
-                        Voice Call
-                    </span>
-                    {!hasProPlan && (
-                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-violet-500/20 text-violet-600 dark:text-violet-400 uppercase tracking-wide">
-                            Pro
-                        </span>
-                    )}
-                </button>
-                <button
-                    onClick={() => {
-                        if (!hasProPlan) {
-                            handleLockedClick();
-                            return;
-                        }
-                        setOpen(false);
-                        onInitiateCall("video");
-                    }}
-                    className={`w-full flex items-center justify-between gap-2 px-2.5 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-                        hasProPlan
-                            ? "text-foreground hover:bg-muted"
-                            : "text-muted-foreground hover:bg-muted/60"
-                    }`}
-                >
-                    <span className="flex items-center gap-2">
-                        <Video className="size-3.5 text-blue-500" />
-                        Video Call
-                    </span>
-                    {!hasProPlan && (
-                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-violet-500/20 text-violet-600 dark:text-violet-400 uppercase tracking-wide">
-                            Pro
-                        </span>
-                    )}
-                </button>
-            </PopoverContent>
-        </Popover>
+        <button
+            onClick={handleClick}
+            title={`Chat with ${member.name}`}
+            className={`relative inline-flex items-center gap-1.5 px-2 py-1.5 rounded-lg border transition-colors cursor-pointer text-xs font-medium ${
+                hasProPlan
+                    ? "text-violet-600 dark:text-violet-400 hover:bg-violet-500/10 border-violet-500/20"
+                    : "text-muted-foreground hover:bg-muted border-border/60"
+            }`}
+        >
+            <MessageSquare className="size-3.5 text-violet-500 shrink-0" />
+            <span className="hidden sm:inline">Chat</span>
+            {unreadCount > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full shadow-sm">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+            )}
+        </button>
     );
 };
 
@@ -166,7 +107,7 @@ const JoinedMembers = () => {
 
     const confirm = useConfirm();
     const { mutate: removeMemberMutation } = useRemoveMemberMutation();
-    const { initiateCall } = useCall();
+    const { openChatWithMember, closeChat } = useDirectChat();
     const { hasPermission, isOrgOwner } = usePermission();
     const canList = hasPermission(PERMISSIONS.MEMBERS_JOINED.LIST);
     const canView = hasPermission(PERMISSIONS.MEMBERS_JOINED.VIEW);
@@ -174,11 +115,42 @@ const JoinedMembers = () => {
     const canDelete = hasPermission(PERMISSIONS.MEMBERS_JOINED.DELETE);
     const hasAnyAction = canView || canEdit || canDelete || canList;
 
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    useEffect(() => {
+        return () => {
+            closeChat();
+        };
+    }, [closeChat]);
+
+    useEffect(() => {
+        const chatMemberId = searchParams.get("chatMemberId");
+        const chatName = searchParams.get("chatName");
+        if (chatMemberId) {
+            const memberObj = members.find(
+                (m) => m.id === chatMemberId || m.userId === chatMemberId,
+            );
+            const name =
+                memberObj?.name ||
+                (chatName && chatName !== "Member"
+                    ? chatName
+                    : memberObj?.email || "Member");
+            const email = memberObj?.email;
+
+            openChatWithMember(chatMemberId, name, email);
+            const newParams = new URLSearchParams(searchParams);
+            newParams.delete("chatMemberId");
+            newParams.delete("chatName");
+            setSearchParams(newParams, { replace: true });
+        }
+    }, [searchParams, setSearchParams, openChatWithMember, members]);
+
     const activeOrganization = useOrganizationStore(
         (s) => s.activeOrganization,
     );
     const { data: subscription } = useSubscriptionQuery();
-    const hasProPlan = isAtLeastPlan(subscription?.plan, "pro");
+    const currentPlan = subscription?.plan || activeOrganization?.plan;
+    const hasProPlan = isAtLeastPlan(currentPlan, "pro");
     const billingPath = `/${activeOrganization?.slug}/billing`;
 
     const { data: joinedMembers, isLoading } = useMembersQuery(
@@ -254,6 +226,7 @@ const JoinedMembers = () => {
                         <MemberAvatar
                             name={member.name}
                             status={member.status}
+                            memberId={member.userId}
                         />
                         <div className="min-w-0">
                             <p className="text-sm font-medium text-foreground truncate">
@@ -278,34 +251,38 @@ const JoinedMembers = () => {
                     </Badge>
                 ),
             },
-            {
-                key: "status",
-                label: "Status",
-                render: (member) => (
-                    <div className="flex items-center gap-1.5">
-                        <span
-                            className="size-1.5 rounded-full shrink-0"
-                            style={{
-                                backgroundColor:
-                                    member.status === "Active"
-                                        ? "#798c5e"
-                                        : "#a1a1aa",
-                            }}
-                        />
-                        <span
-                            className="text-xs font-medium"
-                            style={{
-                                color:
-                                    member.status === "Active"
-                                        ? "#798c5e"
-                                        : "#a1a1aa",
-                            }}
-                        >
-                            {member.status}
-                        </span>
-                    </div>
-                ),
-            },
+            ...(canEdit
+                ? [
+                      {
+                          key: "status" as const,
+                          label: "Status",
+                          render: (member: Member) => (
+                              <div className="flex items-center gap-1.5">
+                                  <span
+                                      className="size-1.5 rounded-full shrink-0"
+                                      style={{
+                                          backgroundColor:
+                                              member.status === "Active"
+                                                  ? "#798c5e"
+                                                  : "#a1a1aa",
+                                      }}
+                                  />
+                                  <span
+                                      className="text-xs font-medium"
+                                      style={{
+                                          color:
+                                              member.status === "Active"
+                                                  ? "#798c5e"
+                                                  : "#a1a1aa",
+                                      }}
+                                  >
+                                      {member.status}
+                                  </span>
+                              </div>
+                          ),
+                      },
+                  ]
+                : []),
             {
                 key: "joinedAt",
                 label: "Joined",
@@ -327,14 +304,14 @@ const JoinedMembers = () => {
                                   {canList &&
                                       member.email !==
                                           localStorage.getItem("email") && (
-                                          <MemberCallButton
+                                          <MemberChatButton
                                               member={member}
-                                              onInitiateCall={(type) =>
-                                                  initiateCall(
+                                              onOpenChat={() =>
+                                                  openChatWithMember(
                                                       member.userId ??
                                                           member.id,
                                                       member.name,
-                                                      type,
+                                                      member.email,
                                                   )
                                               }
                                               hasProPlan={hasProPlan}
@@ -342,6 +319,7 @@ const JoinedMembers = () => {
                                               billingPath={billingPath}
                                           />
                                       )}
+
                                   {canView && (
                                       <button
                                           title={`View ${member.name}`}
@@ -375,7 +353,17 @@ const JoinedMembers = () => {
                   ]
                 : []),
         ],
-        [hasAnyAction, canView, canEdit, canDelete],
+        [
+            hasAnyAction,
+            canView,
+            canEdit,
+            canDelete,
+            canList,
+            hasProPlan,
+            isOrgOwner,
+            billingPath,
+            openChatWithMember,
+        ],
     );
 
     const activeCount = members.filter((m) => m.status === "Active").length;
@@ -402,15 +390,17 @@ const JoinedMembers = () => {
                                 {members.length} total
                             </span>
                         </div>
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card border border-border">
-                            <span
-                                className="size-1.5 rounded-full"
-                                style={{ backgroundColor: "#798c5e" }}
-                            />
-                            <span className="text-xs font-medium text-foreground">
-                                {activeCount} active
-                            </span>
-                        </div>
+                        {canEdit && (
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card border border-border">
+                                <span
+                                    className="size-1.5 rounded-full"
+                                    style={{ backgroundColor: "#798c5e" }}
+                                />
+                                <span className="text-xs font-medium text-foreground">
+                                    {activeCount} active
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
 

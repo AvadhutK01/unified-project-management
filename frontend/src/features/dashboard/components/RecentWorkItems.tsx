@@ -50,6 +50,9 @@ const RecentWorkItems = ({ workItems }: Props) => {
                                     name={name}
                                     status={item.assignedToStatus || "active"}
                                     size="sm"
+                                    memberId={
+                                        item.assignedToUserId || undefined
+                                    }
                                 />
                                 <div className="flex-1 min-w-0">
                                     <p className="truncate text-sm font-medium text-foreground">

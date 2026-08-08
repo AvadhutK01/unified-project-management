@@ -18,6 +18,8 @@ export const mapWorkItem = (item: any): WorkItem => ({
     assignedTo: item.assignedTo || null,
     assignedToName: item.assignedToName || null,
     assignedToEmail: item.assignedToEmail || null,
+    assignedToStatus: item.assignedToStatus || null,
+    assignedToUserId: item.assignedToUserId || null,
     projectId: item.projectId || null,
     phaseId: item.phaseId || null,
     projectTitle: item.projectTitle || null,

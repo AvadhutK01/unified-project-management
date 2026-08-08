@@ -113,6 +113,7 @@ export const getOrganizationDashboardMetrics = async (
                     assignedToName: users.username,
                     assignedToEmail: users.email,
                     assignedToStatus: organizationMembers.status,
+                    assignedToUserId: users.id,
                 })
                 .from(workitems)
                 .leftJoin(

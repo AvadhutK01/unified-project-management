@@ -135,6 +135,7 @@ const WorkItemCommentsTab = ({
                                     name={d.authorName}
                                     status={d.authorStatus || "active"}
                                     size="sm"
+                                    memberId={d.authorUserId}
                                 />
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between gap-2">

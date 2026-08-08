@@ -403,6 +403,9 @@ const AddWorkItemModal = ({ onAddWorkItem, canAdd }: AddWorkItemModalProps) => {
                                                                         member.status
                                                                     }
                                                                     size="sm"
+                                                                    memberId={
+                                                                        member.memberId
+                                                                    }
                                                                 />
                                                                 <span>
                                                                     {

@@ -122,6 +122,7 @@ export const CallModal: React.FC = () => {
                                     status="active"
                                     size="lg"
                                     className="mb-3"
+                                    memberId={activeCall.targetId}
                                 />
                                 <p className="text-xs text-slate-400 font-medium">
                                     Waiting for {activeCall.targetName}'s
@@ -188,6 +189,7 @@ export const CallModal: React.FC = () => {
                             status="active"
                             size="lg"
                             className="scale-125"
+                            memberId={activeCall.targetId}
                         />
                     </div>
                 )}

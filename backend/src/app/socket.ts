@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import { handleChatConnection } from "../modules/chat/presentation/chat.socket.js";
 import { handleCallConnection } from "../modules/call/presentation/call.socket.js";
+import { handleDirectChatConnection } from "../modules/chat/presentation/direct-chat.socket.js";
 
 let socketServer: Server | null = null;
 
@@ -59,19 +60,55 @@ export const initializeSocket = (httpServer: HttpServer) => {
         }
     });
 
-    chatNamespace.on("connection", (socket: Socket) => {
+    chatNamespace.on("connection", async (socket: Socket) => {
         const user = (socket as any).user;
         const orgId = (socket as any).orgId;
         if (user && user.id && orgId) {
-            const roomName = `user:${user.id}:org:${orgId}`;
+            const roomName = `org:${orgId}`;
+            const userRoom = `user:${user.id}:org:${orgId}`;
             socket.join(roomName);
+            socket.join(userRoom);
 
-            socket.on("disconnect", () => {
+            const { setUserPresence, removeUserPresence, getOrgPresence } =
+                await import("../modules/organizations/application/presence.service.js");
+
+            await setUserPresence(orgId, user.id, "active");
+            chatNamespace.to(roomName).emit("presence:update", {
+                memberId: user.id,
+                status: "active",
+            });
+
+            const currentPresence = await getOrgPresence(orgId);
+            socket.emit("presence:sync", currentPresence);
+
+            socket.on(
+                "user:status_change",
+                async (data: { status: "active" | "away" }) => {
+                    await setUserPresence(orgId, user.id, data.status);
+                    chatNamespace.to(roomName).emit("presence:update", {
+                        memberId: user.id,
+                        status: data.status,
+                    });
+                },
+            );
+
+            socket.on("presence:request_sync", async () => {
+                const freshPresence = await getOrgPresence(orgId);
+                socket.emit("presence:sync", freshPresence);
+            });
+
+            socket.on("disconnect", async () => {
                 socket.leave(roomName);
+                await removeUserPresence(orgId, user.id);
+                chatNamespace.to(roomName).emit("presence:update", {
+                    memberId: user.id,
+                    status: "offline",
+                });
             });
         }
         handleChatConnection(socket);
         handleCallConnection(socket);
+        handleDirectChatConnection(socket);
     });
 
     return io;

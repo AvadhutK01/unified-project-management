@@ -59,5 +59,11 @@ export const getNotificationRoute = (notification: Notification): string => {
         return `/${orgSlug}/dashboard`;
     }
 
+    if (entityType === "direct_chat" || type === "direct_message") {
+        const senderId = metadata?.senderUserId || entityId;
+        const senderName = metadata?.senderName || "Member";
+        return `/${orgSlug}/members/joined?chatMemberId=${senderId}&chatName=${encodeURIComponent(senderName)}`;
+    }
+
     return `/${orgSlug}/dashboard`;
 };

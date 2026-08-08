@@ -54,6 +54,7 @@ export const findWorkitemById = async (id: string) => {
             assignedToName: users.username,
             assignedToEmail: users.email,
             assignedToStatus: organizationMembers.status,
+            assignedToUserId: users.id,
         })
         .from(workitems)
         .innerJoin(sprints, eq(workitems.sprintId, sprints.id))
@@ -77,6 +78,7 @@ export const findWorkitemById = async (id: string) => {
         assignedToName: row.assignedToName,
         assignedToEmail: row.assignedToEmail,
         assignedToStatus: row.assignedToStatus,
+        assignedToUserId: row.assignedToUserId,
     };
 };
 

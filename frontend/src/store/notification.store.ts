@@ -8,6 +8,7 @@ interface NotificationStore {
     setInitial: (notifications: Notification[]) => void;
     addNotification: (notification: Notification) => void;
     markRead: (id: string) => void;
+    markReadForEntity: (entityId: string, entityType: string) => void;
     markAllRead: () => void;
     togglePanel: () => void;
     setPanelOpen: (open: boolean) => void;
@@ -40,6 +41,27 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
                     n.id === id ? { ...n, isRead: true } : n,
                 ),
                 unreadCount: Math.max(0, state.unreadCount - 1),
+            };
+        }),
+
+    markReadForEntity: (entityId, entityType) =>
+        set((state) => {
+            let markedCount = 0;
+            const updated = state.notifications.map((n) => {
+                const isMatch =
+                    (n.entityId === entityId ||
+                        n.metadata?.senderUserId === entityId) &&
+                    (n.entityType === entityType ||
+                        n.type === "direct_message");
+                if (isMatch && !n.isRead) {
+                    markedCount++;
+                    return { ...n, isRead: true };
+                }
+                return n;
+            });
+            return {
+                notifications: updated,
+                unreadCount: Math.max(0, state.unreadCount - markedCount),
             };
         }),
 

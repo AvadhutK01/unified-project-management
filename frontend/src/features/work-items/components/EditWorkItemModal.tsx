@@ -505,6 +505,9 @@ const EditWorkItemModal = ({
                                                                         member.status
                                                                     }
                                                                     size="sm"
+                                                                    memberId={
+                                                                        member.memberId
+                                                                    }
                                                                 />
                                                                 <span>
                                                                     {

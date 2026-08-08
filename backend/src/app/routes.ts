@@ -10,6 +10,7 @@ import { reportRouter } from "../modules/reports/presentation/report.routes.js";
 import { dashboardRouter } from "../modules/dashboards/presentation/dashboard.routes.js";
 import { notificationRouter } from "../modules/notifications/presentation/notification.routes.js";
 import { subscriptionRouter } from "../modules/subscriptions/presentation/subscription.routes.js";
+import { chatRouter } from "../modules/chat/presentation/chat.routes.js";
 
 /**
  * Registers application routers on the parent Router.
@@ -19,6 +20,7 @@ import { subscriptionRouter } from "../modules/subscriptions/presentation/subscr
 export const registerRoutes = (router: Router): Router => {
     router.use("/users", userRouter);
     router.use("/organizations", organizationRouter);
+    router.use("/members/chat", chatRouter);
     router.use("/roles", roleRouter);
     router.use("/projects", projectRouter);
     router.use("/phases", phaseRouter);

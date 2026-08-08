@@ -11,6 +11,7 @@ export interface DashboardWorkItem {
     assignedTo: string | null;
     assignedToName: string | null;
     assignedToStatus?: string | null;
+    assignedToUserId?: string | null;
     createdAt: string;
 }
 

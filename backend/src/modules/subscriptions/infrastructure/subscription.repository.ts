@@ -145,11 +145,11 @@ export const findSubscriptionByOrgId = async (organizationId: string) => {
 
     const rawPlan = (org.plan || "free") as SubscriptionPlan;
 
-    // Paid plans need a valid expiry
     let effectivePlan: SubscriptionPlan = rawPlan;
     if (rawPlan !== "free") {
         const expired =
-            !org.subscriptionExpiresAt ||
+            org.subscriptionExpiresAt !== null &&
+            org.subscriptionExpiresAt !== undefined &&
             new Date(org.subscriptionExpiresAt) <= new Date();
         if (expired) effectivePlan = "free";
     }

@@ -172,7 +172,6 @@ const ProjectDashboardPage = () => {
 
     return (
         <div className="p-4 sm:p-6 space-y-6">
-            {/* Breadcrumb */}
             <div className="flex items-center gap-2">
                 <button
                     onClick={() => navigate(`/${slug}/projects`)}
@@ -186,11 +185,8 @@ const ProjectDashboardPage = () => {
                     {data.title}
                 </span>
             </div>
-
-            {/* Hero card */}
             <div className="rounded-xl border bg-card shadow-sm p-6">
                 <div className="flex flex-col sm:flex-row sm:items-start gap-5">
-                    {/* Logo */}
                     <div className="size-16 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center overflow-hidden border">
                         {logoUrl ? (
                             <img
@@ -202,8 +198,6 @@ const ProjectDashboardPage = () => {
                             <FolderKanban size={28} className="text-primary" />
                         )}
                     </div>
-
-                    {/* Info */}
                     <div className="flex-1 min-w-0 space-y-2">
                         <div className="flex items-center gap-2 flex-wrap">
                             <h1 className="text-xl font-semibold text-foreground leading-tight">
@@ -240,15 +234,11 @@ const ProjectDashboardPage = () => {
                             />
                         )}
                     </div>
-
-                    {/* Completion ring */}
                     <div className="shrink-0">
                         <CompletionRing pct={overallPct} />
                     </div>
                 </div>
             </div>
-
-            {/* Stats row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {STAT_CARDS.map(
                     ({
@@ -283,17 +273,12 @@ const ProjectDashboardPage = () => {
                     ),
                 )}
             </div>
-
-            {/* AI Summary */}
             <AiSummary
                 summary={summaryMutation.data}
                 isPending={summaryMutation.isPending}
                 onGenerate={() => summaryMutation.mutate(id!)}
             />
-
-            {/* Bottom grid: Phase Progress + Team Members */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Phase Progress — spans 2 cols */}
                 {data.phases.length > 0 && (
                     <div className="lg:col-span-2 rounded-xl border bg-card shadow-sm overflow-hidden">
                         <div className="px-5 py-4 border-b flex items-center gap-2.5">
@@ -339,8 +324,6 @@ const ProjectDashboardPage = () => {
                         </div>
                     </div>
                 )}
-
-                {/* Team Members */}
                 {data.teamMembers.length > 0 && (
                     <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
                         <div className="px-5 py-4 border-b flex items-center gap-2.5">
@@ -365,6 +348,7 @@ const ProjectDashboardPage = () => {
                                         name={member.name}
                                         status={member.status}
                                         size="sm"
+                                        memberId={member.id}
                                     />
                                     <span className="text-sm font-medium text-foreground truncate">
                                         {member.name}
