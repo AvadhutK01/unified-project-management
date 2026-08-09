@@ -22,6 +22,13 @@ const envSchema = z.object({
     RAZORPAY_WEBHOOK_SECRET: z.string().default("webhook_secret_mock"),
     SUPPORT_EMAIL: z.string().default("support@unifiedpm.com"),
     SUPPORT_PHONE: z.string().default("+1 (800) 555-0199"),
+    MINIMOTH_API_KEY: z.string(),
+    SMTP_HOST: z.string().default("smtp.gmail.com"),
+    SMTP_PORT: z.coerce.number().default(587),
+    SMTP_USER: z.string(),
+    SMTP_PASS: z.string(),
+    SMTP_FROM: z.string(),
+    FRONTEND_URL: z.string(),
 });
 
 const parsed = envSchema.safeParse(process.env);

@@ -15,6 +15,9 @@ import {
     markSubscriptionExpired,
     downgradeOrganizationToFree,
 } from "../infrastructure/subscription.repository.js";
+import { findOrganizationById } from "../../organizations/infrastructure/organization.repository.js";
+import { findUserById } from "../../users/infrastructure/user.repository.js";
+import { sendSubscriptionExpiryEmail } from "../../../shared/utils/email.js";
 
 /**
  * Expires a subscription and downgrades the corresponding organization plan
@@ -54,6 +57,25 @@ export const expireSubscription = async (
             "Failed to expire subscription inside transaction",
         );
         throw error;
+    }
+
+    if (organizationId) {
+        const org = await findOrganizationById(organizationId);
+        if (org) {
+            const owner = await findUserById(org.ownerUserId);
+            if (owner) {
+                sendSubscriptionExpiryEmail(
+                    owner.email,
+                    org.name,
+                    new Date().toISOString().split("T")[0] || "",
+                ).catch((err: unknown) =>
+                    console.error(
+                        "Failed to send subscription expiry email:",
+                        err,
+                    ),
+                );
+            }
+        }
     }
 
     return organizationId !== null;

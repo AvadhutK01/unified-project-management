@@ -51,24 +51,33 @@ export const sendNotification = async (
     return notification;
 };
 
-const getUserIdFromProjectMemberId = async (projectMemberId: string) => {
+import {
+    sendTaskAssignmentEmail,
+    sendTaskUpdateEmail,
+    sendCommentMentionEmail,
+    sendSprintDeadlineEmail,
+} from "../../../shared/utils/email.js";
+
+const getUserDetailsFromProjectMemberId = async (projectMemberId: string) => {
     const [member] = await db
-        .select({ userId: organizationMembers.memberId })
+        .select({ userId: organizationMembers.memberId, email: users.email })
         .from(projectMembers)
         .innerJoin(
             organizationMembers,
             eq(projectMembers.organizationMemberId, organizationMembers.id),
         )
+        .innerJoin(users, eq(organizationMembers.memberId, users.id))
         .where(eq(projectMembers.id, projectMemberId));
-    return member?.userId;
+    return member;
 };
 
-const getUserIdFromOrgMemberId = async (orgMemberId: string) => {
+const getUserDetailsFromOrgMemberId = async (orgMemberId: string) => {
     const [member] = await db
-        .select({ userId: organizationMembers.memberId })
+        .select({ userId: organizationMembers.memberId, email: users.email })
         .from(organizationMembers)
+        .innerJoin(users, eq(organizationMembers.memberId, users.id))
         .where(eq(organizationMembers.id, orgMemberId));
-    return member?.userId;
+    return member;
 };
 
 const getWorkitemContext = async (workitemId: string) => {
@@ -121,9 +130,15 @@ export const notifyTaskAssignment = async (
     requesterUserId: string,
 ) => {
     if (task.assignedTo) {
-        const userId = await getUserIdFromProjectMemberId(task.assignedTo);
+        const memberDetails = await getUserDetailsFromProjectMemberId(
+            task.assignedTo,
+        );
         const context = await getWorkitemContext(task.id);
-        if (userId && context && userId !== requesterUserId) {
+        if (
+            memberDetails &&
+            context &&
+            memberDetails.userId !== requesterUserId
+        ) {
             const message = `You have been assigned to task "${context.workitemTitle}" in sprint "${context.sprintTitle}" (Phase: "${context.phaseTitle}", Project: "${context.projectTitle}", Org: "${context.organizationName}").`;
             const metadata = {
                 orgSlug: context.orgSlug,
@@ -133,7 +148,7 @@ export const notifyTaskAssignment = async (
                 workitemId: context.workitemId,
             };
             await sendNotification(
-                userId,
+                memberDetails.userId,
                 context.organizationId,
                 "task_assignment",
                 "Task Assigned",
@@ -141,6 +156,16 @@ export const notifyTaskAssignment = async (
                 task.id,
                 "workitem",
                 metadata,
+            );
+            sendTaskAssignmentEmail(
+                memberDetails.email,
+                context.workitemTitle,
+                context.sprintTitle,
+                context.projectTitle,
+                context.organizationName,
+                metadata,
+            ).catch((err) =>
+                console.error("Failed to send task assignment email:", err),
             );
         }
     }
@@ -152,9 +177,15 @@ export const notifyTaskUpdate = async (
     requesterUserId: string,
 ) => {
     if (task.assignedTo) {
-        const userId = await getUserIdFromProjectMemberId(task.assignedTo);
+        const memberDetails = await getUserDetailsFromProjectMemberId(
+            task.assignedTo,
+        );
         const context = await getWorkitemContext(task.id);
-        if (userId && context && userId !== requesterUserId) {
+        if (
+            memberDetails &&
+            context &&
+            memberDetails.userId !== requesterUserId
+        ) {
             const message = `Task "${context.workitemTitle}" in sprint "${context.sprintTitle}" (Project: "${context.projectTitle}", Org: "${context.organizationName}") was updated: ${changesDescription}.`;
             const metadata = {
                 orgSlug: context.orgSlug,
@@ -164,7 +195,7 @@ export const notifyTaskUpdate = async (
                 workitemId: context.workitemId,
             };
             await sendNotification(
-                userId,
+                memberDetails.userId,
                 context.organizationId,
                 "task_update",
                 "Task Updated",
@@ -172,6 +203,17 @@ export const notifyTaskUpdate = async (
                 task.id,
                 "workitem",
                 metadata,
+            );
+            sendTaskUpdateEmail(
+                memberDetails.email,
+                context.workitemTitle,
+                "In Progress",
+                "Updated",
+                context.projectTitle,
+                context.organizationName,
+                metadata,
+            ).catch((err) =>
+                console.error("Failed to send task update email:", err),
             );
         }
     }
@@ -184,9 +226,15 @@ export const notifyTaskStatusUpdate = async (
     requesterUserId: string,
 ) => {
     if (task.assignedTo) {
-        const userId = await getUserIdFromProjectMemberId(task.assignedTo);
+        const memberDetails = await getUserDetailsFromProjectMemberId(
+            task.assignedTo,
+        );
         const context = await getWorkitemContext(task.id);
-        if (userId && context && userId !== requesterUserId) {
+        if (
+            memberDetails &&
+            context &&
+            memberDetails.userId !== requesterUserId
+        ) {
             const message = `Status of task "${context.workitemTitle}" in sprint "${context.sprintTitle}" (Project: "${context.projectTitle}", Org: "${context.organizationName}") changed from '${oldStatus}' to '${newStatus}'.`;
             const metadata = {
                 orgSlug: context.orgSlug,
@@ -196,7 +244,7 @@ export const notifyTaskStatusUpdate = async (
                 workitemId: context.workitemId,
             };
             await sendNotification(
-                userId,
+                memberDetails.userId,
                 context.organizationId,
                 "task_status_updated",
                 "Task Status Updated",
@@ -204,6 +252,17 @@ export const notifyTaskStatusUpdate = async (
                 task.id,
                 "workitem",
                 metadata,
+            );
+            sendTaskUpdateEmail(
+                memberDetails.email,
+                context.workitemTitle,
+                oldStatus,
+                newStatus,
+                context.projectTitle,
+                context.organizationName,
+                metadata,
+            ).catch((err) =>
+                console.error("Failed to send task status update email:", err),
             );
         }
     }
@@ -214,9 +273,15 @@ export const notifyTaskDeletion = async (
     requesterUserId: string,
 ) => {
     if (task.assignedTo) {
-        const userId = await getUserIdFromProjectMemberId(task.assignedTo);
+        const memberDetails = await getUserDetailsFromProjectMemberId(
+            task.assignedTo,
+        );
         const context = await getWorkitemContext(task.id);
-        if (userId && context && userId !== requesterUserId) {
+        if (
+            memberDetails &&
+            context &&
+            memberDetails.userId !== requesterUserId
+        ) {
             const message = `Task "${context.workitemTitle}" in sprint "${context.sprintTitle}" (Project: "${context.projectTitle}", Org: "${context.organizationName}") has been deleted.`;
             const metadata = {
                 orgSlug: context.orgSlug,
@@ -227,7 +292,7 @@ export const notifyTaskDeletion = async (
                 isDeleted: true,
             };
             await sendNotification(
-                userId,
+                memberDetails.userId,
                 context.organizationId,
                 "task_deleted",
                 "Task Deleted",
@@ -247,8 +312,9 @@ export const notifyDiscussionMention = async (
     entityId: string,
     entityType: string,
 ) => {
-    const userId = await getUserIdFromOrgMemberId(recipientMemberId);
-    if (!userId || userId === mentionerId) return;
+    const memberDetails =
+        await getUserDetailsFromOrgMemberId(recipientMemberId);
+    if (!memberDetails || memberDetails.userId === mentionerId) return;
 
     let orgId: string | null = null;
     let detailMsg = "";
@@ -291,7 +357,7 @@ export const notifyDiscussionMention = async (
         const preview = `"${cleanComment.substring(0, 50)}${cleanComment.length > 50 ? "..." : ""}"`;
         const message = `${mentionerName} mentioned you in a comment ${detailMsg}: ${preview}`;
         await sendNotification(
-            userId,
+            memberDetails.userId,
             orgId,
             "comment_mention",
             "New Mention",
@@ -299,6 +365,15 @@ export const notifyDiscussionMention = async (
             entityId,
             entityType,
             metadata,
+        );
+        sendCommentMentionEmail(
+            memberDetails.email,
+            mentionerName,
+            preview,
+            detailMsg,
+            metadata ?? undefined,
+        ).catch((err) =>
+            console.error("Failed to send comment mention email:", err),
         );
     }
 };
@@ -318,12 +393,16 @@ export const checkUpcomingSprintDeadlines = async () => {
         if (!context) continue;
 
         const members = await db
-            .select({ userId: organizationMembers.memberId })
+            .select({
+                userId: organizationMembers.memberId,
+                email: users.email,
+            })
             .from(projectMembers)
             .innerJoin(
                 organizationMembers,
                 eq(projectMembers.organizationMemberId, organizationMembers.id),
             )
+            .innerJoin(users, eq(organizationMembers.memberId, users.id))
             .where(eq(projectMembers.projectId, context.projectId));
 
         for (const member of members) {
@@ -343,6 +422,16 @@ export const checkUpcomingSprintDeadlines = async () => {
                 sprint.id,
                 "sprint",
                 metadata,
+            );
+            sendSprintDeadlineEmail(
+                member.email,
+                context.sprintTitle,
+                sprint.endDate || "",
+                context.projectTitle,
+                context.organizationName,
+                metadata,
+            ).catch((err) =>
+                console.error("Failed to send sprint deadline email:", err),
             );
         }
     }

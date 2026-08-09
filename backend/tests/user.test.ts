@@ -19,6 +19,8 @@ describe("User Flow Integration Tests", () => {
     const phoneNumber = `9999${String(uniqueId).slice(-6)}`;
     const password = "Password@123";
 
+    let latestEmailOtp = "";
+
     it("should register a user with pending verification", async () => {
         const result = await registerUser({
             username,
@@ -31,8 +33,9 @@ describe("User Flow Integration Tests", () => {
         expect(result.email).toBe(email);
         expect(result.phoneNumber).toBe(phoneNumber);
         expect(result.isVerified).toBe(false);
-        expect(result.emailOtp).toBe("123456");
-        expect(result.phoneOtp).toBe("123456");
+        expect(result.emailOtp).toBeTypeOf("string");
+        expect(result.phoneOtp).toBe("mock-otp-id");
+        latestEmailOtp = result.emailOtp!;
     });
 
     it("should reject login for unverified user but trigger OTP", async () => {
@@ -62,14 +65,15 @@ describe("User Flow Integration Tests", () => {
         });
 
         expect(result.email).toBe(email);
-        expect(result.emailOtp).toBe("123456");
+        expect(result.emailOtp).toBeTypeOf("string");
+        latestEmailOtp = result.emailOtp!;
     });
 
     it("should verify user when both OTPs are correct and return a token", async () => {
         const result = await verifyOtp({
             email,
             phoneNumber,
-            emailOtp: "123456",
+            emailOtp: latestEmailOtp,
             phoneOtp: "123456",
         });
 
@@ -250,7 +254,7 @@ describe("User Flow Integration Tests", () => {
         const emailE = `usere_${unique}@example.com`;
         const phoneE = `4444${String(unique).slice(-6)}`;
 
-        await registerUser({
+        const reg = await registerUser({
             username: "usere",
             email: emailE,
             phoneNumber: phoneE,
@@ -260,13 +264,13 @@ describe("User Flow Integration Tests", () => {
         await verifyOtp({
             email: emailE,
             phoneNumber: phoneE,
-            emailOtp: "123456",
+            emailOtp: reg.emailOtp!,
             phoneOtp: "123456",
         });
 
         const result = await generateResetPwdOtp(emailE);
         expect(result.email).toBe(emailE);
-        expect(result.pwdResetOtp).toBe("123456");
+        expect(result.pwdResetOtp).toBeTypeOf("string");
     });
 
     it("should fail to generate reset OTP for an unverified user", async () => {
@@ -291,7 +295,7 @@ describe("User Flow Integration Tests", () => {
         const emailG = `userg_${unique}@example.com`;
         const phoneG = `2222${String(unique).slice(-6)}`;
 
-        await registerUser({
+        const reg = await registerUser({
             username: "userg",
             email: emailG,
             phoneNumber: phoneG,
@@ -301,7 +305,7 @@ describe("User Flow Integration Tests", () => {
         await verifyOtp({
             email: emailG,
             phoneNumber: phoneG,
-            emailOtp: "123456",
+            emailOtp: reg.emailOtp!,
             phoneOtp: "123456",
         });
 
@@ -320,7 +324,7 @@ describe("User Flow Integration Tests", () => {
         const emailH = `userh_${unique}@example.com`;
         const phoneH = `1111${String(unique).slice(-6)}`;
 
-        await registerUser({
+        const reg = await registerUser({
             username: "userh",
             email: emailH,
             phoneNumber: phoneH,
@@ -330,15 +334,15 @@ describe("User Flow Integration Tests", () => {
         await verifyOtp({
             email: emailH,
             phoneNumber: phoneH,
-            emailOtp: "123456",
+            emailOtp: reg.emailOtp!,
             phoneOtp: "123456",
         });
 
-        await generateResetPwdOtp(emailH);
+        const resetRes = await generateResetPwdOtp(emailH);
 
         const verifyResult = await verifyPwdResetOtp({
             email: emailH,
-            otp: "123456",
+            otp: resetRes.pwdResetOtp!,
         });
 
         expect(verifyResult.token).toBeDefined();
@@ -400,7 +404,7 @@ describe("User Flow Integration Tests", () => {
         });
         expect(sendOtpResult.email).toBe(googleEmail);
         expect(sendOtpResult.phoneNumber).toBe(phone);
-        expect(sendOtpResult.phoneOtp).toBe("123456");
+        expect(sendOtpResult.phoneOtp).toBe("mock-otp-id");
 
         // 3. Verify Phone OTP
         const verifyResult = await verifyPhoneOtp({

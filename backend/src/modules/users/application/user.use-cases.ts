@@ -18,6 +18,13 @@ import {
     generateResetToken,
     verifyResetToken,
 } from "../../../shared/utils/jwt.js";
+import { sendSMSOtp, verifySMSOtp } from "../../../shared/utils/sms.js";
+import { generateRandomSixDigitOtp } from "../../../shared/utils/common.js";
+import {
+    sendEmailOtp,
+    sendWelcomeEmail,
+    sendPasswordChangedEmail,
+} from "../../../shared/utils/email.js";
 
 /**
  * Registers a new user or updates OTPs for an unverified user.
@@ -46,12 +53,15 @@ export const registerUser = async (data: {
     }
 
     if (userByEmail) {
+        const emailOtp = generateRandomSixDigitOtp();
+        await sendEmailOtp(data.email, emailOtp);
+        const { otpId } = await sendSMSOtp(data.phoneNumber);
         const updated = await updateUserOtp(userByEmail.id, {
             username: data.username,
             phoneNumber: data.phoneNumber,
             password: data.password,
-            emailOtp: "123456",
-            phoneOtp: "123456",
+            emailOtp,
+            phoneOtp: otpId,
         });
         if (!updated) {
             throw internalServerError("Failed to update user OTP");
@@ -68,12 +78,15 @@ export const registerUser = async (data: {
     }
 
     if (userByPhone) {
+        const emailOtp = generateRandomSixDigitOtp();
+        await sendEmailOtp(data.email, emailOtp);
+        const { otpId } = await sendSMSOtp(data.phoneNumber);
         const updated = await updateUserOtp(userByPhone.id, {
             username: data.username,
             email: data.email,
             password: data.password,
-            emailOtp: "123456",
-            phoneOtp: "123456",
+            emailOtp,
+            phoneOtp: otpId,
         });
         if (!updated) {
             throw internalServerError("Failed to update user OTP");
@@ -89,13 +102,16 @@ export const registerUser = async (data: {
         };
     }
 
+    const emailOtp = generateRandomSixDigitOtp();
+    await sendEmailOtp(data.email, emailOtp);
+    const { otpId } = await sendSMSOtp(data.phoneNumber);
     const newUser = await createUser({
         username: data.username,
         email: data.email,
         phoneNumber: data.phoneNumber,
         password: data.password,
-        emailOtp: "123456",
-        phoneOtp: "123456",
+        emailOtp,
+        phoneOtp: otpId,
     });
 
     if (!newUser) {
@@ -136,14 +152,27 @@ export const verifyOtp = async (data: {
         throw badRequestError("User is already verified");
     }
 
-    if (user.emailOtp !== data.emailOtp || user.phoneOtp !== data.phoneOtp) {
+    if (user.emailOtp !== data.emailOtp) {
         throw badRequestError("Invalid email or phone OTP");
+    }
+
+    if (data.phoneOtp && data.phoneNumber) {
+        const verifyResult = await verifySMSOtp(
+            data.phoneNumber,
+            data.phoneOtp,
+        );
+        if (!verifyResult.valid) {
+            throw badRequestError("Invalid email or phone OTP");
+        }
     }
 
     const verifiedUser = await markUserAsVerified(user.id);
     if (!verifiedUser) {
         throw internalServerError("Failed to verify user");
     }
+    sendWelcomeEmail(verifiedUser.email, verifiedUser.username).catch((err) =>
+        console.error("Failed to send welcome email:", err),
+    );
     const token = generateToken({
         id: verifiedUser.id,
         email: verifiedUser.email,
@@ -194,13 +223,16 @@ export const resendOtp = async (data: {
         if (user.email !== data.email) {
             throw badRequestError("Email and phone number do not match");
         }
-        updateFields.emailOtp = newOtp;
+        const emailOtp = generateRandomSixDigitOtp();
+        await sendEmailOtp(data.email, emailOtp);
+        updateFields.emailOtp = emailOtp;
     }
     if (data.phoneNumber) {
         if (user.phoneNumber !== data.phoneNumber) {
             throw badRequestError("Email and phone number do not match");
         }
-        updateFields.phoneOtp = newOtp;
+        const { otpId } = await sendSMSOtp(data.phoneNumber!);
+        updateFields.phoneOtp = otpId;
     }
 
     const updated = await updateUserOtp(user.id, updateFields);
@@ -246,9 +278,12 @@ export const loginUser = async (data: { email: string; password: string }) => {
         };
     }
 
+    const emailOtp = generateRandomSixDigitOtp();
+    await sendEmailOtp(user.email, emailOtp);
+    const { otpId } = await sendSMSOtp(user.phoneNumber!);
     const updated = await updateUserOtp(user.id, {
-        emailOtp: "123456",
-        phoneOtp: "123456",
+        emailOtp,
+        phoneOtp: otpId,
     });
 
     if (!updated) {
@@ -280,8 +315,10 @@ export const generateResetPwdOtp = async (email: string) => {
         throw badRequestError("User is not verified");
     }
 
+    const pwdResetOtp = generateRandomSixDigitOtp();
+    await sendEmailOtp(email, pwdResetOtp);
     const updated = await updateUserOtp(user.id, {
-        pwdResetOtp: "123456",
+        pwdResetOtp,
     });
 
     if (!updated) {
@@ -356,6 +393,10 @@ export const resetPassword = async (data: {
         if (!updated) {
             throw internalServerError("Failed to reset password");
         }
+
+        sendPasswordChangedEmail(updated.email, updated.username).catch((err) =>
+            console.error("Failed to send password changed email:", err),
+        );
 
         return {
             id: updated.id,
@@ -457,7 +498,8 @@ export const sendPhoneOtp = async (data: {
         throw badRequestError("Phone number already exists");
     }
 
-    const phoneOtp = "123456";
+    const { otpId } = await sendSMSOtp(data.phoneNumber!);
+    const phoneOtp = otpId;
     const updated = await updateUserOtp(user.id, {
         phoneNumber: data.phoneNumber,
         phoneOtp,
@@ -493,7 +535,8 @@ export const verifyPhoneOtp = async (data: {
         throw badRequestError("Phone number does not match registered phone");
     }
 
-    if (!user.phoneOtp || user.phoneOtp !== data.phoneOtp) {
+    const verifyResult = await verifySMSOtp(data.phoneNumber, data.phoneOtp);
+    if (!verifyResult.valid) {
         throw badRequestError("Invalid phone OTP");
     }
 

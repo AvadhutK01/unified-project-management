@@ -22,8 +22,12 @@ import {
 } from "../infrastructure/organization-member.repository.js";
 import { findOrganizationById } from "../infrastructure/organization.repository.js";
 import { findProjectById } from "../../projects/infrastructure/project.repository.js";
-import { findUserByEmail } from "../../users/infrastructure/user.repository.js";
+import {
+    findUserByEmail,
+    findUserById,
+} from "../../users/infrastructure/user.repository.js";
 import { findRoleByIdRaw } from "../../roles/infrastructure/role.repository.js";
+import { sendOrgInviteEmail } from "../../../shared/utils/email.js";
 import {
     badRequestError,
     notFoundError,
@@ -100,6 +104,21 @@ export const inviteMembers = async (
             roleId: invite.roleId,
             invitedBy: requesterUserId,
         });
+
+        const [requesterUser, org] = await Promise.all([
+            findUserById(requesterUserId),
+            findOrganizationById(organizationId),
+        ]);
+        if (requesterUser && org) {
+            sendOrgInviteEmail(
+                invite.email,
+                requesterUser.username,
+                org.name,
+                role.name,
+            ).catch((err) =>
+                console.error("Failed to send org invite email:", err),
+            );
+        }
 
         results.push(newInvitation);
     }
@@ -294,6 +313,21 @@ export const reInviteMember = async (
         "pending",
         requesterUserId,
     );
+
+    const [requesterUser, org] = await Promise.all([
+        findUserById(requesterUserId),
+        findOrganizationById(organizationId),
+    ]);
+    if (requesterUser && org) {
+        sendOrgInviteEmail(
+            email,
+            requesterUser.username,
+            org.name,
+            role.name,
+        ).catch((err) =>
+            console.error("Failed to send org re-invite email:", err),
+        );
+    }
 
     return updatedInvitation ?? null;
 };

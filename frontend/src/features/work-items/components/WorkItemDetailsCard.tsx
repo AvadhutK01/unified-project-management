@@ -19,7 +19,6 @@ const WorkItemDetailsCard = ({
     phaseName,
     sprintName,
 }: WorkItemDetailsCardProps) => {
-    console.log(workItem);
     const est = workItem.originalEstimation ?? 0;
     const rem = workItem.remaining ?? 0;
     const completed = workItem.completed ?? 0;

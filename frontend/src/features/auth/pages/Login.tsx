@@ -65,7 +65,6 @@ const Login = () => {
                 },
 
                 onError: (error: any) => {
-                    console.log(error);
                     toast.dismiss();
                     toast.error(
                         error.response?.data?.message ||

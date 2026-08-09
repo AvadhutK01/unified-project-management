@@ -16,8 +16,6 @@ const OrganizationLoader = () => {
 
         const organizationCount = data.organizations?.length || 0;
 
-        console.log(data.organizations);
-
         if (organizationCount === 0) {
             navigate("/org-setup", { replace: true });
         } else if (organizationCount === 1) {

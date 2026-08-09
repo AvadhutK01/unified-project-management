@@ -202,5 +202,5 @@ export const seedPermissions = async () => {
         await db.insert(permissions).values(permission).onConflictDoNothing();
     }
 
-    console.log("✅ All permissions seeded successfully");
+    console.log("All permissions seeded successfully");
 };

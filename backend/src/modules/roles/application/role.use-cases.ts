@@ -107,7 +107,7 @@ export const getAllRoles = async (
     const rolesWithPermissions = await Promise.all(
         data.map(async (role) => {
             const permissions = await findPermissionsByRoleId(role.id);
-            return { ...role, permissions };
+            return { ...role, memberCount: role.memberCount ?? 0, permissions };
         }),
     );
 

@@ -15,6 +15,9 @@ import {
     PLAN_HIERARCHY,
     type SubscriptionPlan,
 } from "../../../shared/middleware/require-premium.js";
+import { findOrganizationById } from "../../organizations/infrastructure/organization.repository.js";
+import { findUserById } from "../../users/infrastructure/user.repository.js";
+import { sendPaymentReceiptEmail } from "../../../shared/utils/email.js";
 
 const razorpay = new Razorpay({
     key_id: env.RAZORPAY_KEY_ID,
@@ -189,6 +192,21 @@ export const verifyPaymentUseCase = async (
         periodStart: now,
         periodEnd,
     });
+
+    const org = await findOrganizationById(organizationId);
+    if (org) {
+        const owner = await findUserById(org.ownerUserId);
+        if (owner) {
+            sendPaymentReceiptEmail(
+                owner.email,
+                org.name,
+                `₹${PLAN_PRICES_RS[targetPlan]}`,
+                razorpayPaymentId,
+            ).catch((err) =>
+                console.error("Failed to send payment receipt email:", err),
+            );
+        }
+    }
 
     const planLabels: Record<string, string> = {
         basic: "Basic",

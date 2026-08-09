@@ -96,6 +96,20 @@ export const findUserByPhone = async (phoneNumber: string) => {
 };
 
 /**
+ * Finds a user by ID.
+ * @param id The user UUID.
+ * @returns The user object if found, otherwise null.
+ */
+export const findUserById = async (id: string) => {
+    const results = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, id))
+        .limit(1);
+    return results[0] || null;
+};
+
+/**
  * Updates a user's verification OTPs or details.
  * @param id The user ID.
  * @param otps The partial values to update.

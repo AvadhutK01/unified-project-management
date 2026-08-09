@@ -3,8 +3,9 @@ import {
     roles,
     rolePermissions,
     permissions,
+    organizationMembers,
 } from "../../../infrastructure/database/schema/index.js";
-import { eq, count, and, or, ilike, ne, desc } from "drizzle-orm";
+import { eq, count, and, or, ilike, ne, desc, sql } from "drizzle-orm";
 
 /**
  * Creates a new role in the database.
@@ -89,18 +90,28 @@ export const findAllRoles = async (
         );
     }
 
-    const query = db.select().from(roles);
-    if (filters.length > 0) {
-        return query
-            .where(and(...filters))
-            .orderBy(desc(roles.updatedAt))
-            .limit(limit)
-            .offset((page - 1) * limit);
-    }
-    return query
+    const whereClause = filters.length > 0 ? and(...filters) : undefined;
+
+    const results = await db
+        .select({
+            id: roles.id,
+            name: roles.name,
+            description: roles.description,
+            organizationId: roles.organizationId,
+            isActive: roles.isActive,
+            createdAt: roles.createdAt,
+            updatedAt: roles.updatedAt,
+            memberCount: sql<number>`cast(count(${organizationMembers.id}) as int)`,
+        })
+        .from(roles)
+        .leftJoin(organizationMembers, eq(organizationMembers.roleId, roles.id))
+        .where(whereClause)
+        .groupBy(roles.id)
         .orderBy(desc(roles.updatedAt))
         .limit(limit)
         .offset((page - 1) * limit);
+
+    return results;
 };
 
 /**
@@ -270,14 +281,23 @@ export const findRoleByIdRaw = async (id: string) => {
 };
 
 /**
+ * Counts active members assigned to a specific role.
+ */
+export const countMembersByRoleId = async (roleId: string): Promise<number> => {
+    const result = await db
+        .select({ value: count() })
+        .from(organizationMembers)
+        .where(eq(organizationMembers.roleId, roleId));
+    return Number(result[0]?.value ?? 0);
+};
+
+/**
  * Deletes all roles (and their permissions) belonging to an organization.
  * Used as part of cascaded organization deletion.
- * @param organizationId The organization UUID.
  */
 export const deleteRolesByOrganizationId = async (
     organizationId: string,
 ): Promise<void> => {
-    // First detach all permissions from every role in this org
     const orgRoles = await db
         .select({ id: roles.id })
         .from(roles)
@@ -287,6 +307,5 @@ export const deleteRolesByOrganizationId = async (
         await detachAllPermissionsFromRole(role.id);
     }
 
-    // Then delete all roles for the org
     await db.delete(roles).where(eq(roles.organizationId, organizationId));
 };
