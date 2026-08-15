@@ -8,12 +8,13 @@ import {
     pgEnum,
 } from "drizzle-orm/pg-core";
 import { projects } from "./project.js";
+import { PHASE_STATUS } from "../../../shared/constants/enumConstants.js";
 
 export const phaseStatusEnum = pgEnum("phase_status", [
-    "notstarted",
-    "started",
-    "onhold",
-    "completed",
+    PHASE_STATUS.NOT_STARTED,
+    PHASE_STATUS.STARTED,
+    PHASE_STATUS.ON_HOLD,
+    PHASE_STATUS.COMPLETED,
 ]);
 
 export const phases = pgTable("phases", {
@@ -24,7 +25,9 @@ export const phases = pgTable("phases", {
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
     type: varchar("type", { length: 255 }),
-    status: phaseStatusEnum("status").default("notstarted").notNull(),
+    status: phaseStatusEnum("status")
+        .default(PHASE_STATUS.NOT_STARTED)
+        .notNull(),
     startDate: date("start_date"),
     endDate: date("end_date"),
     createdAt: timestamp("created_at").defaultNow().notNull(),

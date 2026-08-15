@@ -1,11 +1,19 @@
 import { db } from "../../../infrastructure/database/client.js";
 import {
     organizationInvitations,
+    organizationMembers,
     roles,
     users,
     organizations,
 } from "../../../infrastructure/database/schema/index.js";
 import { eq, and, count, desc } from "drizzle-orm";
+import {
+    ORGANIZATION_INVITATION_STATUS,
+    ORGANIZATION_MEMBER_STATUS,
+} from "../../../shared/constants/enumConstants.js";
+
+type InvitationStatus =
+    (typeof ORGANIZATION_INVITATION_STATUS)[keyof typeof ORGANIZATION_INVITATION_STATUS];
 
 /**
  * Creates a new organization invitation.
@@ -27,7 +35,7 @@ export const createInvitation = async (data: {
             memberId: data.memberId,
             roleId: data.roleId,
             invitedBy: data.invitedBy,
-            status: "pending",
+            status: ORGANIZATION_INVITATION_STATUS.PENDING,
         })
         .returning();
     return invitation;
@@ -76,7 +84,10 @@ export const findInvitationByOrgEmail = async (
  * @param status The new status.
  * @returns The updated invitation record.
  */
-export const updateInvitationStatus = async (id: string, status: string) => {
+export const updateInvitationStatus = async (
+    id: string,
+    status: InvitationStatus,
+) => {
     const [updated] = await db
         .update(organizationInvitations)
         .set({ status, updatedAt: new Date() })
@@ -123,7 +134,10 @@ export const findInvitationsForUser = async (
         .where(
             and(
                 eq(organizationInvitations.memberId, memberId),
-                eq(organizationInvitations.status, "pending"),
+                eq(
+                    organizationInvitations.status,
+                    ORGANIZATION_INVITATION_STATUS.PENDING,
+                ),
             ),
         )
         .orderBy(desc(organizationInvitations.updatedAt))
@@ -143,7 +157,10 @@ export const countInvitationsForUser = async (memberId: string) => {
         .where(
             and(
                 eq(organizationInvitations.memberId, memberId),
-                eq(organizationInvitations.status, "pending"),
+                eq(
+                    organizationInvitations.status,
+                    ORGANIZATION_INVITATION_STATUS.PENDING,
+                ),
             ),
         );
     return Number(result?.value ?? 0);
@@ -159,7 +176,7 @@ export const countInvitationsForUser = async (memberId: string) => {
 export const updateInvitationRoleAndStatus = async (
     id: string,
     roleId: string,
-    status: string,
+    status: InvitationStatus,
     invitedBy?: string,
 ) => {
     const updates: any = { status, roleId, updatedAt: new Date() };
@@ -172,4 +189,34 @@ export const updateInvitationRoleAndStatus = async (
         .where(eq(organizationInvitations.id, id))
         .returning();
     return updated;
+};
+
+/**
+ * Accepts an invitation and inserts the new organization member in a single DB transaction.
+ */
+export const acceptInvitationTx = async (
+    invitationId: string,
+    organizationId: string,
+    memberId: string,
+    roleId: string,
+) => {
+    return db.transaction(async (tx) => {
+        const [updatedInvitation] = await tx
+            .update(organizationInvitations)
+            .set({
+                status: ORGANIZATION_INVITATION_STATUS.ACCEPTED,
+                updatedAt: new Date(),
+            })
+            .where(eq(organizationInvitations.id, invitationId))
+            .returning();
+
+        await tx.insert(organizationMembers).values({
+            organizationId,
+            memberId,
+            roleId,
+            status: ORGANIZATION_MEMBER_STATUS.ACTIVE,
+        });
+
+        return updatedInvitation;
+    });
 };

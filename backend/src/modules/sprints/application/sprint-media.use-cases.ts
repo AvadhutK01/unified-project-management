@@ -38,7 +38,6 @@ export const uploadSprintMedia = async (
         throw notFoundError("Sprint not found");
     }
 
-    // Upload to S3 folder "sprints"
     const url = await uploadToS3(file, "sprints");
 
     const media = await createSprintMedia({

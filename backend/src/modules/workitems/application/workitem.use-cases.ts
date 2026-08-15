@@ -29,6 +29,10 @@ import {
     notifyTaskStatusUpdate,
     notifyTaskDeletion,
 } from "../../notifications/application/notification.service.js";
+import {
+    WORKITEM_STATUS,
+    WORKITEM_TYPE,
+} from "../../../shared/constants/enumConstants.js";
 
 const generateUpdateDescription = (oldWorkitem: any, data: any): string => {
     const changes: string[] = [];
@@ -125,7 +129,10 @@ export const createWorkitem = async (data: {
     organizationId: string;
     userId: string;
 }) => {
-    if (data.workitemType === "task" && data.status === "resolved") {
+    if (
+        data.workitemType === WORKITEM_TYPE.TASK &&
+        data.status === WORKITEM_STATUS.RESOLVED
+    ) {
         throw badRequestError(
             "Task workitems cannot have a 'resolved' status.",
         );
@@ -300,7 +307,10 @@ export const updateWorkitem = async (
     const resultingType = data.workitemType ?? workitem.workitemType;
     const resultingStatus = data.status ?? workitem.status;
 
-    if (resultingType === "task" && resultingStatus === "resolved") {
+    if (
+        resultingType === WORKITEM_TYPE.TASK &&
+        resultingStatus === WORKITEM_STATUS.RESOLVED
+    ) {
         throw badRequestError(
             "Task workitems cannot have a 'resolved' status.",
         );
@@ -347,7 +357,10 @@ export const updateWorkitemStatus = async (
         throw notFoundError("Workitem not found");
     }
 
-    if (workitem.workitemType === "task" && status === "resolved") {
+    if (
+        workitem.workitemType === WORKITEM_TYPE.TASK &&
+        status === WORKITEM_STATUS.RESOLVED
+    ) {
         throw badRequestError(
             "Task workitems cannot have a 'resolved' status.",
         );
@@ -383,7 +396,12 @@ export const updateWorkitemStatus = async (
         description: `Status updated from '${oldStatus}' to '${status}'`,
     });
 
-    await notifyTaskStatusUpdate(updated, oldStatus || "new", status, userId);
+    await notifyTaskStatusUpdate(
+        updated,
+        oldStatus || WORKITEM_STATUS.NEW,
+        status,
+        userId,
+    );
 
     return updated;
 };

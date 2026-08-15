@@ -1,10 +1,11 @@
 import { z } from "zod";
+import { PROJECT_STATUS } from "../../../shared/constants/enumConstants.js";
 
 const projectStatusSchema = z.enum([
-    "notstarted",
-    "started",
-    "onhold",
-    "completed",
+    PROJECT_STATUS.NOT_STARTED,
+    PROJECT_STATUS.STARTED,
+    PROJECT_STATUS.ON_HOLD,
+    PROJECT_STATUS.COMPLETED,
 ]);
 
 const orgMemberIdsSchema = z

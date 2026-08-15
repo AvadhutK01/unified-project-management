@@ -1,6 +1,7 @@
 import { db } from "../../../infrastructure/database/client.js";
 import { phases } from "../../../infrastructure/database/schema/index.js";
 import { eq, and, ilike, isNull, count, SQL, desc } from "drizzle-orm";
+import { PHASE_STATUS } from "../../../shared/constants/enumConstants.js";
 
 /**
  * Creates a new phase in the database.
@@ -23,7 +24,7 @@ export const createPhase = async (data: {
             name: data.name,
             description: data.description ?? null,
             type: data.type ?? null,
-            status: data.status ?? "notstarted",
+            status: data.status ?? PHASE_STATUS.NOT_STARTED,
             startDate: data.startDate ?? null,
             endDate: data.endDate ?? null,
         })

@@ -7,6 +7,10 @@ import {
     workitems,
 } from "../../../infrastructure/database/schema/index.js";
 import { eq, and, ilike, isNull, count, SQL, desc } from "drizzle-orm";
+import {
+    SPRINT_STATUS,
+    WORKITEM_STATUS,
+} from "../../../shared/constants/enumConstants.js";
 
 /**
  * Creates a new sprint in the database.
@@ -33,7 +37,7 @@ export const createSprint = async (data: {
             endDate: data.endDate ?? null,
             sequence: data.sequence ?? null,
             acceptanceCriteria: data.acceptanceCriteria ?? null,
-            status: data.status ?? "new",
+            status: data.status ?? SPRINT_STATUS.NEW,
         })
         .returning();
     return sprint;
@@ -69,12 +73,12 @@ export const findSprintById = async (id: string) => {
         .where(and(eq(workitems.sprintId, id), isNull(workitems.deletedAt)));
 
     const workitemsByStatus = {
-        new: 0,
-        active: 0,
-        resolved: 0,
-        closed: 0,
-        removed: 0,
-        onhold: 0,
+        [WORKITEM_STATUS.NEW]: 0,
+        [WORKITEM_STATUS.ACTIVE]: 0,
+        [WORKITEM_STATUS.RESOLVED]: 0,
+        [WORKITEM_STATUS.CLOSED]: 0,
+        [WORKITEM_STATUS.REMOVED]: 0,
+        [WORKITEM_STATUS.ON_HOLD]: 0,
     };
 
     sprintWorkItems.forEach((wi) => {

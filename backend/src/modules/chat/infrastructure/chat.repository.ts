@@ -4,6 +4,11 @@ import {
     directMessages,
     users,
     organizationMembers,
+    organizations,
+    projects,
+    phases,
+    sprints,
+    workitems,
     DirectMessageInsert,
 } from "../../../infrastructure/database/schema/index.js";
 import { eq, and, or, desc, asc, count, SQL } from "drizzle-orm";
@@ -384,4 +389,70 @@ export const forwardDirectMessages = async (data: {
     }
 
     return createdMessages;
+};
+
+/**
+ * Fetches deep organization hierarchy including projects, phases, sprints, and work items.
+ */
+export const getDeepOrganizationContextRepo = async (
+    organizationId: string,
+) => {
+    const [org] = await db
+        .select()
+        .from(organizations)
+        .where(eq(organizations.id, organizationId));
+
+    if (!org) return null;
+
+    const orgProjects = await db
+        .select()
+        .from(projects)
+        .where(eq(projects.organizationId, organizationId));
+
+    const projectsWithDetails = await Promise.all(
+        orgProjects.map(async (project) => {
+            const projectPhases = await db
+                .select()
+                .from(phases)
+                .where(eq(phases.projectId, project.id));
+
+            const phasesWithSprints = await Promise.all(
+                projectPhases.map(async (phase) => {
+                    const phaseSprints = await db
+                        .select()
+                        .from(sprints)
+                        .where(eq(sprints.phaseId, phase.id));
+
+                    const sprintsWithWorkitems = await Promise.all(
+                        phaseSprints.map(async (sprint) => {
+                            const sprintWorkitems = await db
+                                .select()
+                                .from(workitems)
+                                .where(eq(workitems.sprintId, sprint.id));
+
+                            return {
+                                ...sprint,
+                                workitems: sprintWorkitems,
+                            };
+                        }),
+                    );
+
+                    return {
+                        ...phase,
+                        sprints: sprintsWithWorkitems,
+                    };
+                }),
+            );
+
+            return {
+                ...project,
+                phases: phasesWithSprints,
+            };
+        }),
+    );
+
+    return {
+        organization: org,
+        projects: projectsWithDetails,
+    };
 };

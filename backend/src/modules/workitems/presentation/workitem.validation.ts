@@ -1,16 +1,29 @@
 import { z } from "zod";
+import {
+    WORKITEM_STATUS,
+    WORKITEM_TYPE,
+} from "../../../shared/constants/enumConstants.js";
+
+const workitemStatusValues = [
+    WORKITEM_STATUS.NEW,
+    WORKITEM_STATUS.ACTIVE,
+    WORKITEM_STATUS.RESOLVED,
+    WORKITEM_STATUS.CLOSED,
+    WORKITEM_STATUS.REMOVED,
+    WORKITEM_STATUS.ON_HOLD,
+] as const;
+
+const workitemTypeValues = [WORKITEM_TYPE.TASK, WORKITEM_TYPE.BUG] as const;
 
 export const createWorkitemSchema = z.object({
     body: z.object({
         title: z.string().min(1, "Title is required").max(255),
         description: z.string().optional(),
         assignedTo: z.string().uuid("Invalid assignedTo UUID").optional(),
-        status: z
-            .enum(["new", "active", "resolved", "closed", "removed", "onhold"])
-            .optional(),
+        status: z.enum(workitemStatusValues).optional(),
         priority: z.number().int().min(1).max(5).optional(),
         acceptanceCriteria: z.string().optional(),
-        workitemType: z.enum(["task", "bug"]),
+        workitemType: z.enum(workitemTypeValues),
         sprintId: z.string().uuid("Invalid sprint ID"),
         originalEstimation: z.number().optional(),
         remaining: z.number().optional(),
@@ -30,12 +43,10 @@ export const updateWorkitemSchema = z.object({
             .uuid("Invalid assignedTo UUID")
             .nullable()
             .optional(),
-        status: z
-            .enum(["new", "active", "resolved", "closed", "removed", "onhold"])
-            .optional(),
+        status: z.enum(workitemStatusValues).optional(),
         priority: z.number().int().min(1).max(5).optional(),
         acceptanceCriteria: z.string().nullable().optional(),
-        workitemType: z.enum(["task", "bug"]).optional(),
+        workitemType: z.enum(workitemTypeValues).optional(),
         originalEstimation: z.number().nullable().optional(),
         remaining: z.number().nullable().optional(),
         completed: z.number().nullable().optional(),
@@ -47,14 +58,7 @@ export const updateWorkitemStatusSchema = z.object({
         id: z.string().uuid("Invalid workitem ID"),
     }),
     body: z.object({
-        status: z.enum([
-            "new",
-            "active",
-            "resolved",
-            "closed",
-            "removed",
-            "onhold",
-        ]),
+        status: z.enum(workitemStatusValues),
     }),
 });
 
@@ -64,9 +68,7 @@ export const getWorkitemsQuerySchema = z.object({
         page: z.string().regex(/^\d+$/).optional().transform(Number),
         limit: z.string().regex(/^\d+$/).optional().transform(Number),
         search: z.string().optional(),
-        status: z
-            .enum(["new", "active", "resolved", "closed", "removed", "onhold"])
-            .optional(),
+        status: z.enum(workitemStatusValues).optional(),
     }),
 });
 

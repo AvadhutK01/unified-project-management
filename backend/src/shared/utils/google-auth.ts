@@ -23,7 +23,6 @@ export const verifyGoogleIdToken = async (
         throw badRequestError("Google ID token is required");
     }
 
-    // Support mock token for test environment
     if (
         idToken.startsWith("mock-google-token") ||
         process.env.NODE_ENV === "test"

@@ -2,29 +2,11 @@ import { db } from "../../../infrastructure/database/client.js";
 import {
     sprintDiscussions,
     sprintDiscussionTags,
+    sprintActivityLogs,
     organizationMembers,
     users,
 } from "../../../infrastructure/database/schema/index.js";
 import { eq, and, isNull, inArray, count, desc } from "drizzle-orm";
-
-/**
- * Creates a new sprint discussion comment.
- */
-export const createDiscussionComment = async (data: {
-    sprintId: string;
-    memberId: string;
-    comment: string;
-}) => {
-    const [discussion] = await db
-        .insert(sprintDiscussions)
-        .values({
-            sprintId: data.sprintId,
-            memberId: data.memberId,
-            comment: data.comment,
-        })
-        .returning();
-    return discussion;
-};
 
 /**
  * Adds tagged organization members to a discussion.
@@ -184,4 +166,52 @@ export const softDeleteDiscussion = async (id: string) => {
         )
         .returning();
     return deleted ?? null;
+};
+
+/**
+ * Creates a sprint discussion comment, adds discussion tags, and logs activity in a single DB transaction.
+ */
+export const createSprintDiscussionWithTagsAndLogTx = async (data: {
+    sprintId: string;
+    memberId: string;
+    comment: string;
+    userId: string;
+    taggedMemberIds: string[];
+}) => {
+    return db.transaction(async (tx) => {
+        const [discussion] = await tx
+            .insert(sprintDiscussions)
+            .values({
+                sprintId: data.sprintId,
+                memberId: data.memberId,
+                comment: data.comment,
+            })
+            .returning();
+
+        if (!discussion) {
+            throw new Error("Failed to create discussion comment");
+        }
+
+        let tags: any[] = [];
+        if (data.taggedMemberIds.length > 0) {
+            tags = await tx
+                .insert(sprintDiscussionTags)
+                .values(
+                    data.taggedMemberIds.map((orgMemberId) => ({
+                        sprintDiscussionId: discussion.id,
+                        organizationMemberId: orgMemberId,
+                    })),
+                )
+                .returning();
+        }
+
+        await tx.insert(sprintActivityLogs).values({
+            sprintId: data.sprintId,
+            userId: data.userId,
+            action: "added_comment",
+            description: "Added a comment",
+        });
+
+        return { discussion, tags };
+    });
 };

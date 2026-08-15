@@ -1,10 +1,11 @@
 import { z } from "zod";
+import { PHASE_STATUS } from "../../../shared/constants/enumConstants.js";
 
 const phaseStatusSchema = z.enum([
-    "notstarted",
-    "started",
-    "onhold",
-    "completed",
+    PHASE_STATUS.NOT_STARTED,
+    PHASE_STATUS.STARTED,
+    PHASE_STATUS.ON_HOLD,
+    PHASE_STATUS.COMPLETED,
 ]);
 
 /**

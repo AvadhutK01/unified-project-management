@@ -4,7 +4,14 @@ import {
     varchar,
     boolean,
     timestamp,
+    pgEnum,
 } from "drizzle-orm/pg-core";
+import { AUTH_PROVIDER } from "../../../shared/constants/enumConstants.js";
+
+export const userAuthProviderEnum = pgEnum("user_auth_provider", [
+    AUTH_PROVIDER.LOCAL,
+    AUTH_PROVIDER.GOOGLE,
+]);
 
 export const users = pgTable("users", {
     id: uuid("id").defaultRandom().primaryKey(),
@@ -13,8 +20,8 @@ export const users = pgTable("users", {
     phoneNumber: varchar("phone_number", { length: 255 }).unique(),
     password: varchar("password", { length: 255 }),
     googleId: varchar("google_id", { length: 255 }).unique(),
-    authProvider: varchar("auth_provider", { length: 50 })
-        .default("local")
+    authProvider: userAuthProviderEnum("auth_provider")
+        .default(AUTH_PROVIDER.LOCAL)
         .notNull(),
     emailOtp: varchar("email_otp", { length: 255 }),
     phoneOtp: varchar("phone_otp", { length: 255 }),

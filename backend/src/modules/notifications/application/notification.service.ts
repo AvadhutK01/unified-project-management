@@ -1,27 +1,41 @@
-import { createNotification } from "../infrastructure/notification.repository.js";
-import { enqueueNotificationJob } from "./notification.queue.js";
-import { db } from "../../../infrastructure/database/client.js";
 import {
-    projectMembers,
-    organizationMembers,
-    users,
-    sprints,
-    workitems,
-    projects,
-    organizations,
-    notifications,
-} from "../../../infrastructure/database/schema/index.js";
-import { phases } from "../../../infrastructure/database/schema/phase.js";
-import { eq, and } from "drizzle-orm";
+    createNotification,
+    getUserDetailsFromProjectMemberId,
+    getUserDetailsFromOrgMemberId,
+    getWorkitemContext,
+    getSprintContext,
+    findUsernameById,
+    findSprintsEndingOnDate,
+    findProjectMembersWithUsersByProjectId,
+    findOrgSlugById,
+    markDirectMessageNotificationsAsReadRepo,
+} from "../infrastructure/notification.repository.js";
+import { enqueueNotificationJob } from "./notification.queue.js";
+import {
+    sendTaskAssignmentEmail,
+    sendTaskUpdateEmail,
+    sendCommentMentionEmail,
+    sendSprintDeadlineEmail,
+} from "../../../shared/utils/email.js";
+
+import {
+    NOTIFICATION_TYPE,
+    NOTIFICATION_ENTITY_TYPE,
+} from "../../../shared/constants/enumConstants.js";
+
+type NotificationType =
+    (typeof NOTIFICATION_TYPE)[keyof typeof NOTIFICATION_TYPE];
+type NotificationEntityType =
+    (typeof NOTIFICATION_ENTITY_TYPE)[keyof typeof NOTIFICATION_ENTITY_TYPE];
 
 export const sendNotification = async (
     userId: string,
     organizationId: string,
-    type: string,
+    type: NotificationType,
     title: string,
     message: string,
     entityId?: string | null,
-    entityType?: string | null,
+    entityType?: NotificationEntityType | null,
     metadata?: Record<string, any> | null,
 ) => {
     const notification = await createNotification({
@@ -49,80 +63,6 @@ export const sendNotification = async (
         metadata ?? null,
     );
     return notification;
-};
-
-import {
-    sendTaskAssignmentEmail,
-    sendTaskUpdateEmail,
-    sendCommentMentionEmail,
-    sendSprintDeadlineEmail,
-} from "../../../shared/utils/email.js";
-
-const getUserDetailsFromProjectMemberId = async (projectMemberId: string) => {
-    const [member] = await db
-        .select({ userId: organizationMembers.memberId, email: users.email })
-        .from(projectMembers)
-        .innerJoin(
-            organizationMembers,
-            eq(projectMembers.organizationMemberId, organizationMembers.id),
-        )
-        .innerJoin(users, eq(organizationMembers.memberId, users.id))
-        .where(eq(projectMembers.id, projectMemberId));
-    return member;
-};
-
-const getUserDetailsFromOrgMemberId = async (orgMemberId: string) => {
-    const [member] = await db
-        .select({ userId: organizationMembers.memberId, email: users.email })
-        .from(organizationMembers)
-        .innerJoin(users, eq(organizationMembers.memberId, users.id))
-        .where(eq(organizationMembers.id, orgMemberId));
-    return member;
-};
-
-const getWorkitemContext = async (workitemId: string) => {
-    const [result] = await db
-        .select({
-            workitemId: workitems.id,
-            workitemTitle: workitems.title,
-            sprintId: sprints.id,
-            sprintTitle: sprints.title,
-            phaseId: phases.id,
-            phaseTitle: phases.name,
-            projectId: projects.id,
-            projectTitle: projects.title,
-            orgSlug: organizations.slug,
-            organizationName: organizations.name,
-            organizationId: projects.organizationId,
-        })
-        .from(workitems)
-        .innerJoin(sprints, eq(workitems.sprintId, sprints.id))
-        .innerJoin(phases, eq(sprints.phaseId, phases.id))
-        .innerJoin(projects, eq(phases.projectId, projects.id))
-        .innerJoin(organizations, eq(projects.organizationId, organizations.id))
-        .where(eq(workitems.id, workitemId));
-    return result;
-};
-
-const getSprintContext = async (sprintId: string) => {
-    const [result] = await db
-        .select({
-            sprintId: sprints.id,
-            sprintTitle: sprints.title,
-            phaseId: phases.id,
-            phaseTitle: phases.name,
-            projectId: phases.projectId,
-            projectTitle: projects.title,
-            orgSlug: organizations.slug,
-            organizationName: organizations.name,
-            organizationId: projects.organizationId,
-        })
-        .from(sprints)
-        .innerJoin(phases, eq(sprints.phaseId, phases.id))
-        .innerJoin(projects, eq(phases.projectId, projects.id))
-        .innerJoin(organizations, eq(projects.organizationId, organizations.id))
-        .where(eq(sprints.id, sprintId));
-    return result;
 };
 
 export const notifyTaskAssignment = async (
@@ -310,7 +250,7 @@ export const notifyDiscussionMention = async (
     commentText: string,
     recipientMemberId: string,
     entityId: string,
-    entityType: string,
+    entityType: NotificationEntityType,
 ) => {
     const memberDetails =
         await getUserDetailsFromOrgMemberId(recipientMemberId);
@@ -320,7 +260,7 @@ export const notifyDiscussionMention = async (
     let detailMsg = "";
     let metadata: Record<string, any> | null = null;
 
-    if (entityType === "workitem") {
+    if (entityType === NOTIFICATION_ENTITY_TYPE.WORKITEM) {
         const context = await getWorkitemContext(entityId);
         if (context) {
             orgId = context.organizationId;
@@ -333,7 +273,7 @@ export const notifyDiscussionMention = async (
                 workitemId: context.workitemId,
             };
         }
-    } else if (entityType === "sprint") {
+    } else if (entityType === NOTIFICATION_ENTITY_TYPE.SPRINT) {
         const context = await getSprintContext(entityId);
         if (context) {
             orgId = context.organizationId;
@@ -348,11 +288,8 @@ export const notifyDiscussionMention = async (
     }
 
     if (orgId) {
-        const [mentioner] = await db
-            .select({ username: users.username })
-            .from(users)
-            .where(eq(users.id, mentionerId));
-        const mentionerName = mentioner?.username || "Someone";
+        const mentionerName =
+            (await findUsernameById(mentionerId)) || "Someone";
         const cleanComment = commentText.replace(/<[^>]*>/g, "");
         const preview = `"${cleanComment.substring(0, 50)}${cleanComment.length > 50 ? "..." : ""}"`;
         const message = `${mentionerName} mentioned you in a comment ${detailMsg}: ${preview}`;
@@ -383,27 +320,15 @@ export const checkUpcomingSprintDeadlines = async () => {
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().split("T")[0] || "";
 
-    const upcomingSprints = await db
-        .select()
-        .from(sprints)
-        .where(eq(sprints.endDate, tomorrowStr));
+    const upcomingSprints = await findSprintsEndingOnDate(tomorrowStr);
 
     for (const sprint of upcomingSprints) {
         const context = await getSprintContext(sprint.id);
         if (!context) continue;
 
-        const members = await db
-            .select({
-                userId: organizationMembers.memberId,
-                email: users.email,
-            })
-            .from(projectMembers)
-            .innerJoin(
-                organizationMembers,
-                eq(projectMembers.organizationMemberId, organizationMembers.id),
-            )
-            .innerJoin(users, eq(organizationMembers.memberId, users.id))
-            .where(eq(projectMembers.projectId, context.projectId));
+        const members = await findProjectMembersWithUsersByProjectId(
+            context.projectId,
+        );
 
         for (const member of members) {
             const message = `Sprint "${context.sprintTitle}" in phase "${context.phaseTitle}" (Project: "${context.projectTitle}", Org: "${context.organizationName}") is ending tomorrow (${sprint.endDate}).`;
@@ -446,10 +371,7 @@ export const notifyDirectMessage = async (
 ) => {
     if (senderUserId === receiverUserId) return;
 
-    const [org] = await db
-        .select({ slug: organizations.slug })
-        .from(organizations)
-        .where(eq(organizations.id, organizationId));
+    const orgSlug = await findOrgSlugById(organizationId);
 
     const cleanSnippet = messageSnippet.replace(/<[^>]*>/g, "");
     const preview =
@@ -466,7 +388,7 @@ export const notifyDirectMessage = async (
         senderUserId,
         "direct_chat",
         {
-            orgSlug: org?.slug,
+            orgSlug: orgSlug || undefined,
             senderUserId,
             senderName,
         },
@@ -478,16 +400,9 @@ export const markDirectMessageNotificationsAsRead = async (
     senderUserId: string,
     receiverUserId: string,
 ) => {
-    await db
-        .update(notifications)
-        .set({ isRead: true, updatedAt: new Date() })
-        .where(
-            and(
-                eq(notifications.organizationId, organizationId),
-                eq(notifications.userId, receiverUserId),
-                eq(notifications.entityId, senderUserId),
-                eq(notifications.entityType, "direct_chat"),
-                eq(notifications.isRead, false),
-            ),
-        );
+    await markDirectMessageNotificationsAsReadRepo(
+        organizationId,
+        senderUserId,
+        receiverUserId,
+    );
 };

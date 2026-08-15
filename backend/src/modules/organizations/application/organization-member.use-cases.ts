@@ -6,6 +6,7 @@ import {
     findInvitationsForUser,
     countInvitationsForUser,
     updateInvitationRoleAndStatus,
+    acceptInvitationTx,
 } from "../infrastructure/organization-invitation.repository.js";
 import {
     createMember,
@@ -35,6 +36,10 @@ import {
     forbiddenError,
     internalServerError,
 } from "../../../shared/errors/app-error.js";
+import {
+    ORGANIZATION_INVITATION_STATUS,
+    ORGANIZATION_MEMBER_STATUS,
+} from "../../../shared/constants/enumConstants.js";
 
 /**
  * Invites members to an organization.
@@ -80,17 +85,26 @@ export const inviteMembers = async (
             invite.email,
         );
         if (existingInvitation) {
-            if (existingInvitation.status === "pending") {
+            if (
+                existingInvitation.status ===
+                ORGANIZATION_INVITATION_STATUS.PENDING
+            ) {
                 throw badRequestError(
                     `Invitation is already pending for ${invite.email}`,
                 );
             }
-            if (existingInvitation.status === "rejected") {
+            if (
+                existingInvitation.status ===
+                ORGANIZATION_INVITATION_STATUS.REJECTED
+            ) {
                 throw badRequestError(
                     `Invitation for ${invite.email} was rejected. Please use re-invite API.`,
                 );
             }
-            if (existingInvitation.status === "accepted") {
+            if (
+                existingInvitation.status ===
+                ORGANIZATION_INVITATION_STATUS.ACCEPTED
+            ) {
                 throw badRequestError(
                     `Invitation is already accepted by ${invite.email}`,
                 );
@@ -175,25 +189,20 @@ export const updateInvitationStatus = async (
         );
     }
 
-    if (invitation.status !== "pending") {
+    if (invitation.status !== ORGANIZATION_INVITATION_STATUS.PENDING) {
         throw badRequestError("Invitation has already been processed");
     }
 
-    const updatedInvitation = await updateInvitationStatusRepo(
-        invitationId,
-        status,
-    );
-
-    if (status === "accepted") {
-        await createMember({
-            organizationId: invitation.organizationId,
-            memberId: invitation.memberId,
-            roleId: invitation.roleId,
-            status: "active",
-        });
+    if (status === ORGANIZATION_INVITATION_STATUS.ACCEPTED) {
+        return acceptInvitationTx(
+            invitationId,
+            invitation.organizationId,
+            invitation.memberId,
+            invitation.roleId,
+        );
     }
 
-    return updatedInvitation;
+    return updateInvitationStatusRepo(invitationId, status);
 };
 
 /**
@@ -301,7 +310,10 @@ export const reInviteMember = async (
         organizationId,
         email,
     );
-    if (!existingInvitation || existingInvitation.status !== "rejected") {
+    if (
+        !existingInvitation ||
+        existingInvitation.status !== ORGANIZATION_INVITATION_STATUS.REJECTED
+    ) {
         throw badRequestError(
             `Re-invite is only allowed for rejected invitations`,
         );
@@ -310,7 +322,7 @@ export const reInviteMember = async (
     const updatedInvitation = await updateInvitationRoleAndStatus(
         existingInvitation.id,
         roleId,
-        "pending",
+        ORGANIZATION_INVITATION_STATUS.PENDING,
         requesterUserId,
     );
 
@@ -397,11 +409,14 @@ export const revokeInvitation = async (invitationId: string) => {
         throw notFoundError("Invitation not found");
     }
 
-    if (invitation.status !== "pending") {
+    if (invitation.status !== ORGANIZATION_INVITATION_STATUS.PENDING) {
         throw badRequestError("Invitation is not in pending state");
     }
 
-    return updateInvitationStatusRepo(invitationId, "revoked");
+    return updateInvitationStatusRepo(
+        invitationId,
+        ORGANIZATION_INVITATION_STATUS.REVOKED,
+    );
 };
 
 /**
@@ -463,14 +478,20 @@ export const toggleMyLeaveStatus = async (orgId: string, userId: string) => {
         throw notFoundError("Member not found in organization");
     }
 
-    if (member.status !== "active" && member.status !== "onleave") {
+    if (
+        member.status !== ORGANIZATION_MEMBER_STATUS.ACTIVE &&
+        member.status !== ORGANIZATION_MEMBER_STATUS.ON_LEAVE
+    ) {
         throw badRequestError(
             "You cannot change your leave status because your current status is " +
                 member.status,
         );
     }
 
-    const newStatus = member.status === "active" ? "onleave" : "active";
+    const newStatus =
+        member.status === ORGANIZATION_MEMBER_STATUS.ACTIVE
+            ? ORGANIZATION_MEMBER_STATUS.ON_LEAVE
+            : ORGANIZATION_MEMBER_STATUS.ACTIVE;
 
     const updated = await updateMemberDetails(member.id, { status: newStatus });
     if (!updated) {

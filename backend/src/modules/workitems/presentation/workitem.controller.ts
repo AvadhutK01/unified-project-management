@@ -20,8 +20,6 @@ import {
     deleteWorkitemMedia,
 } from "../application/workitem-media.use-cases.js";
 
-// Workitem CRUD
-
 export const handleCreateWorkitem = async (
     req: Request,
     res: Response,
@@ -145,8 +143,6 @@ export const handleDeleteWorkitem = async (
     }
 };
 
-// Workitem Discussions
-
 export const handleCreateWorkitemDiscussion = async (
     req: Request,
     res: Response,
@@ -230,8 +226,6 @@ export const handleDeleteWorkitemDiscussion = async (
     }
 };
 
-// Workitem Activity Logs
-
 export const handleGetWorkitemActivities = async (
     req: Request,
     res: Response,
@@ -256,8 +250,6 @@ export const handleGetWorkitemActivities = async (
         next(error);
     }
 };
-
-// Workitem Media
 
 export const handleUploadWorkitemMedia = async (
     req: Request,

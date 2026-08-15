@@ -10,6 +10,7 @@ import {
     users,
 } from "../../../infrastructure/database/schema/index.js";
 import { eq, and, ilike, isNull, count, SQL, desc } from "drizzle-orm";
+import { WORKITEM_STATUS } from "../../../shared/constants/enumConstants.js";
 
 export const createWorkitem = async (data: {
     sprintId: string;
@@ -31,7 +32,7 @@ export const createWorkitem = async (data: {
             assignedTo: data.assignedTo ?? null,
             title: data.title,
             description: data.description ?? null,
-            status: data.status ?? "new",
+            status: data.status ?? WORKITEM_STATUS.NEW,
             priority: data.priority ?? 2,
             acceptanceCriteria: data.acceptanceCriteria ?? null,
             workitemType: data.workitemType,

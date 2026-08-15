@@ -7,6 +7,7 @@ import {
     updateTransactionPayment,
     activateOrganizationSubscription,
     upsertSubscriptionRecord,
+    confirmSubscriptionPaymentTx,
     findSubscriptionByOrgId,
     findTransactionsByOrgId,
 } from "../infrastructure/subscription.repository.js";
@@ -18,6 +19,10 @@ import {
 import { findOrganizationById } from "../../organizations/infrastructure/organization.repository.js";
 import { findUserById } from "../../users/infrastructure/user.repository.js";
 import { sendPaymentReceiptEmail } from "../../../shared/utils/email.js";
+import {
+    SUBSCRIPTION_PLAN,
+    TRANSACTION_STATUS,
+} from "../../../shared/constants/enumConstants.js";
 
 const razorpay = new Razorpay({
     key_id: env.RAZORPAY_KEY_ID,
@@ -42,12 +47,17 @@ export const PLAN_PRICES_RS: Record<
  */
 const computeUpgradeAmountRs = (
     currentPlan: SubscriptionPlan,
-    targetPlan: Exclude<SubscriptionPlan, "free">,
+    targetPlan: Exclude<SubscriptionPlan, typeof SUBSCRIPTION_PLAN.FREE>,
 ): number => {
     const currentPrice =
-        currentPlan === "free"
+        currentPlan === SUBSCRIPTION_PLAN.FREE
             ? 0
-            : PLAN_PRICES_RS[currentPlan as Exclude<SubscriptionPlan, "free">];
+            : PLAN_PRICES_RS[
+                  currentPlan as Exclude<
+                      SubscriptionPlan,
+                      typeof SUBSCRIPTION_PLAN.FREE
+                  >
+              ];
     const targetPrice = PLAN_PRICES_RS[targetPlan];
     return Math.max(targetPrice - currentPrice, 0);
 };
@@ -59,9 +69,15 @@ const computeUpgradeAmountRs = (
 export const createSubscriptionOrderUseCase = async (
     organizationId: string,
     userId: string,
-    targetPlan: Exclude<SubscriptionPlan, "free">,
+    targetPlan: Exclude<SubscriptionPlan, typeof SUBSCRIPTION_PLAN.FREE>,
 ) => {
-    if (!["basic", "pro", "premium"].includes(targetPlan)) {
+    if (
+        ![
+            SUBSCRIPTION_PLAN.BASIC,
+            SUBSCRIPTION_PLAN.PRO,
+            SUBSCRIPTION_PLAN.PREMIUM,
+        ].includes(targetPlan)
+    ) {
         throw badRequestError(
             "Invalid target plan. Must be basic, pro, or premium.",
         );
@@ -71,7 +87,7 @@ export const createSubscriptionOrderUseCase = async (
 
     const currentIndex = PLAN_HIERARCHY.indexOf(currentPlan);
     const targetIndex = PLAN_HIERARCHY.indexOf(targetPlan);
-    if (targetIndex <= currentIndex && currentPlan !== "free") {
+    if (targetIndex <= currentIndex && currentPlan !== SUBSCRIPTION_PLAN.FREE) {
         throw badRequestError(
             `Cannot downgrade plan. You are already on '${currentPlan}'.`,
         );
@@ -151,14 +167,6 @@ export const verifyPaymentUseCase = async (
         );
     }
 
-    await updateTransactionPayment(razorpayOrderId, {
-        razorpayPaymentId,
-        razorpaySignature,
-        status: "captured",
-    });
-
-    // For upgrades on existing active plans, keep the same expiry date.
-    // For fresh subscriptions, compute a 30-day period.
     const { plan: currentPlan } = await getOrganizationPlan(organizationId);
     const existingSubscription = await findSubscriptionByOrgId(organizationId);
 
@@ -170,24 +178,18 @@ export const verifyPaymentUseCase = async (
         existingSubscription.subscriptionExpiresAt &&
         currentPlan !== "free"
     ) {
-        // Preserve existing expiry on upgrades
         periodEnd = new Date(existingSubscription.subscriptionExpiresAt);
     } else {
-        // Fresh subscription — 30 days from now
         periodEnd = new Date(now);
         periodEnd.setDate(periodEnd.getDate() + 30);
     }
 
-    await activateOrganizationSubscription(
-        organizationId,
-        targetPlan,
-        periodEnd,
-    );
-
-    await upsertSubscriptionRecord({
+    await confirmSubscriptionPaymentTx({
         organizationId,
         razorpayOrderId,
-        plan: targetPlan,
+        razorpayPaymentId,
+        razorpaySignature,
+        targetPlan,
         amount: PLAN_PRICES_RS[targetPlan],
         periodStart: now,
         periodEnd,

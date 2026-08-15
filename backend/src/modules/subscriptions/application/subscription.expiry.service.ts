@@ -9,12 +9,8 @@
  *  - Single-responsibility: the service knows nothing about queues or workers.
  */
 
-import { db } from "../../../infrastructure/database/client.js";
 import { logger } from "../../../config/logger.js";
-import {
-    markSubscriptionExpired,
-    downgradeOrganizationToFree,
-} from "../infrastructure/subscription.repository.js";
+import { executeSubscriptionExpiryTransaction } from "../infrastructure/subscription.repository.js";
 import { findOrganizationById } from "../../organizations/infrastructure/organization.repository.js";
 import { findUserById } from "../../users/infrastructure/user.repository.js";
 import { sendSubscriptionExpiryEmail } from "../../../shared/utils/email.js";
@@ -31,26 +27,20 @@ export const expireSubscription = async (
     let organizationId: string | null = null;
 
     try {
-        await db.transaction(async (tx) => {
-            const expired = await markSubscriptionExpired(subscriptionId, tx);
-
-            if (!expired) {
-                logger.info(
-                    { subscriptionId },
-                    "Subscription already expired — skipping (idempotent)",
-                );
-                return;
-            }
-
-            organizationId = expired.organizationId;
-
-            await downgradeOrganizationToFree(organizationId, tx);
-
+        const result =
+            await executeSubscriptionExpiryTransaction(subscriptionId);
+        if (!result) {
             logger.info(
-                { subscriptionId, organizationId },
-                "Subscription expired and organization downgraded to free plan",
+                { subscriptionId },
+                "Subscription already expired — skipping (idempotent)",
             );
-        });
+            return false;
+        }
+        organizationId = result.organizationId;
+        logger.info(
+            { subscriptionId, organizationId },
+            "Subscription expired and organization downgraded to free plan",
+        );
     } catch (error) {
         logger.error(
             { subscriptionId, organizationId, error },

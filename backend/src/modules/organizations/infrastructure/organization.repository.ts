@@ -2,37 +2,13 @@ import { db } from "../../../infrastructure/database/client.js";
 import {
     organizations,
     organizationMembers,
+    roles,
 } from "../../../infrastructure/database/schema/index.js";
 import { eq, count, ilike, and, or, isNull, desc } from "drizzle-orm";
-
-/**
- * Creates a new organization in the database.
- * @param data Organization input data.
- * @returns The newly created organization record.
- */
-export const createOrganization = async (data: {
-    name: string;
-    slug: string;
-    logoUrl?: string;
-    ownerUserId: string;
-    websiteUrl?: string;
-    description?: string;
-    status?: string;
-}) => {
-    const [org] = await db
-        .insert(organizations)
-        .values({
-            name: data.name,
-            slug: data.slug,
-            logoUrl: data.logoUrl ?? null,
-            ownerUserId: data.ownerUserId,
-            websiteUrl: data.websiteUrl ?? null,
-            description: data.description ?? null,
-            status: data.status ?? "active",
-        })
-        .returning();
-    return org;
-};
+import {
+    ORGANIZATION_STATUS,
+    ORGANIZATION_MEMBER_STATUS,
+} from "../../../shared/constants/enumConstants.js";
 
 /**
  * Finds an organization by its primary key.
@@ -249,7 +225,7 @@ export const updateOrganization = async (
         logoUrl?: string | null;
         websiteUrl?: string | null;
         description?: string | null;
-        status?: string;
+        status?: "active" | "inactive" | "archived";
     },
 ) => {
     const [org] = await db
@@ -271,4 +247,81 @@ export const deleteOrganization = async (id: string) => {
         .where(eq(organizations.id, id))
         .returning();
     return org ?? null;
+};
+
+/**
+ * Executes a transaction to create an organization, its default Owner role, and its initial Owner member atomically.
+ */
+export const createOrganizationWithRoleAndMemberTx = async (
+    data: {
+        name: string;
+        slug: string;
+        logoUrl?: string;
+        websiteUrl?: string;
+        description?: string;
+        status?: "active" | "inactive" | "archived";
+    },
+    ownerId: string,
+) => {
+    return db.transaction(async (tx) => {
+        const [org] = await tx
+            .insert(organizations)
+            .values({
+                name: data.name,
+                slug: data.slug,
+                logoUrl: data.logoUrl ?? null,
+                ownerUserId: ownerId,
+                websiteUrl: data.websiteUrl ?? null,
+                description: data.description ?? null,
+                status: data.status ?? ORGANIZATION_STATUS.ACTIVE,
+            })
+            .returning();
+
+        if (!org) {
+            throw new Error("Failed to create organization in transaction");
+        }
+
+        const [ownerRole] = await tx
+            .insert(roles)
+            .values({
+                name: "Owner",
+                organizationId: org.id,
+                description: "Organization Owner",
+                isActive: true,
+            })
+            .returning();
+
+        if (!ownerRole) {
+            throw new Error("Failed to create owner role in transaction");
+        }
+
+        await tx.insert(organizationMembers).values({
+            organizationId: org.id,
+            memberId: ownerId,
+            roleId: ownerRole.id,
+            status: ORGANIZATION_MEMBER_STATUS.ACTIVE,
+        });
+
+        return org;
+    });
+};
+
+/**
+ * Executes a transaction to delete an organization and all its members and roles atomically.
+ */
+export const deleteOrganizationCascadeTx = async (id: string) => {
+    return db.transaction(async (tx) => {
+        await tx
+            .delete(organizationMembers)
+            .where(eq(organizationMembers.organizationId, id));
+
+        await tx.delete(roles).where(eq(roles.organizationId, id));
+
+        const [deleted] = await tx
+            .delete(organizations)
+            .where(eq(organizations.id, id))
+            .returning();
+
+        return deleted ?? null;
+    });
 };

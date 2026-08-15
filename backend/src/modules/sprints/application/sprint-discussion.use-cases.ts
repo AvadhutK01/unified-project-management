@@ -1,5 +1,5 @@
 import {
-    createDiscussionComment,
+    createSprintDiscussionWithTagsAndLogTx,
     addDiscussionTags,
     clearDiscussionTags,
     findDiscussionById,
@@ -42,7 +42,6 @@ export const createSprintDiscussion = async (
         throw notFoundError("Sprint not found");
     }
 
-    // Validate tagged member IDs
     for (const taggedMemberId of taggedMemberIds) {
         const taggedMember = await findMemberById(taggedMemberId);
         if (!taggedMember || taggedMember.organizationId !== orgId) {
@@ -52,18 +51,15 @@ export const createSprintDiscussion = async (
         }
     }
 
-    const discussion = await createDiscussionComment({
+    const { discussion, tags } = await createSprintDiscussionWithTagsAndLogTx({
         sprintId,
         memberId: creatorMember.id,
         comment,
+        userId,
+        taggedMemberIds,
     });
-    if (!discussion) {
-        throw new Error("Failed to create discussion comment");
-    }
 
-    let tags: any[] = [];
     if (taggedMemberIds.length > 0) {
-        tags = await addDiscussionTags(discussion.id, taggedMemberIds);
         for (const taggedMemberId of taggedMemberIds) {
             await notifyDiscussionMention(
                 userId,
@@ -74,13 +70,6 @@ export const createSprintDiscussion = async (
             );
         }
     }
-
-    await createActivityLog({
-        sprintId,
-        userId,
-        action: "added_comment",
-        description: "Added a comment",
-    });
 
     return {
         ...discussion,
@@ -114,7 +103,6 @@ export const updateSprintDiscussion = async (
         );
     }
 
-    // Validate tagged member IDs
     for (const taggedMemberId of taggedMemberIds) {
         const taggedMember = await findMemberById(taggedMemberId);
         if (!taggedMember || taggedMember.organizationId !== orgId) {

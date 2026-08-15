@@ -1,5 +1,5 @@
 import {
-    createDiscussionComment,
+    createWorkitemDiscussionWithTagsAndLogTx,
     addDiscussionTags,
     clearDiscussionTags,
     findDiscussionById,
@@ -48,18 +48,17 @@ export const createWorkitemDiscussion = async (
         }
     }
 
-    const discussion = await createDiscussionComment({
-        workitemId,
-        memberId: creatorMember.id,
-        comment,
-    });
-    if (!discussion) {
-        throw new Error("Failed to create discussion comment");
-    }
+    const { discussion, tags } = await createWorkitemDiscussionWithTagsAndLogTx(
+        {
+            workitemId,
+            memberId: creatorMember.id,
+            comment,
+            userId,
+            taggedMemberIds,
+        },
+    );
 
-    let tags: any[] = [];
     if (taggedMemberIds.length > 0) {
-        tags = await addDiscussionTags(discussion.id, taggedMemberIds);
         for (const taggedMemberId of taggedMemberIds) {
             await notifyDiscussionMention(
                 userId,
@@ -70,13 +69,6 @@ export const createWorkitemDiscussion = async (
             );
         }
     }
-
-    await createActivityLog({
-        workitemId,
-        userId,
-        action: "added_comment",
-        description: "Added a comment",
-    });
 
     return {
         ...discussion,

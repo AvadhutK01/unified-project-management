@@ -1,11 +1,12 @@
 import { z } from "zod";
+import { SPRINT_STATUS } from "../../../shared/constants/enumConstants.js";
 
 const sprintStatusSchema = z.enum([
-    "new",
-    "active",
-    "onhold",
-    "removed",
-    "closed",
+    SPRINT_STATUS.NEW,
+    SPRINT_STATUS.ACTIVE,
+    SPRINT_STATUS.ON_HOLD,
+    SPRINT_STATUS.REMOVED,
+    SPRINT_STATUS.CLOSED,
 ]);
 
 /**

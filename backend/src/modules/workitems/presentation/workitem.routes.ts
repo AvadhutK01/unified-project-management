@@ -40,7 +40,6 @@ const router = Router();
 router.use(authenticate);
 router.use(requireOrgId);
 
-// Core Workitem endpoints
 router.post(
     "/",
     requirePermission("workitem_add"),

@@ -28,7 +28,7 @@ export const createMember = async (data: {
     organizationId: string;
     memberId: string;
     roleId: string;
-    status?: string;
+    status?: "active" | "inactive" | "onleave" | "suspended";
 }) => {
     const [member] = await db
         .insert(organizationMembers)
@@ -295,7 +295,7 @@ export const updateMemberDetails = async (
     id: string,
     data: {
         roleId?: string;
-        status?: string;
+        status?: "active" | "inactive" | "onleave" | "suspended";
     },
 ) => {
     const [updated] = await db
@@ -417,4 +417,10 @@ export const countProjectMembersPaginated = async (
             ),
         );
     return Number(result?.value ?? 0);
+};
+
+export const deleteMembersByOrganizationId = async (organizationId: string) => {
+    return db
+        .delete(organizationMembers)
+        .where(eq(organizationMembers.organizationId, organizationId));
 };

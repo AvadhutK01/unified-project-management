@@ -9,13 +9,14 @@ import {
     pgEnum,
 } from "drizzle-orm/pg-core";
 import { phases } from "./phase.js";
+import { SPRINT_STATUS } from "../../../shared/constants/enumConstants.js";
 
 export const sprintStatusEnum = pgEnum("sprint_status", [
-    "new",
-    "active",
-    "onhold",
-    "removed",
-    "closed",
+    SPRINT_STATUS.NEW,
+    SPRINT_STATUS.ACTIVE,
+    SPRINT_STATUS.ON_HOLD,
+    SPRINT_STATUS.REMOVED,
+    SPRINT_STATUS.CLOSED,
 ]);
 
 export const sprints = pgTable("sprints", {
@@ -29,7 +30,7 @@ export const sprints = pgTable("sprints", {
     endDate: date("end_date"),
     sequence: integer("sequence"),
     acceptanceCriteria: text("acceptance_criteria"),
-    status: sprintStatusEnum("status").default("new").notNull(),
+    status: sprintStatusEnum("status").default(SPRINT_STATUS.NEW).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
     deletedAt: timestamp("deleted_at"),

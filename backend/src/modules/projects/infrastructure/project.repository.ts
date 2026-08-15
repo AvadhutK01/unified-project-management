@@ -5,37 +5,7 @@ import {
     organizationMembers,
 } from "../../../infrastructure/database/schema/index.js";
 import { eq, and, or, ilike, isNull, count, SQL, desc } from "drizzle-orm";
-
-/**
- * Creates a new project in the database.
- * @param data Project input data.
- * @returns The newly created project record.
- */
-export const createProject = async (data: {
-    organizationId: string;
-    title: string;
-    description?: string;
-    startDate?: string;
-    endDate?: string;
-    clientName?: string;
-    logoUrl?: string;
-    status?: "notstarted" | "started" | "onhold" | "completed";
-}) => {
-    const [project] = await db
-        .insert(projects)
-        .values({
-            organizationId: data.organizationId,
-            title: data.title,
-            description: data.description ?? null,
-            startDate: data.startDate ?? null,
-            endDate: data.endDate ?? null,
-            clientName: data.clientName ?? null,
-            logoUrl: data.logoUrl ?? null,
-            status: data.status ?? "notstarted",
-        })
-        .returning();
-    return project;
-};
+import { PROJECT_STATUS } from "../../../shared/constants/enumConstants.js";
 
 /**
  * Finds an active project by its title within an organization.
@@ -385,4 +355,52 @@ export const removeProjectMember = async (
         )
         .returning();
     return removed ?? null;
+};
+
+/**
+ * Creates a new project and maps initial organization members in a single DB transaction.
+ */
+export const createProjectWithMembersTx = async (
+    projectData: {
+        organizationId: string;
+        title: string;
+        description?: string;
+        startDate?: string;
+        endDate?: string;
+        clientName?: string;
+        logoUrl?: string;
+        status?: "notstarted" | "started" | "onhold" | "completed";
+    },
+    orgMemberIds: string[],
+) => {
+    return db.transaction(async (tx) => {
+        const [project] = await tx
+            .insert(projects)
+            .values({
+                organizationId: projectData.organizationId,
+                title: projectData.title,
+                description: projectData.description ?? null,
+                startDate: projectData.startDate ?? null,
+                endDate: projectData.endDate ?? null,
+                clientName: projectData.clientName ?? null,
+                logoUrl: projectData.logoUrl ?? null,
+                status: projectData.status ?? PROJECT_STATUS.NOT_STARTED,
+            })
+            .returning();
+
+        if (!project) {
+            throw new Error("Failed to create project in transaction");
+        }
+
+        if (orgMemberIds.length > 0) {
+            await tx.insert(projectMembers).values(
+                orgMemberIds.map((memberId) => ({
+                    projectId: project.id,
+                    organizationMemberId: memberId,
+                })),
+            );
+        }
+
+        return project;
+    });
 };

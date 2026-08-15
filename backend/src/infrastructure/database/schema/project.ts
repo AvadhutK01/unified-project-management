@@ -8,12 +8,13 @@ import {
     timestamp,
 } from "drizzle-orm/pg-core";
 import { organizations } from "./organization.js";
+import { PROJECT_STATUS } from "../../../shared/constants/enumConstants.js";
 
 export const projectStatusEnum = pgEnum("project_status", [
-    "notstarted",
-    "started",
-    "onhold",
-    "completed",
+    PROJECT_STATUS.NOT_STARTED,
+    PROJECT_STATUS.STARTED,
+    PROJECT_STATUS.ON_HOLD,
+    PROJECT_STATUS.COMPLETED,
 ]);
 
 export const projects = pgTable("projects", {
@@ -27,7 +28,9 @@ export const projects = pgTable("projects", {
     endDate: date("end_date"),
     clientName: varchar("client_name", { length: 255 }),
     logoUrl: varchar("logo_url", { length: 1000 }),
-    status: projectStatusEnum("status").default("notstarted").notNull(),
+    status: projectStatusEnum("status")
+        .default(PROJECT_STATUS.NOT_STARTED)
+        .notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
     deletedAt: timestamp("deleted_at"),

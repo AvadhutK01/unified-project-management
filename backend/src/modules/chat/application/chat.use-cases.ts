@@ -2,6 +2,7 @@ import {
     getDirectMessagesBetweenUsers,
     countDirectMessagesBetweenUsers,
     markDirectMessagesAsRead,
+    getDeepOrganizationContextRepo,
 } from "../infrastructure/chat.repository.js";
 
 import { isOrganizationOnPlan } from "../../../shared/middleware/require-premium.js";
@@ -11,15 +12,6 @@ import {
     badRequestError,
     notFoundError,
 } from "../../../shared/errors/app-error.js";
-import { findOrganizationById } from "../../organizations/infrastructure/organization.repository.js";
-import { db } from "../../../infrastructure/database/client.js";
-import {
-    projects,
-    phases,
-    sprints,
-    workitems,
-} from "../../../infrastructure/database/schema/index.js";
-import { eq } from "drizzle-orm";
 
 /**
  * Verifies that the organization is on a Pro or Premium plan.
@@ -114,60 +106,9 @@ export const uploadDirectChatAttachmentUseCase = async (
  * Fetches deep organization hierarchy including projects, phases, sprints, and work items.
  */
 export const getDeepOrganizationContext = async (organizationId: string) => {
-    const org = await findOrganizationById(organizationId);
-    if (!org) {
+    const result = await getDeepOrganizationContextRepo(organizationId);
+    if (!result) {
         throw notFoundError("Organization not found");
     }
-
-    const orgProjects = await db
-        .select()
-        .from(projects)
-        .where(eq(projects.organizationId, organizationId));
-
-    const projectsWithDetails = await Promise.all(
-        orgProjects.map(async (project) => {
-            const projectPhases = await db
-                .select()
-                .from(phases)
-                .where(eq(phases.projectId, project.id));
-
-            const phasesWithSprints = await Promise.all(
-                projectPhases.map(async (phase) => {
-                    const phaseSprints = await db
-                        .select()
-                        .from(sprints)
-                        .where(eq(sprints.phaseId, phase.id));
-
-                    const sprintsWithWorkitems = await Promise.all(
-                        phaseSprints.map(async (sprint) => {
-                            const sprintWorkitems = await db
-                                .select()
-                                .from(workitems)
-                                .where(eq(workitems.sprintId, sprint.id));
-
-                            return {
-                                ...sprint,
-                                workitems: sprintWorkitems,
-                            };
-                        }),
-                    );
-
-                    return {
-                        ...phase,
-                        sprints: sprintsWithWorkitems,
-                    };
-                }),
-            );
-
-            return {
-                ...project,
-                phases: phasesWithSprints,
-            };
-        }),
-    );
-
-    return {
-        organization: org,
-        projects: projectsWithDetails,
-    };
+    return result;
 };

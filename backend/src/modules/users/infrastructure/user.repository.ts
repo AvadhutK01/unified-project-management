@@ -13,7 +13,7 @@ export const createUser = async (data: {
     phoneNumber?: string | null;
     password?: string | null;
     googleId?: string | null;
-    authProvider?: string;
+    authProvider?: "local" | "google";
     emailOtp?: string | null;
     phoneOtp?: string | null;
     isVerified?: boolean;
@@ -123,7 +123,7 @@ export const updateUserOtp = async (
         phoneNumber?: string | null;
         password?: string | null;
         googleId?: string | null;
-        authProvider?: string;
+        authProvider?: "local" | "google";
         emailOtp?: string | null;
         phoneOtp?: string | null;
         pwdResetOtp?: string | null;

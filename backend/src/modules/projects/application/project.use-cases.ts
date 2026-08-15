@@ -1,5 +1,5 @@
 import {
-    createProject as createProjectRepo,
+    createProjectWithMembersTx,
     findProjectById,
     findAllProjects,
     countAllProjects,
@@ -90,23 +90,6 @@ export const createProject = async (data: {
         throw badRequestError("Start date must be before or equal to end date");
     }
 
-    const project = await createProjectRepo({
-        organizationId: data.organizationId,
-        title: data.title,
-        ...(data.description !== undefined && {
-            description: data.description,
-        }),
-        ...(data.startDate !== undefined && { startDate: data.startDate }),
-        ...(data.endDate !== undefined && { endDate: data.endDate }),
-        ...(data.clientName !== undefined && { clientName: data.clientName }),
-        ...(data.logoUrl !== undefined && { logoUrl: data.logoUrl }),
-        ...(data.status !== undefined && { status: data.status }),
-    });
-
-    if (!project) {
-        throw internalServerError("Failed to create project");
-    }
-
     const orgMemberIdsToMap = new Set<string>(data.orgMemberIds || []);
 
     const org = await findOrganizationById(data.organizationId);
@@ -129,8 +112,26 @@ export const createProject = async (data: {
         }
     }
 
-    for (const orgMemberId of orgMemberIdsToMap) {
-        await addProjectMemberRepo(project.id, orgMemberId);
+    const project = await createProjectWithMembersTx(
+        {
+            organizationId: data.organizationId,
+            title: data.title,
+            ...(data.description !== undefined && {
+                description: data.description,
+            }),
+            ...(data.startDate !== undefined && { startDate: data.startDate }),
+            ...(data.endDate !== undefined && { endDate: data.endDate }),
+            ...(data.clientName !== undefined && {
+                clientName: data.clientName,
+            }),
+            ...(data.logoUrl !== undefined && { logoUrl: data.logoUrl }),
+            ...(data.status !== undefined && { status: data.status }),
+        },
+        Array.from(orgMemberIdsToMap),
+    );
+
+    if (!project) {
+        throw internalServerError("Failed to create project");
     }
 
     return project;
@@ -273,7 +274,6 @@ export const updateProject = async (
             (m) => m.organizationMemberId,
         );
 
-        // Prevent the organization owner from being removed
         let ownerOrgMemberId: string | undefined = undefined;
         const org = await findOrganizationById(organizationId);
         if (org) {

@@ -1,17 +1,17 @@
 import { Request, Response, NextFunction } from "express";
 import { forbiddenError, badRequestError } from "../errors/app-error.js";
-import { db } from "../../infrastructure/database/client.js";
-import { organizations } from "../../infrastructure/database/schema/index.js";
-import { eq } from "drizzle-orm";
+import { findSubscriptionByOrgId } from "../../modules/subscriptions/infrastructure/subscription.repository.js";
+import { SUBSCRIPTION_PLAN } from "../constants/enumConstants.js";
 
-export type SubscriptionPlan = "free" | "basic" | "pro" | "premium";
+export type SubscriptionPlan =
+    (typeof SUBSCRIPTION_PLAN)[keyof typeof SUBSCRIPTION_PLAN];
 
 /** Ordered hierarchy of plans, lowest to highest. */
 export const PLAN_HIERARCHY: SubscriptionPlan[] = [
-    "free",
-    "basic",
-    "pro",
-    "premium",
+    SUBSCRIPTION_PLAN.FREE,
+    SUBSCRIPTION_PLAN.BASIC,
+    SUBSCRIPTION_PLAN.PRO,
+    SUBSCRIPTION_PLAN.PREMIUM,
 ];
 
 /**
@@ -34,26 +34,9 @@ export const isAtLeastPlan = (
 export const getOrganizationPlan = async (
     organizationId: string,
 ): Promise<{ plan: SubscriptionPlan; isActive: boolean }> => {
-    const [org] = await db
-        .select({
-            plan: organizations.plan,
-            subscriptionExpiresAt: organizations.subscriptionExpiresAt,
-        })
-        .from(organizations)
-        .where(eq(organizations.id, organizationId));
-
-    if (!org) return { plan: "free", isActive: false };
-
-    const plan = (org.plan as SubscriptionPlan) || "free";
-
-    const isExpired =
-        org.subscriptionExpiresAt !== null &&
-        org.subscriptionExpiresAt !== undefined &&
-        new Date(org.subscriptionExpiresAt) <= new Date();
-
-    const isActive = !isExpired;
-
-    return { plan: isActive ? plan : "free", isActive };
+    const sub = await findSubscriptionByOrgId(organizationId);
+    if (!sub) return { plan: SUBSCRIPTION_PLAN.FREE, isActive: false };
+    return { plan: sub.plan, isActive: sub.plan !== SUBSCRIPTION_PLAN.FREE };
 };
 
 /**
@@ -76,7 +59,7 @@ export const isOrganizationOnPlan = async (
 export const isOrganizationPremium = async (
     organizationId: string,
 ): Promise<boolean> => {
-    return isOrganizationOnPlan(organizationId, "premium");
+    return isOrganizationOnPlan(organizationId, SUBSCRIPTION_PLAN.PREMIUM);
 };
 
 /**
@@ -127,4 +110,4 @@ export const requirePlan = (minPlan: SubscriptionPlan) => {
 /**
  * Backward-compatible alias — middleware that requires an active Premium subscription.
  */
-export const requirePremium = requirePlan("premium");
+export const requirePremium = requirePlan(SUBSCRIPTION_PLAN.PREMIUM);

@@ -2,26 +2,11 @@ import { db } from "../../../infrastructure/database/client.js";
 import {
     workitemDiscussions,
     workitemDiscussionTags,
+    workitemActivityLogs,
     organizationMembers,
     users,
 } from "../../../infrastructure/database/schema/index.js";
 import { eq, and, isNull, inArray, desc, count } from "drizzle-orm";
-
-export const createDiscussionComment = async (data: {
-    workitemId: string;
-    memberId: string;
-    comment: string;
-}) => {
-    const [discussion] = await db
-        .insert(workitemDiscussions)
-        .values({
-            workitemId: data.workitemId,
-            memberId: data.memberId,
-            comment: data.comment,
-        })
-        .returning();
-    return discussion;
-};
 
 export const addDiscussionTags = async (
     workitemDiscussionId: string,
@@ -160,4 +145,52 @@ export const softDeleteDiscussion = async (id: string) => {
         )
         .returning();
     return deleted ?? null;
+};
+
+/**
+ * Creates a discussion comment, adds discussion tags, and logs activity in a single DB transaction.
+ */
+export const createWorkitemDiscussionWithTagsAndLogTx = async (data: {
+    workitemId: string;
+    memberId: string;
+    comment: string;
+    userId: string;
+    taggedMemberIds: string[];
+}) => {
+    return db.transaction(async (tx) => {
+        const [discussion] = await tx
+            .insert(workitemDiscussions)
+            .values({
+                workitemId: data.workitemId,
+                memberId: data.memberId,
+                comment: data.comment,
+            })
+            .returning();
+
+        if (!discussion) {
+            throw new Error("Failed to create discussion comment");
+        }
+
+        let tags: any[] = [];
+        if (data.taggedMemberIds.length > 0) {
+            tags = await tx
+                .insert(workitemDiscussionTags)
+                .values(
+                    data.taggedMemberIds.map((memberId) => ({
+                        workitemDiscussionId: discussion.id,
+                        memberId,
+                    })),
+                )
+                .returning();
+        }
+
+        await tx.insert(workitemActivityLogs).values({
+            workitemId: data.workitemId,
+            userId: data.userId,
+            action: "added_comment",
+            description: "Added a comment",
+        });
+
+        return { discussion, tags };
+    });
 };

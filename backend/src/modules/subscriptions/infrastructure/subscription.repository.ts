@@ -7,6 +7,11 @@ import {
 import { eq, desc, count, lte, and } from "drizzle-orm";
 import type { SubscriptionPlan } from "../../../shared/middleware/require-premium.js";
 import type { DatabaseOrTransaction } from "../../../infrastructure/database/client.js";
+import {
+    SUBSCRIPTION_PLAN,
+    SUBSCRIPTION_STATUS,
+    TRANSACTION_STATUS,
+} from "../../../shared/constants/enumConstants.js";
 
 /**
  * Creates a new transaction record in the database.
@@ -27,7 +32,7 @@ export const createTransactionRecord = async (data: {
             razorpayOrderId: data.razorpayOrderId,
             amount: data.amount,
             currency: data.currency || "INR",
-            status: "created",
+            status: TRANSACTION_STATUS.CREATED,
             description: data.description || "Organization Subscription",
         })
         .returning();
@@ -226,7 +231,7 @@ export const findExpiredActiveSubscriptions = async (
         .from(subscriptions)
         .where(
             and(
-                eq(subscriptions.status, "active"),
+                eq(subscriptions.status, SUBSCRIPTION_STATUS.ACTIVE),
                 lte(subscriptions.currentPeriodEnd, asOf),
             ),
         )
@@ -249,11 +254,11 @@ export const markSubscriptionExpired = async (
 
     const [updated] = await (client as typeof db)
         .update(subscriptions)
-        .set({ status: "expired", updatedAt: now })
+        .set({ status: SUBSCRIPTION_STATUS.EXPIRED, updatedAt: now })
         .where(
             and(
                 eq(subscriptions.id, subscriptionId),
-                eq(subscriptions.status, "active"),
+                eq(subscriptions.status, SUBSCRIPTION_STATUS.ACTIVE),
             ),
         )
         .returning({
@@ -279,9 +284,91 @@ export const downgradeOrganizationToFree = async (
     await (client as typeof db)
         .update(organizations)
         .set({
-            plan: "free",
+            plan: SUBSCRIPTION_PLAN.FREE,
             subscriptionExpiresAt: null,
             updatedAt: new Date(),
         })
         .where(eq(organizations.id, organizationId));
+};
+
+/**
+ * Executes the subscription expiration process inside a database transaction.
+ */
+export const executeSubscriptionExpiryTransaction = async (
+    subscriptionId: string,
+): Promise<{ organizationId: string } | null> => {
+    let organizationId: string | null = null;
+    await db.transaction(async (tx) => {
+        const expired = await markSubscriptionExpired(subscriptionId, tx);
+        if (!expired) {
+            return;
+        }
+        organizationId = expired.organizationId;
+        await downgradeOrganizationToFree(organizationId, tx);
+    });
+    return organizationId ? { organizationId } : null;
+};
+
+/**
+ * Confirms payment, updates transaction status, upgrades organization plan, and upserts subscription in a single DB transaction.
+ */
+export const confirmSubscriptionPaymentTx = async (data: {
+    organizationId: string;
+    razorpayOrderId: string;
+    razorpayPaymentId: string;
+    razorpaySignature: string;
+    targetPlan: SubscriptionPlan;
+    amount: number;
+    periodStart: Date;
+    periodEnd: Date;
+}) => {
+    return db.transaction(async (tx) => {
+        await tx
+            .update(transactions)
+            .set({
+                razorpayPaymentId: data.razorpayPaymentId,
+                razorpaySignature: data.razorpaySignature,
+                status: TRANSACTION_STATUS.CAPTURED,
+                updatedAt: new Date(),
+            })
+            .where(eq(transactions.razorpayOrderId, data.razorpayOrderId));
+
+        await tx
+            .update(organizations)
+            .set({
+                plan: data.targetPlan,
+                subscriptionExpiresAt: data.periodEnd,
+                updatedAt: new Date(),
+            })
+            .where(eq(organizations.id, data.organizationId));
+
+        const [existing] = await tx
+            .select()
+            .from(subscriptions)
+            .where(eq(subscriptions.organizationId, data.organizationId));
+
+        if (existing) {
+            await tx
+                .update(subscriptions)
+                .set({
+                    razorpayOrderId: data.razorpayOrderId,
+                    status: SUBSCRIPTION_STATUS.ACTIVE,
+                    amount: data.amount,
+                    currentPeriodStart: data.periodStart,
+                    currentPeriodEnd: data.periodEnd,
+                    updatedAt: new Date(),
+                })
+                .where(eq(subscriptions.id, existing.id));
+        } else {
+            await tx.insert(subscriptions).values({
+                organizationId: data.organizationId,
+                razorpayOrderId: data.razorpayOrderId,
+                amount: data.amount,
+                currency: "INR",
+                status: SUBSCRIPTION_STATUS.ACTIVE,
+                currentPeriodStart: data.periodStart,
+                currentPeriodEnd: data.periodEnd,
+            });
+        }
+    });
 };

@@ -1,27 +1,62 @@
 import { badRequestError } from "../errors/app-error.js";
+import {
+    PROJECT_STATUS,
+    SPRINT_STATUS,
+    WORKITEM_STATUS,
+} from "../constants/enumConstants.js";
 
 const projectTransitions: Record<string, string[]> = {
-    notstarted: ["started", "completed"],
-    started: ["onhold", "completed"],
-    onhold: ["started", "completed"],
-    completed: [],
+    [PROJECT_STATUS.NOT_STARTED]: [
+        PROJECT_STATUS.STARTED,
+        PROJECT_STATUS.COMPLETED,
+    ],
+    [PROJECT_STATUS.STARTED]: [
+        PROJECT_STATUS.ON_HOLD,
+        PROJECT_STATUS.COMPLETED,
+    ],
+    [PROJECT_STATUS.ON_HOLD]: [
+        PROJECT_STATUS.STARTED,
+        PROJECT_STATUS.COMPLETED,
+    ],
+    [PROJECT_STATUS.COMPLETED]: [],
 };
 
 const sprintTransitions: Record<string, string[]> = {
-    new: ["active", "removed"],
-    active: ["onhold", "closed", "removed"],
-    onhold: ["active", "closed", "removed"],
-    removed: [],
-    closed: [],
+    [SPRINT_STATUS.NEW]: [SPRINT_STATUS.ACTIVE, SPRINT_STATUS.REMOVED],
+    [SPRINT_STATUS.ACTIVE]: [
+        SPRINT_STATUS.ON_HOLD,
+        SPRINT_STATUS.CLOSED,
+        SPRINT_STATUS.REMOVED,
+    ],
+    [SPRINT_STATUS.ON_HOLD]: [
+        SPRINT_STATUS.ACTIVE,
+        SPRINT_STATUS.CLOSED,
+        SPRINT_STATUS.REMOVED,
+    ],
+    [SPRINT_STATUS.REMOVED]: [],
+    [SPRINT_STATUS.CLOSED]: [],
 };
 
 const workitemTransitions: Record<string, string[]> = {
-    new: ["active", "removed"],
-    active: ["resolved", "closed", "onhold", "removed"],
-    onhold: ["active", "closed", "removed"],
-    resolved: ["active", "closed", "removed"],
-    closed: [],
-    removed: [],
+    [WORKITEM_STATUS.NEW]: [WORKITEM_STATUS.ACTIVE, WORKITEM_STATUS.REMOVED],
+    [WORKITEM_STATUS.ACTIVE]: [
+        WORKITEM_STATUS.RESOLVED,
+        WORKITEM_STATUS.CLOSED,
+        WORKITEM_STATUS.ON_HOLD,
+        WORKITEM_STATUS.REMOVED,
+    ],
+    [WORKITEM_STATUS.ON_HOLD]: [
+        WORKITEM_STATUS.ACTIVE,
+        WORKITEM_STATUS.CLOSED,
+        WORKITEM_STATUS.REMOVED,
+    ],
+    [WORKITEM_STATUS.RESOLVED]: [
+        WORKITEM_STATUS.ACTIVE,
+        WORKITEM_STATUS.CLOSED,
+        WORKITEM_STATUS.REMOVED,
+    ],
+    [WORKITEM_STATUS.CLOSED]: [],
+    [WORKITEM_STATUS.REMOVED]: [],
 };
 
 export const validateProjectTransition = (current: string, next: string) => {
