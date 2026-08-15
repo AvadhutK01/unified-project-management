@@ -9,6 +9,7 @@ import {
     Trash2,
 } from "lucide-react";
 import { formatBytes } from "../utils/workitem.utils";
+import { downloadFile } from "@/utils/fileDownload";
 
 interface WorkItemAttachmentsTabProps {
     mediaList: any[];
@@ -136,15 +137,16 @@ const WorkItemAttachmentsTab = ({
                                 </div>
 
                                 <div className="flex items-center gap-1.5 ml-4 shrink-0">
-                                    <a
-                                        href={m.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            downloadFile(m.url, m.name)
+                                        }
                                         className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
                                         title="Download File"
                                     >
                                         <Download className="size-4" />
-                                    </a>
+                                    </button>
                                     {isUploader && (
                                         <button
                                             onClick={() => onDeleteMedia(m.id)}

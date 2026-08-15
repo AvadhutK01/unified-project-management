@@ -11,6 +11,7 @@ import { dashboardRouter } from "../modules/dashboards/presentation/dashboard.ro
 import { notificationRouter } from "../modules/notifications/presentation/notification.routes.js";
 import { subscriptionRouter } from "../modules/subscriptions/presentation/subscription.routes.js";
 import { chatRouter } from "../modules/chat/presentation/chat.routes.js";
+import { mediaRouter } from "../modules/media/presentation/media.routes.js";
 
 /**
  * Registers application routers on the parent Router.
@@ -30,5 +31,6 @@ export const registerRoutes = (router: Router): Router => {
     router.use("/dashboards", dashboardRouter);
     router.use("/notifications", notificationRouter);
     router.use("/subscriptions", subscriptionRouter);
+    router.use("/media", mediaRouter);
     return router;
 };

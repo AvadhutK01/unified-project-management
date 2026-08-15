@@ -1,4 +1,9 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+    S3Client,
+    PutObjectCommand,
+    GetObjectCommand,
+    GetObjectCommandOutput,
+} from "@aws-sdk/client-s3";
 import { env } from "../../config/env.js";
 
 const s3Client = new S3Client({
@@ -68,9 +73,84 @@ export const uploadToS3 = async (
             Key: key,
             Body: file.buffer,
             ContentType: file.mimetype,
-            ContentDisposition: `inline; filename="${encodeURIComponent(fixedName)}"; filename*=UTF-8''${encodeURIComponent(fixedName)}`,
+            ContentDisposition: `attachment; filename="${encodeURIComponent(fixedName)}"; filename*=UTF-8''${encodeURIComponent(fixedName)}`,
         }),
     );
 
     return `https://${env.AWS_BUCKET_NAME}.s3.${env.AWS_REGION}.amazonaws.com/${key}`;
+};
+
+/**
+ * Extracts the object key from a full S3 URL or returns key directly.
+ * Preserves exact encoding as stored in S3.
+ * @param urlOrKey The full S3 URL or object key.
+ */
+export const extractS3Key = (urlOrKey: string): string => {
+    if (!urlOrKey) return "";
+    if (urlOrKey.startsWith("http://") || urlOrKey.startsWith("https://")) {
+        try {
+            const parsed = new URL(urlOrKey);
+            return parsed.pathname.replace(/^\//, "");
+        } catch {
+            return urlOrKey;
+        }
+    }
+    return urlOrKey;
+};
+
+/**
+ * Downloads/streams an S3 object using GetObjectCommand.
+ * Includes key fallback logic for both raw encoded and decoded key formats (e.g. %20 vs spaces).
+ * @param urlOrKey Full S3 URL or object key.
+ */
+export const getS3ObjectStream = async (urlOrKey: string) => {
+    const rawKey = extractS3Key(urlOrKey);
+
+    const keysToTry: string[] = [rawKey];
+
+    try {
+        const decoded = decodeURIComponent(rawKey);
+        if (decoded !== rawKey && !keysToTry.includes(decoded)) {
+            keysToTry.push(decoded);
+        }
+    } catch {}
+
+    try {
+        const reEncoded = encodeURI(decodeURIComponent(rawKey));
+        if (!keysToTry.includes(reEncoded)) {
+            keysToTry.push(reEncoded);
+        }
+    } catch {}
+
+    let lastError: any = null;
+
+    for (const key of keysToTry) {
+        try {
+            const command = new GetObjectCommand({
+                Bucket: env.AWS_BUCKET_NAME,
+                Key: key,
+            });
+
+            const response = (await s3Client.send(
+                command,
+            )) as GetObjectCommandOutput;
+            return {
+                stream: response.Body as import("stream").Readable,
+                contentType: response.ContentType || "application/octet-stream",
+                contentLength: response.ContentLength,
+            };
+        } catch (err: any) {
+            lastError = err;
+            if (
+                err?.name === "NoSuchKey" ||
+                err?.name === "NotFound" ||
+                err?.$metadata?.httpStatusCode === 404
+            ) {
+                continue;
+            }
+            throw err;
+        }
+    }
+
+    throw lastError;
 };

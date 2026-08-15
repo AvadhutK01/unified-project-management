@@ -75,7 +75,6 @@ const SprintPage = () => {
     const canView = hasPermission(PERMISSIONS.SPRINT.VIEW);
     const canEdit = hasPermission(PERMISSIONS.SPRINT.EDIT);
     const canDelete = hasPermission(PERMISSIONS.SPRINT.DELETE);
-    const canChangeStatus = hasPermission(PERMISSIONS.SPRINT.STATUS);
     const canViewWorkItems = hasPermission(PERMISSIONS.WORKITEM.LIST);
 
     // Calculate metrics dynamically

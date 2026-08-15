@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-    X,
-    Search,
-    Send,
-    CheckSquare,
-    Square,
-    Users,
-    Sparkles,
-} from "lucide-react";
+import { X, Search, Send, CheckSquare, Square, Sparkles } from "lucide-react";
 import { api } from "@/lib/axios";
 import { useOrganizationStore } from "@/store/organization.store";
 import { MemberAvatar } from "@/components/common/MemberAvatar";

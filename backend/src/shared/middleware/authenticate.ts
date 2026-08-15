@@ -15,13 +15,18 @@ export const authenticate = (
     _res: Response,
     next: NextFunction,
 ): void => {
+    let token: string | undefined = undefined;
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+        token = authHeader.slice(7);
+    } else if (req.query && typeof req.query["token"] === "string") {
+        token = req.query["token"] as string;
+    }
+
+    if (!token) {
         next(unauthorizedError("No token provided"));
         return;
     }
-
-    const token = authHeader.slice(7);
     try {
         const decoded = jwt.verify(token, env.JWT_SECRET) as {
             id: string;

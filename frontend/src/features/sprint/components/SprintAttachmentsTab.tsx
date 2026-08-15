@@ -9,6 +9,7 @@ import {
     Trash2,
 } from "lucide-react";
 import { formatBytes } from "../utils/sprint.utils";
+import { downloadFile } from "@/utils/fileDownload";
 import type { SprintAttachmentsTabProps } from "../types/sprint.types";
 
 const SprintAttachmentsTab = ({
@@ -124,15 +125,16 @@ const SprintAttachmentsTab = ({
                                 </div>
 
                                 <div className="flex items-center gap-1.5 ml-4">
-                                    <a
-                                        href={m.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            downloadFile(m.url, m.name)
+                                        }
                                         className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
                                         title="Download File"
                                     >
                                         <Download className="size-4" />
-                                    </a>
+                                    </button>
                                     {isUploader && (
                                         <button
                                             onClick={() => onDeleteMedia(m.id)}

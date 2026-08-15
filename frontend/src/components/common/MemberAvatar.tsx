@@ -32,7 +32,6 @@ export const MemberAvatar = ({
     const statusLower = status.toLowerCase();
     let statusColor = "#a1a1aa";
     let statusLabel = "Inactive";
-    let isOffline = false;
 
     if (statusLower === "active") {
         if (presence === "away") {
@@ -44,7 +43,6 @@ export const MemberAvatar = ({
         } else {
             statusColor = "#94a3b8";
             statusLabel = "Offline";
-            isOffline = true;
         }
     } else if (statusLower === "on leave" || statusLower === "onleave") {
         statusColor = "#f59e0b";

@@ -6,11 +6,9 @@ import {
     AlertCircle,
     Users,
     Clock,
-    ClipboardList,
     CheckSquare,
 } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useMemberActivityQuery } from "../hooks/useReports";
 import { exportMemberActivityToExcel } from "../utils/exportToExcel";

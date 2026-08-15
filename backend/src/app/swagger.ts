@@ -12,6 +12,7 @@ import { reportSwaggerPaths } from "../modules/reports/presentation/report.swagg
 import { dashboardSwaggerPaths } from "../modules/dashboards/presentation/dashboard.swagger.js";
 import { notificationSwaggerPaths } from "../modules/notifications/presentation/notification.swagger.js";
 import { subscriptionSwaggerPaths } from "../modules/subscriptions/presentation/subscription.swagger.js";
+import { mediaSwagger } from "../modules/media/presentation/media.swagger.js";
 
 const swaggerDocument = {
     openapi: "3.0.0",
@@ -49,6 +50,7 @@ const swaggerDocument = {
         ...dashboardSwaggerPaths,
         ...notificationSwaggerPaths,
         ...subscriptionSwaggerPaths,
+        ...mediaSwagger,
     },
 };
 

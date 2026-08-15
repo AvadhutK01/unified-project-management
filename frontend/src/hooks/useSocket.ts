@@ -26,7 +26,7 @@ export const useSocket = (): Socket | null => {
             globalSocket = io(SOCKET_URL, {
                 auth: {
                     authorization: `Bearer ${token}`,
-                    org_id: activeOrganization.id,
+                    org_id: activeOrganization?.id,
                 },
                 transports: ["websocket", "polling"],
                 autoConnect: true,

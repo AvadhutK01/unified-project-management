@@ -58,27 +58,7 @@ function decodeFileName(name?: string | null, url?: string | null) {
     }
 }
 
-const downloadFile = async (fileUrl: string, fileName?: string | null) => {
-    const cleanName = decodeFileName(fileName, fileUrl);
-    try {
-        const response = await fetch(fileUrl);
-        const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = blobUrl;
-        link.download = cleanName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);
-    } catch (err) {
-        const link = document.createElement("a");
-        link.href = fileUrl;
-        link.download = cleanName;
-        link.target = "_blank";
-        link.click();
-    }
-};
+import { downloadFile } from "@/utils/fileDownload";
 
 export const DirectChatDrawer: React.FC = () => {
     const {
