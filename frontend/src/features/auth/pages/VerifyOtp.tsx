@@ -63,6 +63,9 @@ const VerifyOtp = () => {
                 onSuccess: (response) => {
                     if (response?.data?.token) {
                         localStorage.setItem("token", response.data.token);
+                        if (response.data.id) {
+                            localStorage.setItem("userId", response.data.id);
+                        }
                     }
                     toast.success("Verification successful!");
                     navigate("/org-setup");

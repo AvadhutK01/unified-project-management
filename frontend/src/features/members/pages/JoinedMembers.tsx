@@ -28,6 +28,7 @@ import { useSubscriptionQuery } from "@/features/subscriptions/hooks/useSubscrip
 import { isAtLeastPlan } from "@/features/subscriptions/utils/subscriptionHelpers";
 import { useOrganizationStore } from "@/store/organization.store";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
+import { usePresenceStore } from "@/features/presence/store/presence.store";
 
 const ROLE_STYLES: Record<string, string> = {
     Admin: "bg-primary/10 text-primary border-primary/20",
@@ -216,6 +217,8 @@ const JoinedMembers = () => {
         setEditModalOpen(true);
     };
 
+    const presenceMap = usePresenceStore((s) => s.presenceMap);
+
     const columns = useMemo<DataTableColumn<Member>[]>(
         () => [
             {
@@ -226,7 +229,8 @@ const JoinedMembers = () => {
                         <MemberAvatar
                             name={member.name}
                             status={member.status}
-                            memberId={member.userId}
+                            memberId={member.userId ?? member.id}
+                            userId={member.userId}
                         />
                         <div className="min-w-0">
                             <p className="text-sm font-medium text-foreground truncate">
@@ -256,30 +260,52 @@ const JoinedMembers = () => {
                       {
                           key: "status" as const,
                           label: "Status",
-                          render: (member: Member) => (
-                              <div className="flex items-center gap-1.5">
-                                  <span
-                                      className="size-1.5 rounded-full shrink-0"
-                                      style={{
-                                          backgroundColor:
-                                              member.status === "Active"
-                                                  ? "#798c5e"
-                                                  : "#a1a1aa",
-                                      }}
-                                  />
-                                  <span
-                                      className="text-xs font-medium"
-                                      style={{
-                                          color:
-                                              member.status === "Active"
-                                                  ? "#798c5e"
-                                                  : "#a1a1aa",
-                                      }}
-                                  >
-                                      {member.status}
-                                  </span>
-                              </div>
-                          ),
+                          render: (member: Member) => {
+                              const effectiveId = member.userId || member.id;
+                              const realTimePresence = effectiveId
+                                  ? presenceMap[effectiveId]
+                                  : undefined;
+                              const dbStatusLower = (
+                                  member.status || ""
+                              ).toLowerCase();
+
+                              let color = "#94a3b8";
+                              let label = "Offline";
+
+                              if (
+                                  realTimePresence === "onleave" ||
+                                  realTimePresence === "on_leave" ||
+                                  dbStatusLower === "on leave" ||
+                                  dbStatusLower === "onleave"
+                              ) {
+                                  color = "#f59e0b";
+                                  label = "On Leave";
+                              } else if (realTimePresence === "away") {
+                                  color = "#8b5cf6";
+                                  label = "Away";
+                              } else if (
+                                  realTimePresence === "active" ||
+                                  realTimePresence === "online"
+                              ) {
+                                  color = "#10b981";
+                                  label = "Online";
+                              }
+
+                              return (
+                                  <div className="flex items-center gap-1.5">
+                                      <span
+                                          className="size-2 rounded-full shrink-0"
+                                          style={{ backgroundColor: color }}
+                                      />
+                                      <span
+                                          className="text-xs font-medium"
+                                          style={{ color }}
+                                      >
+                                          {label}
+                                      </span>
+                                  </div>
+                              );
+                          },
                       },
                   ]
                 : []),
@@ -363,6 +389,7 @@ const JoinedMembers = () => {
             isOrgOwner,
             billingPath,
             openChatWithMember,
+            presenceMap,
         ],
     );
 

@@ -131,7 +131,10 @@ const WorkItemList = ({
                                 name={member.name}
                                 status={member.status}
                                 size="sm"
-                                memberId={member.memberId}
+                                memberId={member.memberId || member.id}
+                                userId={
+                                    (member as any).userId || member.memberId
+                                }
                             />
                             <span className="text-sm text-muted-foreground truncate">
                                 {member.name}

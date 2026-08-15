@@ -80,39 +80,106 @@ export const initializeSocket = (httpServer: HttpServer) => {
 
             const { setUserPresence, removeUserPresence, getOrgPresence } =
                 await import("../modules/organizations/application/presence.service.js");
+            const { findMemberByOrgAndUserId } =
+                await import("../modules/organizations/infrastructure/organization-member.repository.js");
 
-            await setUserPresence(orgId, user.id, "active");
+            const member = await findMemberByOrgAndUserId(orgId, user.id);
+            const memberId = member?.id;
+            const dbStatus = member?.status;
+
+            const initialStatus = dbStatus === "onleave" ? "onleave" : "active";
+
+            await setUserPresence(orgId, user.id, initialStatus);
+            if (memberId) {
+                await setUserPresence(orgId, memberId, initialStatus);
+            }
+
             chatNamespace.to(roomName).emit("presence:update", {
                 memberId: user.id,
-                status: "active",
+                status: initialStatus,
             });
+            if (memberId) {
+                chatNamespace.to(roomName).emit("presence:update", {
+                    memberId,
+                    status: initialStatus,
+                });
+            }
 
-            const currentPresence = await getOrgPresence(orgId);
+            const getActivePresenceMap = async () => {
+                const rawPresence = await getOrgPresence(orgId);
+                const activeSockets = await chatNamespace
+                    .in(roomName)
+                    .fetchSockets();
+                const connectedUserIds = new Set<string>();
+
+                for (const s of activeSockets) {
+                    const auth = (s as any).user;
+                    if (auth?.id) connectedUserIds.add(auth.id);
+                }
+
+                const cleanedPresence: Record<string, string> = {};
+                for (const [id, status] of Object.entries(rawPresence)) {
+                    if (status === "onleave" || connectedUserIds.has(id)) {
+                        cleanedPresence[id] = status;
+                    } else {
+                        await removeUserPresence(orgId, id);
+                    }
+                }
+                return cleanedPresence;
+            };
+
+            const currentPresence = await getActivePresenceMap();
             socket.emit("presence:sync", currentPresence);
 
             socket.on(
                 "user:status_change",
-                async (data: { status: "active" | "away" }) => {
+                async (data: {
+                    status: "active" | "away" | "onleave" | "offline";
+                }) => {
                     await setUserPresence(orgId, user.id, data.status);
+                    if (memberId) {
+                        await setUserPresence(orgId, memberId, data.status);
+                    }
                     chatNamespace.to(roomName).emit("presence:update", {
                         memberId: user.id,
                         status: data.status,
                     });
+                    if (memberId) {
+                        chatNamespace.to(roomName).emit("presence:update", {
+                            memberId,
+                            status: data.status,
+                        });
+                    }
                 },
             );
 
             socket.on("presence:request_sync", async () => {
-                const freshPresence = await getOrgPresence(orgId);
+                const freshPresence = await getActivePresenceMap();
                 socket.emit("presence:sync", freshPresence);
             });
 
             socket.on("disconnect", async () => {
                 socket.leave(roomName);
-                await removeUserPresence(orgId, user.id);
-                chatNamespace.to(roomName).emit("presence:update", {
-                    memberId: user.id,
-                    status: "offline",
-                });
+                const remainingSockets = await chatNamespace
+                    .in(userRoom)
+                    .fetchSockets();
+
+                if (remainingSockets.length === 0) {
+                    await removeUserPresence(orgId, user.id);
+                    if (memberId) {
+                        await removeUserPresence(orgId, memberId);
+                    }
+                    chatNamespace.to(roomName).emit("presence:update", {
+                        memberId: user.id,
+                        status: "offline",
+                    });
+                    if (memberId) {
+                        chatNamespace.to(roomName).emit("presence:update", {
+                            memberId,
+                            status: "offline",
+                        });
+                    }
+                }
             });
         }
         handleChatConnection(socket);

@@ -67,6 +67,13 @@ const SprintCommentsTab = ({
             >
                 <MemberAvatar
                     name={localStorage.getItem("name") || "Me"}
+                    userId={
+                        typeof window !== "undefined"
+                            ? localStorage.getItem("userId") ||
+                              localStorage.getItem("id") ||
+                              undefined
+                            : undefined
+                    }
                     status="active"
                     size="default"
                 />
@@ -122,7 +129,8 @@ const SprintCommentsTab = ({
                                     name={d.authorName}
                                     status={d.authorStatus || "active"}
                                     size="sm"
-                                    memberId={d.authorUserId}
+                                    memberId={d.memberId || d.authorId}
+                                    userId={d.authorUserId || d.userId}
                                 />
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between gap-2">

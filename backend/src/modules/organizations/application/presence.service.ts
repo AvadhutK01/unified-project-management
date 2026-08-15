@@ -19,7 +19,7 @@ const getRedisClient = (): Redis => {
 export const setUserPresence = async (
     orgId: string,
     memberId: string,
-    status: "active" | "away",
+    status: "active" | "away" | "onleave" | "offline",
 ) => {
     const client = getRedisClient();
     const key = `presence:org:${orgId}`;
@@ -44,4 +44,26 @@ export const getOrgPresence = async (
     const client = getRedisClient();
     const key = `presence:org:${orgId}`;
     return client.hgetall(key);
+};
+
+/**
+ * Broadcasts a presence status update to all connected sockets in an organization room.
+ */
+export const broadcastPresenceUpdate = async (
+    orgId: string,
+    memberId: string,
+    status: "active" | "away" | "onleave" | "offline",
+) => {
+    await setUserPresence(orgId, memberId, status);
+    try {
+        const { getSocketServer } = await import("../../../app/socket.js");
+        const io = getSocketServer();
+        const roomName = `org:${orgId}`;
+        io.of("/socket.io").to(roomName).emit("presence:update", {
+            memberId,
+            status,
+        });
+    } catch {
+        //
+    }
 };

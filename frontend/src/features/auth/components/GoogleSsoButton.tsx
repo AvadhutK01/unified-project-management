@@ -52,6 +52,9 @@ export const GoogleSsoButton: React.FC<GoogleSsoButtonProps> = ({
                         localStorage.setItem("token", data.token);
                         localStorage.setItem("name", data.username || "");
                         localStorage.setItem("email", data.email || "");
+                        if (data.id) {
+                            localStorage.setItem("userId", data.id);
+                        }
                         toast.success("Welcome! Logged in with Google.");
                         navigate("/org-setup/select", { replace: true });
                     } else if (data?.requiresPhone || !data?.isVerified) {

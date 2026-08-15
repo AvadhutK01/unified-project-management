@@ -9,6 +9,7 @@ interface MemberAvatarProps {
     size?: "default" | "sm" | "lg";
     className?: string;
     memberId?: string;
+    userId?: string;
 }
 
 /**
@@ -22,37 +23,41 @@ export const MemberAvatar = ({
     size = "default",
     className,
     memberId,
+    userId,
 }: MemberAvatarProps) => {
     const initials = getInitials(name);
     const bgColor = getColor(name);
 
     const presenceMap = usePresenceStore((s) => s.presenceMap);
-    const presence = memberId ? presenceMap[memberId] : undefined;
+    const effectiveId = memberId || userId;
+    const realTimePresence = effectiveId ? presenceMap[effectiveId] : undefined;
 
-    const statusLower = status.toLowerCase();
-    let statusColor = "#a1a1aa";
-    let statusLabel = "Inactive";
+    const statusLower = (status || "").toLowerCase();
+    let statusColor = "#94a3b8";
+    let statusLabel = "Offline";
 
-    if (statusLower === "active") {
-        if (presence === "away") {
-            statusColor = "#8b5cf6";
-            statusLabel = "Away";
-        } else if (presence === "active") {
-            statusColor = "#10b981";
-            statusLabel = "Online";
-        } else {
-            statusColor = "#94a3b8";
-            statusLabel = "Offline";
-        }
-    } else if (statusLower === "on leave" || statusLower === "onleave") {
+    if (realTimePresence === "onleave" || realTimePresence === "on_leave") {
+        statusColor = "#f59e0b";
+        statusLabel = "On Leave";
+    } else if (realTimePresence === "away") {
+        statusColor = "#8b5cf6";
+        statusLabel = "Away";
+    } else if (realTimePresence === "active" || realTimePresence === "online") {
+        statusColor = "#10b981";
+        statusLabel = "Online";
+    } else if (
+        statusLower === "on leave" ||
+        statusLower === "onleave" ||
+        statusLower === "on_leave"
+    ) {
         statusColor = "#f59e0b";
         statusLabel = "On Leave";
     } else if (statusLower === "pending") {
         statusColor = "#d97706";
         statusLabel = "Pending";
-    } else if (statusLower === "inactive") {
-        statusColor = "#a1a1aa";
-        statusLabel = "Inactive";
+    } else {
+        statusColor = "#94a3b8";
+        statusLabel = "Offline";
     }
 
     return (

@@ -191,6 +191,8 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
                                         <MemberAvatar
                                             name={member.name}
                                             size="sm"
+                                            memberId={member.id}
+                                            userId={member.userId}
                                         />
                                         <div className="min-w-0">
                                             <p className="text-xs font-semibold text-foreground truncate">

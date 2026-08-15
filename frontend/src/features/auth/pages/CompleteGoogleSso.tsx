@@ -101,6 +101,9 @@ const CompleteGoogleSso = () => {
                         localStorage.setItem("token", data.token);
                         localStorage.setItem("name", data.username || username);
                         localStorage.setItem("email", data.email || email);
+                        if (data.id) {
+                            localStorage.setItem("userId", data.id);
+                        }
                     }
                     toast.success("Phone verified! Account setup complete.");
                     navigate("/org-setup/select", { replace: true });

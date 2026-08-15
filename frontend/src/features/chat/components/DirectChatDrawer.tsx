@@ -271,6 +271,8 @@ export const DirectChatDrawer: React.FC = () => {
                             name={activeRecipient.name}
                             status="Active"
                             size="sm"
+                            memberId={activeRecipient.id}
+                            userId={activeRecipient.id}
                         />
                         <div className="min-w-0">
                             <h3 className="text-sm font-semibold text-foreground truncate">

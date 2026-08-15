@@ -498,5 +498,13 @@ export const toggleMyLeaveStatus = async (orgId: string, userId: string) => {
         throw internalServerError("Failed to update member status");
     }
 
+    const { broadcastPresenceUpdate } = await import("./presence.service.js");
+    const targetPresenceStatus =
+        newStatus === ORGANIZATION_MEMBER_STATUS.ON_LEAVE
+            ? "onleave"
+            : "active";
+    await broadcastPresenceUpdate(orgId, userId, targetPresenceStatus);
+    await broadcastPresenceUpdate(orgId, member.id, targetPresenceStatus);
+
     return updated;
 };

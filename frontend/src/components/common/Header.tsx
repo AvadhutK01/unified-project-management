@@ -11,6 +11,10 @@ import { useNotificationStore } from "@/store/notification.store";
 import { Menu, Sparkles } from "lucide-react";
 import { useSubscriptionQuery } from "@/features/subscriptions/hooks/useSubscription";
 
+import { MemberAvatar } from "@/components/common/MemberAvatar";
+import { useSocket } from "@/hooks/useSocket";
+import { usePresenceStore } from "@/features/presence/store/presence.store";
+
 interface User {
     name: string;
     email: string;
@@ -18,10 +22,27 @@ interface User {
 
 const Header = () => {
     const navigate = useNavigate();
+    const socket = useSocket();
+    const setPresence = usePresenceStore((s) => s.setPresence);
     const { activeOrganization, clearActiveOrganization } =
         useOrganizationStore();
     const { data: subscription } = useSubscriptionQuery();
     const isPremium = subscription?.isPremium ?? false;
+    const getUserIdFromToken = (): string => {
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) return "";
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            return payload.id || payload.userId || payload.sub || "";
+        } catch {
+            return "";
+        }
+    };
+
+    const currentUserId =
+        typeof window !== "undefined"
+            ? localStorage.getItem("userId") || getUserIdFromToken()
+            : "";
 
     const [user, setUser] = useState<User>({
         name: "",
@@ -103,6 +124,13 @@ const Header = () => {
     const handleToggleLeave = (checked: boolean) => {
         setIsOnLeave(checked);
         setMemberStatus(checked ? "onleave" : "available");
+        const targetStatus = checked ? "onleave" : "active";
+        if (currentUserId) {
+            setPresence(currentUserId, targetStatus);
+        }
+        if (socket) {
+            socket.emit("user:status_change", { status: targetStatus });
+        }
         toggleLeaveMutation.mutate();
     };
 
@@ -146,21 +174,11 @@ const Header = () => {
                         onClick={() => setShowProfilePanel(!showProfilePanel)}
                         className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
                     >
-                        <span className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-linear-to-br from-primary/15 to-accent/15 text-primary text-xs font-bold hover:from-primary/25 hover:to-accent/25 transition-all duration-200 ring-1 ring-primary/10">
-                            <span className="text-lg font-semibold text-pink-700">
-                                {user.name
-                                    ?.split(" ")
-                                    .filter((word: string) => Boolean(word))
-                                    .map((word: string) => word[0])
-                                    .slice(0, 2)
-                                    .join("")
-                                    .toUpperCase() || "AK"}
-                            </span>
-                            {/* Status dot */}
-                            <span
-                                className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-card ${isOnLeave ? "bg-amber-400" : "bg-emerald-500"}`}
-                            />
-                        </span>
+                        <MemberAvatar
+                            name={user.name || "User"}
+                            userId={currentUserId || undefined}
+                            status={isOnLeave ? "onleave" : "active"}
+                        />
                     </button>
 
                     {showProfilePanel && (
