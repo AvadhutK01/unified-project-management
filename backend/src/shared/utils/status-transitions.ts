@@ -59,6 +59,12 @@ const workitemTransitions: Record<string, string[]> = {
     [WORKITEM_STATUS.REMOVED]: [],
 };
 
+/**
+ * Validates whether a project status transition from current state to target next state is permitted.
+ * @param current Current status string.
+ * @param next Target status string.
+ * @throws AppError 400 Bad Request if transition is invalid.
+ */
 export const validateProjectTransition = (current: string, next: string) => {
     if (current === next) return;
     const allowed = projectTransitions[current] || [];
@@ -69,6 +75,12 @@ export const validateProjectTransition = (current: string, next: string) => {
     }
 };
 
+/**
+ * Validates whether a sprint status transition from current state to target next state is permitted.
+ * @param current Current status string.
+ * @param next Target status string.
+ * @throws AppError 400 Bad Request if transition is invalid.
+ */
 export const validateSprintTransition = (current: string, next: string) => {
     if (current === next) return;
     const allowed = sprintTransitions[current] || [];
@@ -79,6 +91,12 @@ export const validateSprintTransition = (current: string, next: string) => {
     }
 };
 
+/**
+ * Validates whether a workitem status transition from current state to target next state is permitted.
+ * @param current Current status string.
+ * @param next Target status string.
+ * @throws AppError 400 Bad Request if transition is invalid.
+ */
 export const validateWorkitemTransition = (current: string, next: string) => {
     if (current === next) return;
     const allowed = workitemTransitions[current] || [];

@@ -5,6 +5,12 @@ import {
     findPermissionsByRoleId,
 } from "../../modules/roles/infrastructure/role.repository.js";
 
+/**
+ * Resolves role metadata, permissions, ownership status, and member status for a user in an organization.
+ * @param orgId UUID of the organization.
+ * @param userId UUID of the user.
+ * @returns Object containing role details, permissions, is_org_owner flag, and status, or null if organization/member not found.
+ */
 export const getMemberRoleData = async (orgId: string, userId: string) => {
     const org = await findOrganizationById(orgId);
     if (!org) {

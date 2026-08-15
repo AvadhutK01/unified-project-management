@@ -58,7 +58,7 @@ export const expireSubscription = async (
                     owner.email,
                     org.name,
                     new Date().toISOString().split("T")[0] || "",
-                ).catch((err: unknown) =>
+                ).catch((err) =>
                     console.error(
                         "Failed to send subscription expiry email:",
                         err,

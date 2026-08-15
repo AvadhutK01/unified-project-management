@@ -1,0 +1,507 @@
+export const userSwaggerPaths = {
+    "/users/register": {
+        post: {
+            summary: "Register a new user",
+            requestBody: {
+                required: true,
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            required: [
+                                "username",
+                                "email",
+                                "password",
+                                "phoneNumber",
+                            ],
+                            properties: {
+                                username: {
+                                    type: "string",
+                                },
+                                email: {
+                                    type: "string",
+                                    format: "email",
+                                },
+                                password: {
+                                    type: "string",
+                                },
+                                phoneNumber: {
+                                    type: "string",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            responses: {
+                "201": {
+                    description: "User registered successfully",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    status: {
+                                        type: "string",
+                                        example: "success",
+                                    },
+                                    data: {
+                                        type: "object",
+                                        properties: {
+                                            id: {
+                                                type: "string",
+                                            },
+                                            username: {
+                                                type: "string",
+                                            },
+                                            email: {
+                                                type: "string",
+                                            },
+                                            phoneNumber: {
+                                                type: "string",
+                                            },
+                                            isVerified: {
+                                                type: "boolean",
+                                            },
+                                            emailOtp: {
+                                                type: "string",
+                                            },
+                                            phoneOtp: {
+                                                type: "string",
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                "400": {
+                    description: "Bad Request",
+                },
+            },
+        },
+    },
+    "/users/verify": {
+        post: {
+            summary: "Verify user OTPs",
+            requestBody: {
+                required: true,
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            required: [
+                                "email",
+                                "phoneNumber",
+                                "emailOtp",
+                                "phoneOtp",
+                            ],
+                            properties: {
+                                email: {
+                                    type: "string",
+                                    format: "email",
+                                },
+                                phoneNumber: {
+                                    type: "string",
+                                },
+                                emailOtp: {
+                                    type: "string",
+                                },
+                                phoneOtp: {
+                                    type: "string",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            responses: {
+                "200": {
+                    description:
+                        "User verified successfully. JWT token is returned in the response body.",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    status: {
+                                        type: "string",
+                                        example: "success",
+                                    },
+                                    data: {
+                                        type: "object",
+                                        properties: {
+                                            id: {
+                                                type: "string",
+                                            },
+                                            username: {
+                                                type: "string",
+                                            },
+                                            email: {
+                                                type: "string",
+                                            },
+                                            phoneNumber: {
+                                                type: "string",
+                                            },
+                                            isVerified: {
+                                                type: "boolean",
+                                            },
+                                            token: {
+                                                type: "string",
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                "400": {
+                    description: "Invalid OTP or Bad Request",
+                },
+                "404": {
+                    description: "User not found",
+                },
+            },
+        },
+    },
+    "/users/resend": {
+        post: {
+            summary: "Resend OTP",
+            requestBody: {
+                required: true,
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                email: {
+                                    type: "string",
+                                    format: "email",
+                                },
+                                phoneNumber: {
+                                    type: "string",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            responses: {
+                "200": {
+                    description: "OTP resent successfully",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    status: {
+                                        type: "string",
+                                        example: "success",
+                                    },
+                                    data: {
+                                        type: "object",
+                                        properties: {
+                                            id: {
+                                                type: "string",
+                                            },
+                                            email: {
+                                                type: "string",
+                                            },
+                                            phoneNumber: {
+                                                type: "string",
+                                            },
+                                            emailOtp: {
+                                                type: "string",
+                                            },
+                                            phoneOtp: {
+                                                type: "string",
+                                            },
+                                            isVerified: {
+                                                type: "boolean",
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                "400": {
+                    description: "Bad Request",
+                },
+                "404": {
+                    description: "User not found",
+                },
+            },
+        },
+    },
+    "/users/login": {
+        post: {
+            summary: "Login user",
+            requestBody: {
+                required: true,
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            required: ["email", "password"],
+                            properties: {
+                                email: {
+                                    type: "string",
+                                    format: "email",
+                                },
+                                password: {
+                                    type: "string",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            responses: {
+                "200": {
+                    description:
+                        "Login response indicating verification status. JWT token is returned in the response body if verified.",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    status: {
+                                        type: "string",
+                                        example: "success",
+                                    },
+                                    data: {
+                                        type: "object",
+                                        properties: {
+                                            isVerified: {
+                                                type: "boolean",
+                                            },
+                                            id: {
+                                                type: "string",
+                                            },
+                                            username: {
+                                                type: "string",
+                                            },
+                                            email: {
+                                                type: "string",
+                                            },
+                                            phoneNumber: {
+                                                type: "string",
+                                            },
+                                            token: {
+                                                type: "string",
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                "400": {
+                    description: "Bad Request",
+                },
+                "401": {
+                    description: "Invalid credentials",
+                },
+                "404": {
+                    description: "User is not registered",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    status: {
+                                        type: "string",
+                                        example: "error",
+                                    },
+                                    message: {
+                                        type: "string",
+                                        example: "User is not registered",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "/users/generate-reset-pwd-otp": {
+        post: {
+            summary: "Generate password reset OTP",
+            requestBody: {
+                required: true,
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            required: ["email"],
+                            properties: {
+                                email: {
+                                    type: "string",
+                                    format: "email",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            responses: {
+                "200": {
+                    description: "Reset OTP generated successfully",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    status: {
+                                        type: "string",
+                                        example: "success",
+                                    },
+                                    data: {
+                                        type: "object",
+                                        properties: {
+                                            id: {
+                                                type: "string",
+                                            },
+                                            email: {
+                                                type: "string",
+                                            },
+                                            pwdResetOtp: {
+                                                type: "string",
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                "400": {
+                    description: "Bad Request",
+                },
+                "404": {
+                    description: "User not found",
+                },
+            },
+        },
+    },
+    "/users/verify-reset-pwd-otp": {
+        post: {
+            summary: "Verify password reset OTP",
+            requestBody: {
+                required: true,
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            required: ["email", "otp"],
+                            properties: {
+                                email: {
+                                    type: "string",
+                                    format: "email",
+                                },
+                                otp: {
+                                    type: "string",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            responses: {
+                "200": {
+                    description:
+                        "OTP verified successfully. Temporary reset token is returned.",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    status: {
+                                        type: "string",
+                                        example: "success",
+                                    },
+                                    data: {
+                                        type: "object",
+                                        properties: {
+                                            token: {
+                                                type: "string",
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                "400": {
+                    description: "Bad Request",
+                },
+                "404": {
+                    description: "User not found",
+                },
+            },
+        },
+    },
+    "/users/reset-password": {
+        post: {
+            summary: "Reset user password with valid token",
+            requestBody: {
+                required: true,
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            required: ["token", "password"],
+                            properties: {
+                                token: {
+                                    type: "string",
+                                },
+                                password: {
+                                    type: "string",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            responses: {
+                "200": {
+                    description: "Password reset successfully",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    status: {
+                                        type: "string",
+                                        example: "success",
+                                    },
+                                    data: {
+                                        type: "object",
+                                        properties: {
+                                            id: {
+                                                type: "string",
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                "400": {
+                    description: "Bad Request",
+                },
+                "404": {
+                    description: "User not found",
+                },
+            },
+        },
+    },
+};

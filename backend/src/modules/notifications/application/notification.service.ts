@@ -23,10 +23,11 @@ import {
     NOTIFICATION_ENTITY_TYPE,
 } from "../../../shared/constants/enumConstants.js";
 
-type NotificationType =
-    (typeof NOTIFICATION_TYPE)[keyof typeof NOTIFICATION_TYPE];
-type NotificationEntityType =
-    (typeof NOTIFICATION_ENTITY_TYPE)[keyof typeof NOTIFICATION_ENTITY_TYPE];
+import type {
+    NotificationType,
+    NotificationEntityType,
+    NotificationMetadata,
+} from "../../../types/notifications.js";
 
 export const sendNotification = async (
     userId: string,
@@ -36,7 +37,7 @@ export const sendNotification = async (
     message: string,
     entityId?: string | null,
     entityType?: NotificationEntityType | null,
-    metadata?: Record<string, any> | null,
+    metadata?: NotificationMetadata | null,
 ) => {
     const notification = await createNotification({
         userId,
@@ -258,7 +259,7 @@ export const notifyDiscussionMention = async (
 
     let orgId: string | null = null;
     let detailMsg = "";
-    let metadata: Record<string, any> | null = null;
+    let metadata: NotificationMetadata | null = null;
 
     if (entityType === NOTIFICATION_ENTITY_TYPE.WORKITEM) {
         const context = await getWorkitemContext(entityId);
@@ -315,6 +316,9 @@ export const notifyDiscussionMention = async (
     }
 };
 
+/**
+ * Scans for sprints ending tomorrow and dispatches deadline notification alerts to team members.
+ */
 export const checkUpcomingSprintDeadlines = async () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);

@@ -418,9 +418,3 @@ export const countProjectMembersPaginated = async (
         );
     return Number(result?.value ?? 0);
 };
-
-export const deleteMembersByOrganizationId = async (organizationId: string) => {
-    return db
-        .delete(organizationMembers)
-        .where(eq(organizationMembers.organizationId, organizationId));
-};

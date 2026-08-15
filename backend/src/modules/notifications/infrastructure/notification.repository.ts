@@ -17,10 +17,11 @@ import {
     NOTIFICATION_ENTITY_TYPE,
 } from "../../../shared/constants/enumConstants.js";
 
-type NotificationType =
-    (typeof NOTIFICATION_TYPE)[keyof typeof NOTIFICATION_TYPE];
-type NotificationEntityType =
-    (typeof NOTIFICATION_ENTITY_TYPE)[keyof typeof NOTIFICATION_ENTITY_TYPE];
+import type {
+    NotificationType,
+    NotificationEntityType,
+    NotificationMetadata,
+} from "../../../types/notifications.js";
 
 export const createNotification = async (data: {
     userId: string;
@@ -30,7 +31,7 @@ export const createNotification = async (data: {
     message: string;
     entityId?: string | null;
     entityType?: NotificationEntityType | null;
-    metadata?: Record<string, any> | null;
+    metadata?: NotificationMetadata | null;
 }) => {
     const [notification] = await db
         .insert(notifications)
@@ -76,6 +77,12 @@ export const countNotificationsByUserId = async (
     return Number(result?.count || 0);
 };
 
+/**
+ * Updates a notification record as read for a given user.
+ * @param id UUID of the notification.
+ * @param userId UUID of the user.
+ * @returns Updated notification row or undefined.
+ */
 export const updateNotificationRead = async (id: string, userId: string) => {
     const [notification] = await db
         .update(notifications)
@@ -85,6 +92,11 @@ export const updateNotificationRead = async (id: string, userId: string) => {
     return notification;
 };
 
+/**
+ * Marks all notifications as read for a given user and organization.
+ * @param userId UUID of the user.
+ * @param organizationId UUID of the organization.
+ */
 export const markAllNotificationsRead = async (
     userId: string,
     organizationId: string,
@@ -100,6 +112,11 @@ export const markAllNotificationsRead = async (
         );
 };
 
+/**
+ * Resolves user ID and email address from a project member ID.
+ * @param projectMemberId UUID of the project member.
+ * @returns Member details containing userId and email.
+ */
 export const getUserDetailsFromProjectMemberId = async (
     projectMemberId: string,
 ) => {
@@ -115,6 +132,11 @@ export const getUserDetailsFromProjectMemberId = async (
     return member;
 };
 
+/**
+ * Resolves user ID and email address from an organization member ID.
+ * @param orgMemberId UUID of the organization member.
+ * @returns Member details containing userId and email.
+ */
 export const getUserDetailsFromOrgMemberId = async (orgMemberId: string) => {
     const [member] = await db
         .select({ userId: organizationMembers.memberId, email: users.email })
@@ -124,6 +146,11 @@ export const getUserDetailsFromOrgMemberId = async (orgMemberId: string) => {
     return member;
 };
 
+/**
+ * Fetches hierarchical context (sprint, phase, project, organization) for a workitem.
+ * @param workitemId UUID of the workitem.
+ * @returns Object containing workitem and parent hierarchy metadata.
+ */
 export const getWorkitemContext = async (workitemId: string) => {
     const [result] = await db
         .select({
@@ -148,6 +175,11 @@ export const getWorkitemContext = async (workitemId: string) => {
     return result;
 };
 
+/**
+ * Fetches hierarchical context (phase, project, organization) for a sprint.
+ * @param sprintId UUID of the sprint.
+ * @returns Object containing sprint and parent hierarchy metadata.
+ */
 export const getSprintContext = async (sprintId: string) => {
     const [result] = await db
         .select({
@@ -169,6 +201,11 @@ export const getSprintContext = async (sprintId: string) => {
     return result;
 };
 
+/**
+ * Finds username associated with a user ID.
+ * @param userId UUID of the user.
+ * @returns Username string or null.
+ */
 export const findUsernameById = async (userId: string) => {
     const [user] = await db
         .select({ username: users.username })
@@ -177,10 +214,20 @@ export const findUsernameById = async (userId: string) => {
     return user?.username || null;
 };
 
+/**
+ * Finds all sprints ending on a specific date string (YYYY-MM-DD).
+ * @param dateStr Target end date string.
+ * @returns Array of matching sprint records.
+ */
 export const findSprintsEndingOnDate = async (dateStr: string) => {
     return db.select().from(sprints).where(eq(sprints.endDate, dateStr));
 };
 
+/**
+ * Finds project members with user credentials for a specific project.
+ * @param projectId UUID of the project.
+ * @returns Array of project members containing userId and email.
+ */
 export const findProjectMembersWithUsersByProjectId = async (
     projectId: string,
 ) => {
@@ -198,6 +245,11 @@ export const findProjectMembersWithUsersByProjectId = async (
         .where(eq(projectMembers.projectId, projectId));
 };
 
+/**
+ * Fetches organization slug by organization ID.
+ * @param organizationId UUID of the organization.
+ * @returns Organization slug or null.
+ */
 export const findOrgSlugById = async (organizationId: string) => {
     const [org] = await db
         .select({ slug: organizations.slug })

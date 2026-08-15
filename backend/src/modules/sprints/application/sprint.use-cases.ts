@@ -29,7 +29,18 @@ import { validateSprintTransition } from "../../../shared/utils/status-transitio
  * @param data The fields being updated.
  * @returns A descriptive string of changes.
  */
-const generateUpdateDescription = (oldSprint: any, data: any): string => {
+const generateUpdateDescription = (
+    oldSprint: NonNullable<Awaited<ReturnType<typeof findSprintById>>>,
+    data: {
+        title?: string;
+        description?: string | null;
+        startDate?: string | null;
+        endDate?: string | null;
+        sequence?: number | null;
+        acceptanceCriteria?: string | null;
+        status?: "new" | "active" | "onhold" | "removed" | "closed";
+    },
+): string => {
     const changes: string[] = [];
     if (data.title !== undefined && data.title !== oldSprint.title) {
         changes.push(

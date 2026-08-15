@@ -32,14 +32,8 @@ export const notificationEntityTypeEnum = pgEnum("notification_entity_type", [
     NOTIFICATION_ENTITY_TYPE.DIRECT_CHAT,
 ]);
 
-export interface NotificationMetadata {
-    orgSlug?: string;
-    projectId?: string;
-    phaseId?: string;
-    sprintId?: string;
-    workitemId?: string;
-    [key: string]: any;
-}
+import type { NotificationMetadata } from "../../../types/notifications.js";
+export type { NotificationMetadata };
 
 export const notifications = pgTable("notifications", {
     id: uuid("id").defaultRandom().primaryKey(),

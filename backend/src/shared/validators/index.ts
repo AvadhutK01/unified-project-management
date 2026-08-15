@@ -2,6 +2,11 @@ import { Request, Response, NextFunction } from "express";
 import { AnyZodObject, ZodError } from "zod";
 import { createError } from "../errors/app-error.js";
 
+/**
+ * Higher-order Express middleware factory that validates incoming HTTP request body, query, and params using a Zod schema.
+ * @param schema Zod validation schema object.
+ * @returns Express middleware handler function.
+ */
 export const validateRequest = (schema: AnyZodObject) => {
     return async (
         req: Request,

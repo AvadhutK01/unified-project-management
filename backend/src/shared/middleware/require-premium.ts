@@ -3,8 +3,8 @@ import { forbiddenError, badRequestError } from "../errors/app-error.js";
 import { findSubscriptionByOrgId } from "../../modules/subscriptions/infrastructure/subscription.repository.js";
 import { SUBSCRIPTION_PLAN } from "../constants/enumConstants.js";
 
-export type SubscriptionPlan =
-    (typeof SUBSCRIPTION_PLAN)[keyof typeof SUBSCRIPTION_PLAN];
+import type { SubscriptionPlan } from "../../types/subscriptions.js";
+export type { SubscriptionPlan };
 
 /** Ordered hierarchy of plans, lowest to highest. */
 export const PLAN_HIERARCHY: SubscriptionPlan[] = [
@@ -54,15 +54,6 @@ export const isOrganizationOnPlan = async (
 };
 
 /**
- * Backward-compatible alias — checks if an organization has an active premium subscription.
- */
-export const isOrganizationPremium = async (
-    organizationId: string,
-): Promise<boolean> => {
-    return isOrganizationOnPlan(organizationId, SUBSCRIPTION_PLAN.PREMIUM);
-};
-
-/**
  * Factory middleware that verifies the active organization's plan is at or above `minPlan`.
  */
 export const requirePlan = (minPlan: SubscriptionPlan) => {
@@ -106,8 +97,3 @@ export const requirePlan = (minPlan: SubscriptionPlan) => {
         }
     };
 };
-
-/**
- * Backward-compatible alias — middleware that requires an active Premium subscription.
- */
-export const requirePremium = requirePlan(SUBSCRIPTION_PLAN.PREMIUM);

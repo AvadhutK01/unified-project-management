@@ -34,7 +34,33 @@ import {
     WORKITEM_TYPE,
 } from "../../../shared/constants/enumConstants.js";
 
-const generateUpdateDescription = (oldWorkitem: any, data: any): string => {
+/**
+ * Generates a readable change log description string by comparing old and new workitem property values.
+ * @param oldWorkitem The original workitem object before updates.
+ * @param data The new property updates object.
+ * @returns Human-readable description string summarizing all modified fields.
+ */
+const generateUpdateDescription = (
+    oldWorkitem: NonNullable<Awaited<ReturnType<typeof findWorkitemById>>>,
+    data: {
+        title?: string;
+        description?: string | null;
+        assignedTo?: string | null;
+        status?:
+            | "new"
+            | "active"
+            | "resolved"
+            | "closed"
+            | "removed"
+            | "onhold";
+        priority?: number;
+        acceptanceCriteria?: string | null;
+        workitemType?: "task" | "bug";
+        originalEstimation?: number | null;
+        remaining?: number | null;
+        completed?: number | null;
+    },
+): string => {
     const changes: string[] = [];
     if (data.title !== undefined && data.title !== oldWorkitem.title) {
         changes.push(

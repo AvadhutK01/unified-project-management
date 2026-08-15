@@ -44,6 +44,11 @@ export const createWorkitem = async (data: {
     return workitem;
 };
 
+/**
+ * Finds a workitem by ID with assigned user and parent hierarchy metadata.
+ * @param id UUID of the workitem.
+ * @returns Workitem details object or null.
+ */
 export const findWorkitemById = async (id: string) => {
     const results = await db
         .select({
@@ -178,7 +183,9 @@ export const updateWorkitem = async (
         completed?: number | null;
     },
 ) => {
-    const updates: Record<string, unknown> = { updatedAt: new Date() };
+    const updates: Partial<typeof workitems.$inferInsert> = {
+        updatedAt: new Date(),
+    };
     if (data.title !== undefined) updates.title = data.title;
     if (data.description !== undefined) updates.description = data.description;
     if (data.assignedTo !== undefined) updates.assignedTo = data.assignedTo;
@@ -213,6 +220,11 @@ export const updateWorkitemStatus = async (
     return updated ?? null;
 };
 
+/**
+ * Soft deletes a workitem record by setting its deletedAt timestamp.
+ * @param id UUID of the workitem.
+ * @returns Soft deleted workitem record or null.
+ */
 export const softDeleteWorkitem = async (id: string) => {
     const [deleted] = await db
         .update(workitems)

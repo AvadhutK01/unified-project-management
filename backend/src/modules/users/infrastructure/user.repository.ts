@@ -50,24 +50,6 @@ export const findUserByGoogleId = async (googleId: string) => {
 };
 
 /**
- * Finds a user by email or phone number.
- * @param email The user email.
- * @param phoneNumber The user phone number.
- * @returns The user object if found, otherwise null.
- */
-export const findUserByEmailOrPhone = async (
-    email: string,
-    phoneNumber: string,
-) => {
-    const results = await db
-        .select()
-        .from(users)
-        .where(or(eq(users.email, email), eq(users.phoneNumber, phoneNumber)))
-        .limit(1);
-    return results[0] || null;
-};
-
-/**
  * Finds a user by email.
  * @param email The user email.
  * @returns The user object if found, otherwise null.
@@ -158,14 +140,4 @@ export const markUserAsVerified = async (id: string) => {
         .where(eq(users.id, id))
         .returning();
     return user;
-};
-
-/**
- * Deletes a user by their ID.
- * @param id The user ID.
- * @returns The deleted user record, or null.
- */
-export const deleteUserById = async (id: string) => {
-    const [user] = await db.delete(users).where(eq(users.id, id)).returning();
-    return user || null;
 };

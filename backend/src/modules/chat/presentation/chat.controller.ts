@@ -14,8 +14,8 @@ export const handleGetDirectChatHistory = async (
     next: NextFunction,
 ) => {
     try {
-        const userId = (req as any).user!.id as string;
-        const orgId = (req as any).orgId! as string;
+        const userId = req.user!.id;
+        const orgId = req.orgId!;
         const recipientId = req.params.recipientId as string;
         const page = Number(req.query.page || 1);
         const limit = Number(req.query.limit || 10);
@@ -47,8 +47,8 @@ export const handleMarkDirectChatRead = async (
     next: NextFunction,
 ) => {
     try {
-        const userId = (req as any).user!.id as string;
-        const orgId = (req as any).orgId! as string;
+        const userId = req.user!.id;
+        const orgId = req.orgId!;
         const senderId = req.params.senderId as string;
 
         const result = await markDirectChatAsReadUseCase(
@@ -75,8 +75,8 @@ export const handleUploadDirectChatAttachment = async (
     next: NextFunction,
 ) => {
     try {
-        const userId = (req as any).user!.id as string;
-        const orgId = (req as any).orgId! as string;
+        const userId = req.user!.id;
+        const orgId = req.orgId!;
         const file = req.file;
 
         const attachment = await uploadDirectChatAttachmentUseCase(

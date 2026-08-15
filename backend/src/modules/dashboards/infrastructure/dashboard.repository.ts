@@ -94,7 +94,17 @@ export const getOrganizationDashboardMetrics = async (
     }
 
     const orgMember = orgMembers.find((m) => m.memberId === userId);
-    let recentWorkItems: any[] = [];
+    let recentWorkItems: Array<{
+        id: string;
+        title: string;
+        status: string;
+        type: string;
+        createdAt: Date;
+        assignedToName: string | null;
+        assignedToEmail: string | null;
+        assignedToStatus: string | null;
+        assignedToUserId: string | null;
+    }> = [];
     if (orgMember) {
         const userProjectMembers = await db
             .select()

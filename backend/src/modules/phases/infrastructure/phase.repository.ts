@@ -118,7 +118,15 @@ export const updatePhase = async (
         endDate?: string | null;
     },
 ) => {
-    const updates: Record<string, unknown> = { updatedAt: new Date() };
+    const updates: {
+        updatedAt: Date;
+        name?: string;
+        description?: string | null;
+        type?: string | null;
+        status?: "notstarted" | "started" | "onhold" | "completed";
+        startDate?: string | null;
+        endDate?: string | null;
+    } = { updatedAt: new Date() };
     if (data.name !== undefined) updates.name = data.name;
     if (data.description !== undefined) updates.description = data.description;
     if (data.type !== undefined) updates.type = data.type;

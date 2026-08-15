@@ -190,7 +190,16 @@ export const updateSprint = async (
         status?: "new" | "active" | "onhold" | "removed" | "closed";
     },
 ) => {
-    const updates: Record<string, unknown> = { updatedAt: new Date() };
+    const updates: {
+        updatedAt: Date;
+        title?: string;
+        description?: string | null;
+        startDate?: string | null;
+        endDate?: string | null;
+        sequence?: number | null;
+        acceptanceCriteria?: string | null;
+        status?: "new" | "active" | "onhold" | "removed" | "closed";
+    } = { updatedAt: new Date() };
     if (data.title !== undefined) updates.title = data.title;
     if (data.description !== undefined) updates.description = data.description;
     if (data.startDate !== undefined) updates.startDate = data.startDate;

@@ -1,12 +1,17 @@
 import { Socket } from "socket.io";
 import { getDeepOrganizationContext } from "../application/chat.use-cases.js";
-import { streamOrganizationChatResponse } from "../../../shared/services/ai.socket.service.js";
+import { streamOrganizationChatResponse } from "../../../shared/services/ai.service.js";
 import { isOrganizationOnPlan } from "../../../shared/middleware/require-premium.js";
+import type { AuthenticatedSocket } from "../../../shared/types/socket.js";
 
+/**
+ * Attaches real-time Socket.io event listeners for AI assistant chat streaming.
+ * @param socket The connected Socket.io socket instance.
+ */
 export const handleChatConnection = (socket: Socket) => {
     socket.on("chat:message", async (payload: { message: string }) => {
         const { message } = payload;
-        const organizationId = (socket as any).orgId;
+        const organizationId = (socket as AuthenticatedSocket).orgId;
 
         if (!organizationId || !message) {
             socket.emit("chat:error", {

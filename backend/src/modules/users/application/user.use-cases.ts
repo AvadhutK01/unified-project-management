@@ -216,7 +216,6 @@ export const resendOtp = async (data: {
         throw badRequestError("User is already verified");
     }
 
-    const newOtp = "123456";
     const updateFields: { emailOtp?: string; phoneOtp?: string } = {};
 
     if (data.email) {

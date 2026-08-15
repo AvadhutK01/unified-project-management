@@ -7,6 +7,9 @@ import { notificationQueue } from "../modules/notifications/application/notifica
 import { initializeSubscriptionExpiryWorker } from "../modules/subscriptions/application/subscription.expiry.worker.js";
 import { initializeSubscriptionExpiryScheduler } from "../modules/subscriptions/application/subscription.expiry.scheduler.js";
 
+/**
+ * Starts the HTTP server, initializes socket.io, background workers, and schedules cron tasks.
+ */
 export const startServer = (): void => {
     const app = createApp();
     const server = app.listen(env.PORT, () => {
@@ -35,6 +38,10 @@ export const startServer = (): void => {
         )
         .catch(() => {});
 
+    /**
+     * Handles graceful shutdown of the HTTP server upon receiving termination signals.
+     * @param signal The process signal received (e.g., SIGTERM, SIGINT).
+     */
     const shutdown = (signal: string) => {
         logger.info(`Received ${signal}. Shutting down server gracefully...`);
         server.close(() => {

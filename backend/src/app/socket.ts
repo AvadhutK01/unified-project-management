@@ -6,8 +6,15 @@ import { handleChatConnection } from "../modules/chat/presentation/chat.socket.j
 import { handleCallConnection } from "../modules/call/presentation/call.socket.js";
 import { handleDirectChatConnection } from "../modules/chat/presentation/direct-chat.socket.js";
 
+import type { AuthenticatedSocket } from "../shared/types/socket.js";
+
 let socketServer: Server | null = null;
 
+/**
+ * Initializes the Socket.io server instance with JWT auth middleware and namespace handlers.
+ * @param httpServer The Node.js HTTP server instance.
+ * @returns The initialized Socket.io Server instance.
+ */
 export const initializeSocket = (httpServer: HttpServer) => {
     const io = new Server(httpServer, {
         cors: {
@@ -34,7 +41,8 @@ export const initializeSocket = (httpServer: HttpServer) => {
                 id: string;
                 email: string;
             };
-            (socket as any).user = decoded;
+            const authSocket = socket as AuthenticatedSocket;
+            authSocket.user = decoded;
 
             const orgId = socket.handshake.auth.org_id;
 
@@ -52,7 +60,7 @@ export const initializeSocket = (httpServer: HttpServer) => {
                 );
             }
 
-            (socket as any).orgId = orgId;
+            authSocket.orgId = orgId;
 
             next();
         } catch (error) {
@@ -61,8 +69,9 @@ export const initializeSocket = (httpServer: HttpServer) => {
     });
 
     chatNamespace.on("connection", async (socket: Socket) => {
-        const user = (socket as any).user;
-        const orgId = (socket as any).orgId;
+        const authSocket = socket as AuthenticatedSocket;
+        const user = authSocket.user;
+        const orgId = authSocket.orgId;
         if (user && user.id && orgId) {
             const roomName = `org:${orgId}`;
             const userRoom = `user:${user.id}:org:${orgId}`;
@@ -114,6 +123,11 @@ export const initializeSocket = (httpServer: HttpServer) => {
     return io;
 };
 
+/**
+ * Retrieves the global Socket.io server instance.
+ * @throws Error if Socket.io has not been initialized yet.
+ * @returns The active Socket.io Server instance.
+ */
 export const getSocketServer = (): Server => {
     if (!socketServer) {
         throw new Error("Socket.io is not initialized");

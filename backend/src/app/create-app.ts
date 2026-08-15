@@ -1,7 +1,7 @@
 import express, { Express } from "express";
 import cors from "cors";
 import { registerRoutes } from "./routes.js";
-import { serveSwagger } from "../config/swagger.js";
+import { serveSwagger } from "./swagger.js";
 import { errorHandler } from "../shared/middleware/error-handler.js";
 import { notFound } from "../shared/middleware/not-found.js";
 import { requestLogger } from "../shared/middleware/request-logger.js";

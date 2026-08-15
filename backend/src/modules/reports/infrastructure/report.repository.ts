@@ -8,8 +8,14 @@ import {
     projectMembers,
     users,
 } from "../../../infrastructure/database/schema/index.js";
+import type { GroupData } from "../../../types/reports.js";
 import { eq, and, gte, lte, isNull, inArray } from "drizzle-orm";
 
+/**
+ * Helper to retrieve all active project UUIDs belonging to an organization.
+ * @param orgId UUID of the organization.
+ * @returns Array of project UUIDs.
+ */
 const getOrgProjectIds = async (orgId: string) => {
     const orgProjects = await db
         .select({ id: projects.id })
@@ -20,6 +26,11 @@ const getOrgProjectIds = async (orgId: string) => {
     return orgProjects.map((p) => p.id);
 };
 
+/**
+ * Helper to retrieve all active phase UUIDs for a list of project UUIDs.
+ * @param orgProjectIds Array of project UUIDs.
+ * @returns Array of phase UUIDs.
+ */
 const getOrgPhaseIds = async (orgProjectIds: string[]) => {
     if (orgProjectIds.length === 0) return [];
     const orgPhases = await db
@@ -32,20 +43,6 @@ const getOrgPhaseIds = async (orgProjectIds: string[]) => {
             ),
         );
     return orgPhases.map((p) => p.id);
-};
-
-const getOrgSprintIds = async (orgPhaseIds: string[]) => {
-    if (orgPhaseIds.length === 0) return [];
-    const orgSprints = await db
-        .select({ id: sprints.id })
-        .from(sprints)
-        .where(
-            and(
-                inArray(sprints.phaseId, orgPhaseIds),
-                isNull(sprints.deletedAt),
-            ),
-        );
-    return orgSprints.map((s) => s.id);
 };
 
 export const getProjectOverview = async (
@@ -66,8 +63,8 @@ export const getProjectOverview = async (
         );
 
     const projectIds = allProjects.map((p) => p.id);
-    let allPhases: any[] = [];
-    let allProjectMembers: any[] = [];
+    let allPhases: Array<typeof phases.$inferSelect> = [];
+    let allProjectMembers: Array<typeof projectMembers.$inferSelect> = [];
     if (projectIds.length > 0) {
         allPhases = await db
             .select()
@@ -115,9 +112,9 @@ export const getSprintPerformance = async (
     const pIds = await getOrgProjectIds(orgId);
     const phIds = await getOrgPhaseIds(pIds);
 
-    let allSprints: any[] = [];
-    let allProjects: any[] = [];
-    let allPhases: any[] = [];
+    let allSprints: Array<typeof sprints.$inferSelect> = [];
+    let allProjects: Array<{ id: string; title: string }> = [];
+    let allPhases: Array<{ id: string; name: string; projectId: string }> = [];
 
     if (pIds.length > 0) {
         allProjects = await db
@@ -150,7 +147,7 @@ export const getSprintPerformance = async (
     }
 
     const sprintIds = allSprints.map((s) => s.id);
-    let allWorkitems: any[] = [];
+    let allWorkitems: Array<typeof workitems.$inferSelect> = [];
 
     if (sprintIds.length > 0) {
         allWorkitems = await db
@@ -256,7 +253,13 @@ export const getMemberActivity = async (
         projMembersList.map((m) => [m.id, m.organizationMemberId]),
     );
 
-    let workitemsList: any[] = [];
+    let workitemsList: Array<{
+        id: string;
+        sprintId: string;
+        assignedTo: string | null;
+        status: string;
+        completed: number | null;
+    }> = [];
     if (projMemberIds.length > 0) {
         workitemsList = await db
             .select({
@@ -279,7 +282,7 @@ export const getMemberActivity = async (
 
     const projectIds = [...new Set(projMembersList.map((m) => m.projectId))];
 
-    let projectsList: any[] = [];
+    let projectsList: Array<{ id: string; title: string }> = [];
     if (projectIds.length > 0) {
         projectsList = await db
             .select({ id: projects.id, title: projects.title })
@@ -287,7 +290,7 @@ export const getMemberActivity = async (
             .where(inArray(projects.id, projectIds));
     }
 
-    let phasesList: any[] = [];
+    let phasesList: Array<{ id: string; name: string; projectId: string }> = [];
     if (projectIds.length > 0) {
         phasesList = await db
             .select({
@@ -305,7 +308,13 @@ export const getMemberActivity = async (
     }
 
     const phaseIds = [...new Set(phasesList.map((p) => p.id))];
-    let sprintsList: any[] = [];
+    let sprintsList: Array<{
+        id: string;
+        title: string;
+        phaseId: string;
+        startDate: string | null;
+        endDate: string | null;
+    }> = [];
     if (phaseIds.length > 0) {
         sprintsList = await db
             .select({
@@ -327,16 +336,6 @@ export const getMemberActivity = async (
     const sprintMap = new Map(sprintsList.map((s) => [s.id, s]));
     const phaseMap = new Map(phasesList.map((p) => [p.id, p]));
     const projectMap = new Map(projectsList.map((p) => [p.id, p]));
-
-    type GroupData = {
-        memberName: string;
-        projectName: string;
-        phaseName: string;
-        sprintName: string;
-        totalWorkitems: number;
-        statusCounts: Record<string, number>;
-        totalWorkedTime: number;
-    };
 
     const grouped = new Map<string, GroupData>();
 
@@ -484,7 +483,7 @@ export const getPhaseOverview = async (
         );
 
     const projectIds = activeProjects.map((p) => p.id);
-    let activePhases: any[] = [];
+    let activePhases: Array<typeof phases.$inferSelect> = [];
     if (projectIds.length > 0) {
         activePhases = await db
             .select()
@@ -500,7 +499,7 @@ export const getPhaseOverview = async (
     }
 
     const phaseIds = activePhases.map((ph) => ph.id);
-    let allSprints: any[] = [];
+    let allSprints: Array<typeof sprints.$inferSelect> = [];
     if (phaseIds.length > 0) {
         allSprints = await db
             .select()

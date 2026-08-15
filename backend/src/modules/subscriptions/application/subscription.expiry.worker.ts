@@ -6,7 +6,7 @@ import {
     SCAN_JOB_NAME,
     EXPIRE_JOB_NAME,
     EXPIRY_BATCH_SIZE,
-} from "./subscription.expiry.config.js";
+} from "../../../config/subscription.expiry.config.js";
 import { findExpiredActiveSubscriptions } from "../infrastructure/subscription.repository.js";
 import { expireSubscription } from "./subscription.expiry.service.js";
 import { enqueueSubscriptionExpiryJob } from "./subscription.expiry.queue.js";

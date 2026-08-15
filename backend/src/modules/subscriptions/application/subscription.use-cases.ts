@@ -14,7 +14,6 @@ import {
 import {
     getOrganizationPlan,
     PLAN_HIERARCHY,
-    type SubscriptionPlan,
 } from "../../../shared/middleware/require-premium.js";
 import { findOrganizationById } from "../../organizations/infrastructure/organization.repository.js";
 import { findUserById } from "../../users/infrastructure/user.repository.js";
@@ -246,13 +245,18 @@ export const getOrgTransactionsUseCase = async (
     return await findTransactionsByOrgId(organizationId, page, limit);
 };
 
+import type {
+    SubscriptionPlan,
+    RazorpayWebhookPayload,
+} from "../../../types/subscriptions.js";
+
 /**
  * Processes incoming Razorpay webhooks, validates X-Razorpay-Signature, and handles payment events.
  */
 export const handleWebhookUseCase = async (
     rawBody: string | Buffer,
     signature: string,
-    payload: any,
+    payload: RazorpayWebhookPayload,
 ) => {
     const expectedSignature = crypto
         .createHmac("sha256", env.RAZORPAY_WEBHOOK_SECRET)
@@ -313,9 +317,10 @@ export const handleWebhookUseCase = async (
                 organizationId: orgId,
                 razorpayOrderId: orderId,
                 plan: targetPlan,
-                amount: paymentEntity
-                    ? paymentEntity.amount / 100
-                    : PLAN_PRICES_RS[targetPlan],
+                amount:
+                    paymentEntity?.amount !== undefined
+                        ? paymentEntity.amount / 100
+                        : PLAN_PRICES_RS[targetPlan],
                 periodStart: now,
                 periodEnd,
             });

@@ -6,6 +6,11 @@ import { ExtractTablesWithRelations } from "drizzle-orm";
 import { PgTransaction } from "drizzle-orm/pg-core";
 import { PostgresJsQueryResultHKT } from "drizzle-orm/postgres-js";
 
+/**
+ * Utility function to derive a test database URL by appending '_test' to the target database name.
+ * @param url Primary database connection string.
+ * @returns Test database connection string.
+ */
 const getTestDatabaseUrl = (url: string) => {
     try {
         const parsed = new URL(url);
@@ -25,11 +30,8 @@ const dbUrl =
 const queryClient = postgres(dbUrl);
 export const db = drizzle(queryClient, { schema });
 
-export type Database = typeof db;
-export type Transaction = PgTransaction<
-    PostgresJsQueryResultHKT,
-    typeof schema,
-    ExtractTablesWithRelations<typeof schema>
->;
-
-export type DatabaseOrTransaction = Database | Transaction;
+export type {
+    Database,
+    Transaction,
+    DatabaseOrTransaction,
+} from "../../types/database.js";

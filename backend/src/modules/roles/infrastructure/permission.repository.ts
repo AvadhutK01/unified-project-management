@@ -3,29 +3,6 @@ import { permissions } from "../../../infrastructure/database/schema/index.js";
 import { eq, count, or, ilike } from "drizzle-orm";
 
 /**
- * Creates a new permission in the database.
- * @param data Permission input data.
- * @returns The newly created permission record.
- */
-export const createPermission = async (data: {
-    name: string;
-    codename: string;
-    description?: string;
-    isActive?: boolean;
-}) => {
-    const [permission] = await db
-        .insert(permissions)
-        .values({
-            name: data.name,
-            codename: data.codename,
-            description: data.description ?? null,
-            isActive: data.isActive ?? true,
-        })
-        .returning();
-    return permission;
-};
-
-/**
  * Finds a permission by its primary key.
  * @param id The permission UUID.
  * @returns The permission record or null.
@@ -40,23 +17,7 @@ export const findPermissionById = async (id: string) => {
 };
 
 /**
- * Finds a permission by its codename.
- * @param codename The permission codename.
- * @returns The permission record or null.
- */
-export const findPermissionByCodename = async (codename: string) => {
-    const results = await db
-        .select()
-        .from(permissions)
-        .where(eq(permissions.codename, codename))
-        .limit(1);
-    return results[0] ?? null;
-};
-
-/**
- * Retrieves all permissions with pagination and optional search filter.
- * @param page The page number.
- * @param limit The limit number.
+ * Retrieves all permissions with optional search filter.
  * @param search Optional search keyword.
  * @returns Array of permission records.
  */
@@ -102,47 +63,4 @@ export const countAllPermissions = async (search?: string) => {
 
     const results = await query;
     return results[0]?.count ?? 0;
-};
-
-/**
- * Updates a permission in the database.
- * @param id The permission UUID.
- * @param data Partial permission data to update.
- * @returns The updated permission record.
- */
-export const updatePermission = async (
-    id: string,
-    data: {
-        name?: string;
-        codename?: string;
-        description?: string | null;
-        isActive?: boolean;
-    },
-) => {
-    const updates: any = {};
-    if (data.name !== undefined) updates.name = data.name;
-    if (data.codename !== undefined) updates.codename = data.codename;
-    if (data.description !== undefined) updates.description = data.description;
-    if (data.isActive !== undefined) updates.isActive = data.isActive;
-    updates.updatedAt = new Date();
-
-    const [updated] = await db
-        .update(permissions)
-        .set(updates)
-        .where(eq(permissions.id, id))
-        .returning();
-    return updated;
-};
-
-/**
- * Deletes a permission from the database.
- * @param id The permission UUID.
- * @returns The deleted permission record.
- */
-export const deletePermission = async (id: string) => {
-    const [deleted] = await db
-        .delete(permissions)
-        .where(eq(permissions.id, id))
-        .returning();
-    return deleted;
 };

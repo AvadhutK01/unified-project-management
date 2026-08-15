@@ -5,6 +5,11 @@ const mm = new MiniMoth({
     apiKey: env.MINIMOTH_API_KEY,
 });
 
+/**
+ * Dispatches an SMS OTP to a mobile phone number using MiniMoth SDK.
+ * @param mobileNumber Target phone number string.
+ * @returns Object containing otpId and delivery status object.
+ */
 export const sendSMSOtp = async (mobileNumber: string) => {
     if (env.NODE_ENV === "test" || env.MINIMOTH_API_KEY?.startsWith("mock")) {
         return { otpId: "mock-otp-id", delivery: { status: "delivered" } };
@@ -14,6 +19,12 @@ export const sendSMSOtp = async (mobileNumber: string) => {
     return { otpId, delivery };
 };
 
+/**
+ * Verifies an SMS OTP string against a mobile phone number using MiniMoth SDK.
+ * @param mobileNumber Target phone number string.
+ * @param otp 6-digit OTP string provided by user.
+ * @returns Verification result object containing valid boolean flag.
+ */
 export const verifySMSOtp = async (mobileNumber: string, otp: string) => {
     if (env.NODE_ENV === "test" || env.MINIMOTH_API_KEY?.startsWith("mock")) {
         if (otp === "123456") {

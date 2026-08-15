@@ -4,7 +4,7 @@ import {
     SCAN_JOB_NAME,
     EXPIRY_CRON_PATTERN,
     SCAN_JOB_ID,
-} from "./subscription.expiry.config.js";
+} from "../../../config/subscription.expiry.config.js";
 
 /**
  * Initializes the repeating BullMQ cron job that scans for expired subscriptions.

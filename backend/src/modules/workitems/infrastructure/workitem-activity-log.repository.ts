@@ -5,6 +5,11 @@ import {
 } from "../../../infrastructure/database/schema/index.js";
 import { eq, desc, count } from "drizzle-orm";
 
+/**
+ * Inserts a new workitem activity log record.
+ * @param data Object containing workitemId, userId, action, and description.
+ * @returns Created activity log record.
+ */
 export const createActivityLog = async (data: {
     workitemId: string;
     userId: string;
@@ -23,6 +28,13 @@ export const createActivityLog = async (data: {
     return log;
 };
 
+/**
+ * Retrieves paginated activity logs for a workitem with user details.
+ * @param workitemId UUID of the workitem.
+ * @param page Page number.
+ * @param limit Page size limit.
+ * @returns Array of activity log records.
+ */
 export const findActivityLogsByWorkitemId = async (
     workitemId: string,
     page: number = 1,
@@ -49,6 +61,11 @@ export const findActivityLogsByWorkitemId = async (
         .offset((page - 1) * limit);
 };
 
+/**
+ * Counts total activity logs for a workitem.
+ * @param workitemId UUID of the workitem.
+ * @returns Total count number.
+ */
 export const countActivityLogsByWorkitemId = async (workitemId: string) => {
     const results = await db
         .select({ count: count() })

@@ -15,7 +15,6 @@ import { eq, and, or, desc, asc, count, SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 const senderUsers = alias(users, "sender_users");
-const receiverUsers = alias(users, "receiver_users");
 
 /**
  * Resolves a receiver ID string to a valid users.id UUID.
@@ -245,29 +244,6 @@ export const markDirectMessagesAsRead = async (
 };
 
 /**
- * Gets the total count of unread direct messages for a user in an organization.
- */
-export const getUnreadDirectMessagesCount = async (
-    organizationId: string,
-    userId: string,
-) => {
-    const resolvedUserId = await resolveUserId(userId);
-
-    const results = await db
-        .select({ count: count() })
-        .from(directMessages)
-        .where(
-            and(
-                eq(directMessages.organizationId, organizationId),
-                eq(directMessages.receiverId, resolvedUserId),
-                eq(directMessages.isRead, false),
-            ),
-        );
-
-    return results[0]?.count ?? 0;
-};
-
-/**
  * Deletes a direct message within the 1-hour deletion window.
  */
 export const deleteDirectMessage = async (
@@ -362,7 +338,9 @@ export const forwardDirectMessages = async (data: {
             ),
         );
 
-    const createdMessages: any[] = [];
+    const createdMessages: Array<
+        Awaited<ReturnType<typeof saveDirectMessage>>
+    > = [];
 
     for (const msg of msgs) {
         if (msg.isDeleted) continue;

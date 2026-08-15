@@ -8,6 +8,12 @@ import {
 } from "../../../infrastructure/database/schema/index.js";
 import { eq, and, isNull, inArray, desc, count } from "drizzle-orm";
 
+/**
+ * Associates tagged member IDs with a workitem discussion comment.
+ * @param workitemDiscussionId UUID of the workitem discussion.
+ * @param memberIds Array of member UUIDs.
+ * @returns Array of created tag records.
+ */
 export const addDiscussionTags = async (
     workitemDiscussionId: string,
     memberIds: string[],
@@ -23,6 +29,10 @@ export const addDiscussionTags = async (
     return tags;
 };
 
+/**
+ * Removes all member tags from a workitem discussion.
+ * @param workitemDiscussionId UUID of the workitem discussion.
+ */
 export const clearDiscussionTags = async (workitemDiscussionId: string) => {
     await db
         .delete(workitemDiscussionTags)
@@ -34,6 +44,11 @@ export const clearDiscussionTags = async (workitemDiscussionId: string) => {
         );
 };
 
+/**
+ * Finds a workitem discussion record by ID.
+ * @param id UUID of the discussion.
+ * @returns Discussion record or null.
+ */
 export const findDiscussionById = async (id: string) => {
     const results = await db
         .select()
@@ -48,6 +63,13 @@ export const findDiscussionById = async (id: string) => {
     return results[0] ?? null;
 };
 
+/**
+ * Retrieves paginated discussion comments for a workitem.
+ * @param workitemId UUID of the workitem.
+ * @param page Page number.
+ * @param limit Page limit size.
+ * @returns Array of discussion comment rows with author details.
+ */
 export const findDiscussionsPaginated = async (
     workitemId: string,
     page: number = 1,
@@ -84,6 +106,11 @@ export const findDiscussionsPaginated = async (
         .offset((page - 1) * limit);
 };
 
+/**
+ * Counts total active discussions for a workitem.
+ * @param workitemId UUID of the workitem.
+ * @returns Total count number.
+ */
 export const countDiscussions = async (workitemId: string) => {
     const results = await db
         .select({ count: count() })
@@ -97,6 +124,11 @@ export const countDiscussions = async (workitemId: string) => {
     return results[0]?.count ?? 0;
 };
 
+/**
+ * Fetches tagged members for a set of discussion IDs.
+ * @param discussionIds Array of discussion UUIDs.
+ * @returns Array of tag records with user details.
+ */
 export const findTagsForDiscussions = async (discussionIds: string[]) => {
     if (discussionIds.length === 0) return [];
     return db
@@ -119,6 +151,12 @@ export const findTagsForDiscussions = async (discussionIds: string[]) => {
         );
 };
 
+/**
+ * Updates text comment of a workitem discussion.
+ * @param id UUID of the discussion.
+ * @param comment New comment text string.
+ * @returns Updated discussion record or null.
+ */
 export const updateDiscussionComment = async (id: string, comment: string) => {
     const [updated] = await db
         .update(workitemDiscussions)
@@ -133,6 +171,11 @@ export const updateDiscussionComment = async (id: string, comment: string) => {
     return updated ?? null;
 };
 
+/**
+ * Soft deletes a workitem discussion record.
+ * @param id UUID of the discussion.
+ * @returns Soft deleted discussion record or null.
+ */
 export const softDeleteDiscussion = async (id: string) => {
     const [deleted] = await db
         .update(workitemDiscussions)
@@ -171,7 +214,7 @@ export const createWorkitemDiscussionWithTagsAndLogTx = async (data: {
             throw new Error("Failed to create discussion comment");
         }
 
-        let tags: any[] = [];
+        let tags: Array<typeof workitemDiscussionTags.$inferSelect> = [];
         if (data.taggedMemberIds.length > 0) {
             tags = await tx
                 .insert(workitemDiscussionTags)

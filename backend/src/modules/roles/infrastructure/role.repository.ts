@@ -176,29 +176,6 @@ export const detachAllPermissionsFromRole = async (roleId: string) => {
 };
 
 /**
- * Detaches specific permissions from a role.
- * @param roleId The role UUID.
- * @param permissionIds Array of permission UUIDs to remove.
- */
-export const detachPermissionsFromRole = async (
-    roleId: string,
-    permissionIds: string[],
-) => {
-    if (permissionIds.length === 0) return;
-
-    for (const permissionId of permissionIds) {
-        await db
-            .delete(rolePermissions)
-            .where(
-                and(
-                    eq(rolePermissions.roleId, roleId),
-                    eq(rolePermissions.permissionId, permissionId),
-                ),
-            );
-    }
-};
-
-/**
  * Retrieves all permissions for a specific role.
  * @param roleId The role UUID.
  * @returns Array of permission records.
@@ -236,7 +213,12 @@ export const updateRole = async (
     },
     organizationId: string,
 ) => {
-    const updates: any = {};
+    const updates: {
+        name?: string;
+        description?: string | null;
+        isActive?: boolean;
+        updatedAt?: Date;
+    } = {};
     if (data.name !== undefined) updates.name = data.name;
     if (data.description !== undefined) updates.description = data.description;
     if (data.isActive !== undefined) updates.isActive = data.isActive;
@@ -278,34 +260,4 @@ export const findRoleByIdRaw = async (id: string) => {
         .where(eq(roles.id, id))
         .limit(1);
     return results[0] ?? null;
-};
-
-/**
- * Counts active members assigned to a specific role.
- */
-export const countMembersByRoleId = async (roleId: string): Promise<number> => {
-    const result = await db
-        .select({ value: count() })
-        .from(organizationMembers)
-        .where(eq(organizationMembers.roleId, roleId));
-    return Number(result[0]?.value ?? 0);
-};
-
-/**
- * Deletes all roles (and their permissions) belonging to an organization.
- * Used as part of cascaded organization deletion.
- */
-export const deleteRolesByOrganizationId = async (
-    organizationId: string,
-): Promise<void> => {
-    const orgRoles = await db
-        .select({ id: roles.id })
-        .from(roles)
-        .where(eq(roles.organizationId, organizationId));
-
-    for (const role of orgRoles) {
-        await detachAllPermissionsFromRole(role.id);
-    }
-
-    await db.delete(roles).where(eq(roles.organizationId, organizationId));
 };

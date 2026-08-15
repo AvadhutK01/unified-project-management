@@ -62,5 +62,7 @@ export const directMessages = pgTable(
     }),
 );
 
-export type DirectMessageSelect = typeof directMessages.$inferSelect;
-export type DirectMessageInsert = typeof directMessages.$inferInsert;
+export type {
+    DirectMessageSelect,
+    DirectMessageInsert,
+} from "../../../types/database.js";

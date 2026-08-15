@@ -192,7 +192,7 @@ export const createSprintDiscussionWithTagsAndLogTx = async (data: {
             throw new Error("Failed to create discussion comment");
         }
 
-        let tags: any[] = [];
+        let tags: Array<typeof sprintDiscussionTags.$inferSelect> = [];
         if (data.taggedMemberIds.length > 0) {
             tags = await tx
                 .insert(sprintDiscussionTags)

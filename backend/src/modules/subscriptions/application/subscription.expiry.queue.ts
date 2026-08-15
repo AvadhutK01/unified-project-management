@@ -5,7 +5,7 @@ import {
     EXPIRE_JOB_NAME,
     EXPIRY_JOB_ATTEMPTS,
     EXPIRY_BACKOFF_DELAY_MS,
-} from "./subscription.expiry.config.js";
+} from "../../../config/subscription.expiry.config.js";
 
 const redisUrl = new URL(env.REDIS_URL);
 export const redisConnection = {

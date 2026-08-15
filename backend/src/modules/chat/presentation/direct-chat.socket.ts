@@ -7,15 +7,20 @@ import {
     forwardDirectMessages,
 } from "../infrastructure/chat.repository.js";
 import { notifyDirectMessage } from "../../notifications/application/notification.service.js";
+import type {
+    AuthenticatedSocket,
+    SocketCallbackResponse,
+} from "../../../types/socket.js";
 
 /**
  * Sanitizes errors to prevent exposing raw database or system errors to clients.
  */
-function getSafeErrorMessage(error: any, fallback: string): string {
-    if (!error) return fallback;
+function getSafeErrorMessage(error: unknown, fallback: string): string {
+    if (!error || typeof error !== "object") return fallback;
+    const err = error as { isOperational?: boolean; message?: string };
 
-    if (error.isOperational && typeof error.message === "string") {
-        return error.message;
+    if (err.isOperational && typeof err.message === "string") {
+        return err.message;
     }
 
     const safeAllowedPhrases = [
@@ -27,10 +32,10 @@ function getSafeErrorMessage(error: any, fallback: string): string {
         "Message not found",
     ];
 
-    if (typeof error.message === "string") {
+    if (typeof err.message === "string") {
         for (const phrase of safeAllowedPhrases) {
-            if (error.message.includes(phrase)) {
-                return error.message;
+            if (err.message.includes(phrase)) {
+                return err.message;
             }
         }
     }
@@ -42,8 +47,11 @@ function getSafeErrorMessage(error: any, fallback: string): string {
  * Handles real-time 1-to-1 direct chat messaging events over Socket.io.
  */
 export const handleDirectChatConnection = (socket: Socket) => {
-    const user = (socket as any).user;
-    const orgId = (socket as any).orgId;
+    const authSocket = socket as AuthenticatedSocket;
+    const user = authSocket.user as
+        | { id: string; email: string; username?: string; name?: string }
+        | undefined;
+    const orgId = authSocket.orgId;
 
     if (!user || !user.id || !orgId) return;
 
@@ -63,7 +71,7 @@ export const handleDirectChatConnection = (socket: Socket) => {
                 isForwarded?: boolean;
                 forwardedFromSenderName?: string;
             },
-            callback?: (response: any) => void,
+            callback?: (response: SocketCallbackResponse) => void,
         ) => {
             try {
                 const hasPro = await isOrganizationOnPlan(orgId, "pro");
@@ -132,7 +140,7 @@ export const handleDirectChatConnection = (socket: Socket) => {
                 } else {
                     socket.emit("direct_message:sent", savedMessage);
                 }
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error("Socket direct message send error:", error);
                 const safeMessage = getSafeErrorMessage(
                     error,
@@ -149,13 +157,13 @@ export const handleDirectChatConnection = (socket: Socket) => {
         "direct_message:delete",
         async (
             data: { messageId: string; recipientId: string },
-            callback?: (response: any) => void,
+            callback?: (response: SocketCallbackResponse) => void,
         ) => {
             try {
                 if (!data.messageId) return;
 
                 const deleterName = user.username || user.name || "Member";
-                const updated = await deleteDirectMessage(
+                await deleteDirectMessage(
                     orgId,
                     data.messageId,
                     user.id,
@@ -179,7 +187,7 @@ export const handleDirectChatConnection = (socket: Socket) => {
                 } else {
                     socket.emit("direct_message:deleted", deletePayload);
                 }
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error("Socket direct message delete error:", error);
                 const safeMessage = getSafeErrorMessage(
                     error,
@@ -196,7 +204,7 @@ export const handleDirectChatConnection = (socket: Socket) => {
         "direct_message:forward",
         async (
             data: { messageIds: string[]; recipientIds: string[] },
-            callback?: (response: any) => void,
+            callback?: (response: SocketCallbackResponse) => void,
         ) => {
             try {
                 if (!data.messageIds?.length || !data.recipientIds?.length) {
@@ -218,6 +226,7 @@ export const handleDirectChatConnection = (socket: Socket) => {
                 });
 
                 for (const msg of forwardedMessages) {
+                    if (!msg) continue;
                     const recipientRoom = `user:${msg.receiverId}:org:${orgId}`;
                     socket
                         .to(recipientRoom)
@@ -245,7 +254,7 @@ export const handleDirectChatConnection = (socket: Socket) => {
                         messages: forwardedMessages,
                     });
                 }
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error("Socket direct message forward error:", error);
                 const safeMessage = getSafeErrorMessage(
                     error,

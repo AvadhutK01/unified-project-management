@@ -196,7 +196,16 @@ export const updateProject = async (
         status?: "notstarted" | "started" | "onhold" | "completed";
     },
 ) => {
-    const updates: Record<string, unknown> = { updatedAt: new Date() };
+    const updates: {
+        updatedAt: Date;
+        title?: string;
+        description?: string | null;
+        startDate?: string | null;
+        endDate?: string | null;
+        clientName?: string | null;
+        logoUrl?: string | null;
+        status?: "notstarted" | "started" | "onhold" | "completed";
+    } = { updatedAt: new Date() };
     if (data.title !== undefined) updates.title = data.title;
     if (data.description !== undefined) updates.description = data.description;
     if (data.startDate !== undefined) updates.startDate = data.startDate;

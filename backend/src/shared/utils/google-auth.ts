@@ -3,13 +3,7 @@ import { badRequestError, unauthorizedError } from "../errors/app-error.js";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-export interface GoogleUserInfo {
-    googleId: string;
-    email: string;
-    emailVerified: boolean;
-    name?: string | undefined;
-    picture?: string | undefined;
-}
+import type { GoogleUserInfo } from "../../types/auth.js";
 
 /**
  * Verifies a Google ID Token using google-auth-library.
@@ -59,11 +53,18 @@ export const verifyGoogleIdToken = async (
             name:
                 payload.name ||
                 payload.given_name ||
-                payload.email.split("@")[0],
+                payload.email.split("@")[0] ||
+                "User",
             picture: payload.picture,
         };
-    } catch (error: any) {
-        if (error.status === 401 || error.name === "AppError") {
+    } catch (error: unknown) {
+        if (
+            error &&
+            typeof error === "object" &&
+            ("status" in error || "name" in error) &&
+            ((error as { status?: number }).status === 401 ||
+                (error as { name?: string }).name === "AppError")
+        ) {
             throw error;
         }
         throw unauthorizedError("Failed to verify Google ID token");

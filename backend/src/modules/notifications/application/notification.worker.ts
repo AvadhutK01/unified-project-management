@@ -2,6 +2,10 @@ import { Worker } from "bullmq";
 import { redisConnection } from "./notification.queue.js";
 import { getSocketServer } from "../../../app/socket.js";
 
+/**
+ * Initializes the BullMQ worker for processing notification delivery and deadline checking jobs.
+ * @returns Initialized BullMQ Worker instance.
+ */
 export const initializeNotificationWorker = () => {
     const worker = new Worker(
         "notifications",

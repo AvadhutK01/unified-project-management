@@ -13,6 +13,7 @@ import {
     renderPaymentReceiptEmail,
     renderSubscriptionExpiryEmail,
 } from "./email-templates.js";
+import type { NotificationMetadata } from "../../types/notifications.js";
 
 const smtpUser = env.SMTP_USER;
 const smtpPass = env.SMTP_PASS;
@@ -38,6 +39,13 @@ const transporter =
           })
         : null;
 
+/**
+ * Transmits a generic HTML email using Nodemailer transporter or logs warning if unconfigured.
+ * @param toEmail Recipient email address.
+ * @param subject Email subject line.
+ * @param htmlContent Formatted HTML body content.
+ * @returns Nodemailer info object or mock object.
+ */
 const sendGenericEmail = async (
     toEmail: string,
     subject: string,
@@ -69,17 +77,32 @@ const sendGenericEmail = async (
     }
 };
 
+/**
+ * Sends an OTP email to the specified email address for verification.
+ * @param toEmail Recipient email address.
+ * @param otp 6-digit OTP string.
+ */
 export const sendEmailOtp = async (toEmail: string, otp: string) => {
     const html = renderOtpEmail(otp);
     return sendGenericEmail(toEmail, "Your Verification Code", html);
 };
 
+/**
+ * Sends a welcome email upon user registration.
+ * @param toEmail Recipient email address.
+ * @param username Username of the registered user.
+ */
 export const sendWelcomeEmail = async (toEmail: string, username: string) => {
     const actionUrl = `${frontendUrl}/organization-loader`;
     const html = renderWelcomeEmail(username, actionUrl);
     return sendGenericEmail(toEmail, "Welcome to Unified PM!", html);
 };
 
+/**
+ * Sends a notification email when a user password is changed.
+ * @param toEmail Recipient email address.
+ * @param username Username of the account owner.
+ */
 export const sendPasswordChangedEmail = async (
     toEmail: string,
     username: string,
@@ -115,13 +138,7 @@ export const sendTaskAssignmentEmail = async (
     sprintTitle: string,
     projectTitle: string,
     orgName: string,
-    metadata?: {
-        orgSlug?: string;
-        projectId?: string;
-        phaseId?: string;
-        sprintId?: string;
-        workitemId?: string;
-    },
+    metadata?: NotificationMetadata,
 ) => {
     const taskUrl =
         metadata?.orgSlug &&
@@ -148,13 +165,7 @@ export const sendTaskUpdateEmail = async (
     newStatus: string,
     projectTitle: string,
     orgName: string,
-    metadata?: {
-        orgSlug?: string;
-        projectId?: string;
-        phaseId?: string;
-        sprintId?: string;
-        workitemId?: string;
-    },
+    metadata?: NotificationMetadata,
 ) => {
     const taskUrl =
         metadata?.orgSlug &&
@@ -180,13 +191,7 @@ export const sendCommentMentionEmail = async (
     mentionerName: string,
     commentPreview: string,
     contextDescription: string,
-    metadata?: {
-        orgSlug?: string;
-        projectId?: string;
-        phaseId?: string;
-        sprintId?: string;
-        workitemId?: string;
-    },
+    metadata?: NotificationMetadata,
 ) => {
     const viewUrl =
         metadata?.orgSlug &&

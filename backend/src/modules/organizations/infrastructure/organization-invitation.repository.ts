@@ -12,8 +12,7 @@ import {
     ORGANIZATION_MEMBER_STATUS,
 } from "../../../shared/constants/enumConstants.js";
 
-type InvitationStatus =
-    (typeof ORGANIZATION_INVITATION_STATUS)[keyof typeof ORGANIZATION_INVITATION_STATUS];
+import type { InvitationStatus } from "../../../types/organizations.js";
 
 /**
  * Creates a new organization invitation.
@@ -179,7 +178,12 @@ export const updateInvitationRoleAndStatus = async (
     status: InvitationStatus,
     invitedBy?: string,
 ) => {
-    const updates: any = { status, roleId, updatedAt: new Date() };
+    const updates: {
+        status: InvitationStatus;
+        roleId: string;
+        updatedAt: Date;
+        invitedBy?: string;
+    } = { status, roleId, updatedAt: new Date() };
     if (invitedBy) {
         updates.invitedBy = invitedBy;
     }

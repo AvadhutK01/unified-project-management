@@ -6,6 +6,11 @@ import {
 } from "../../../infrastructure/database/schema/index.js";
 import { eq, and, isNull, count, ilike, SQL, desc } from "drizzle-orm";
 
+/**
+ * Inserts a new workitem media attachment record.
+ * @param data Object containing workitemId, memberId, name, url, fileType, fileSize.
+ * @returns Created media record.
+ */
 export const createWorkitemMedia = async (data: {
     workitemId: string;
     memberId: string;
@@ -28,6 +33,11 @@ export const createWorkitemMedia = async (data: {
     return media;
 };
 
+/**
+ * Finds a workitem media attachment record by ID.
+ * @param id UUID of the media record.
+ * @returns Media record or null.
+ */
 export const findWorkitemMediaById = async (id: string) => {
     const results = await db
         .select()
@@ -37,6 +47,14 @@ export const findWorkitemMediaById = async (id: string) => {
     return results[0] ?? null;
 };
 
+/**
+ * Retrieves paginated media attachments for a workitem.
+ * @param workitemId UUID of the workitem.
+ * @param page Page number.
+ * @param limit Page size limit.
+ * @param search Optional search term.
+ * @returns Array of media attachment records with uploader details.
+ */
 export const findWorkitemMediaPaginated = async (
     workitemId: string,
     page: number = 1,
@@ -79,6 +97,12 @@ export const findWorkitemMediaPaginated = async (
         .offset((page - 1) * limit);
 };
 
+/**
+ * Counts total media attachments for a workitem.
+ * @param workitemId UUID of the workitem.
+ * @param search Optional search filter.
+ * @returns Total count number.
+ */
 export const countWorkitemMedia = async (
     workitemId: string,
     search?: string,
@@ -99,6 +123,11 @@ export const countWorkitemMedia = async (
     return results[0]?.count ?? 0;
 };
 
+/**
+ * Soft deletes a workitem media attachment.
+ * @param id UUID of the media attachment.
+ * @returns Soft deleted media record or null.
+ */
 export const softDeleteWorkitemMedia = async (id: string) => {
     const [deleted] = await db
         .update(workitemMedia)

@@ -117,7 +117,7 @@ export const updateWorkitemDiscussion = async (
     }
     await clearDiscussionTags(discussionId);
 
-    let tags: any[] = [];
+    let tags: Awaited<ReturnType<typeof addDiscussionTags>> = [];
     if (taggedMemberIds.length > 0) {
         tags = await addDiscussionTags(discussionId, taggedMemberIds);
         for (const taggedMemberId of taggedMemberIds) {
