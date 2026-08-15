@@ -59,13 +59,13 @@ export default function OrganizationSelector() {
 
     const organizationCards = useMemo(
         () =>
-            organizations.map((org) => ({
+            organizations.map((org: any) => ({
                 id: org.id,
                 name: org.name,
                 initials: getInitials(org.name),
                 color: getColor(org.slug),
-                role: "Member",
-                memberCount: 1,
+                role: org.role || org.userRole || "Member",
+                memberCount: org.memberCount ?? 1,
                 slug: org.slug,
                 lastActive: formatDate(org.updatedAt),
                 __original: org,

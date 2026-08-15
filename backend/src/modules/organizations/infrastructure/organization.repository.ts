@@ -109,6 +109,63 @@ export const countOrganizationsByOwner = async (
  * @param search Optional search keyword.
  * @returns An array of all organization records.
  */
+export const enrichOrganizationsWithMemberInfo = async (
+    orgList: any[],
+    currentUserId?: string,
+) => {
+    return Promise.all(
+        orgList.map(async (org) => {
+            const countRes = await db
+                .select({ countVal: count() })
+                .from(organizationMembers)
+                .where(
+                    and(
+                        eq(organizationMembers.organizationId, org.id),
+                        isNull(organizationMembers.deletedAt),
+                    ),
+                );
+            const memberCountVal = countRes[0]?.countVal ?? 0;
+
+            let roleName = "Member";
+            if (currentUserId) {
+                if (org.ownerUserId === currentUserId) {
+                    roleName = "Owner";
+                } else {
+                    const memberWithRole = await db
+                        .select({ roleName: roles.name })
+                        .from(organizationMembers)
+                        .innerJoin(
+                            roles,
+                            eq(organizationMembers.roleId, roles.id),
+                        )
+                        .where(
+                            and(
+                                eq(organizationMembers.organizationId, org.id),
+                                eq(organizationMembers.memberId, currentUserId),
+                                isNull(organizationMembers.deletedAt),
+                            ),
+                        )
+                        .limit(1);
+
+                    if (
+                        memberWithRole.length > 0 &&
+                        memberWithRole[0]?.roleName
+                    ) {
+                        roleName = memberWithRole[0].roleName;
+                    }
+                }
+            }
+
+            return {
+                ...org,
+                memberCount: Number(memberCountVal || 0),
+                role: roleName,
+                userRole: roleName,
+            };
+        }),
+    );
+};
+
 export const findAllOrganizations = async (
     page: number,
     limit: number,
@@ -121,8 +178,9 @@ export const findAllOrganizations = async (
         filters.push(ilike(organizations.name, `%${search}%`));
     }
 
+    let results = [];
     if (ownerUserId) {
-        return db
+        results = await db
             .selectDistinct({
                 id: organizations.id,
                 name: organizations.name,
@@ -155,15 +213,17 @@ export const findAllOrganizations = async (
             .orderBy(desc(organizations.updatedAt))
             .limit(limit)
             .offset(offset);
+    } else {
+        const query = db.select().from(organizations);
+        const dynamicQuery =
+            filters.length > 0 ? query.where(and(...filters)) : query;
+        results = await dynamicQuery
+            .orderBy(desc(organizations.updatedAt))
+            .limit(limit)
+            .offset(offset);
     }
 
-    const query = db.select().from(organizations);
-    const dynamicQuery =
-        filters.length > 0 ? query.where(and(...filters)) : query;
-    return dynamicQuery
-        .orderBy(desc(organizations.updatedAt))
-        .limit(limit)
-        .offset(offset);
+    return enrichOrganizationsWithMemberInfo(results, ownerUserId);
 };
 
 /**
