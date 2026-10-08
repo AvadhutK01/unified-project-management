@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { toast } from "sonner";
@@ -36,6 +37,22 @@ export const GoogleSsoButton: React.FC<GoogleSsoButtonProps> = ({
 }) => {
     const navigate = useNavigate();
     const { mutate: googleAuth, isPending } = useGoogleAuth();
+    // Google's button needs a pixel width (200–400px); track the container.
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [buttonWidth, setButtonWidth] = useState<number>();
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        const update = () =>
+            setButtonWidth(
+                Math.max(200, Math.min(400, Math.floor(el.clientWidth))),
+            );
+        update();
+        if (typeof ResizeObserver === "undefined") return;
+        const observer = new ResizeObserver(update);
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
 
     const handleSuccess = (credentialResponse: any) => {
         if (!credentialResponse?.credential) {
@@ -80,30 +97,51 @@ export const GoogleSsoButton: React.FC<GoogleSsoButtonProps> = ({
     };
 
     return (
-        <div className="w-full flex justify-center flex-col items-center">
+        <div ref={containerRef} className="w-full">
             {isPending ? (
-                <div className="w-full h-10 rounded-lg border border-border bg-card flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground animate-pulse">
-                    <GoogleIcon className="w-4 h-4 animate-spin" />
-                    <span>Signing in with Google...</span>
+                <div
+                    role="status"
+                    className="flex h-10 w-full items-center justify-center gap-2.5 rounded-md border border-input bg-card text-sm font-medium text-muted-foreground shadow-xs dark:bg-input/20"
+                >
+                    <Loader2 className="size-4 animate-spin" />
+                    <span>Signing in with Google…</span>
                 </div>
             ) : (
-                <div className="w-full overflow-hidden flex justify-center [&>div]:w-full [&>div>iframe]:w-full">
-                    <GoogleLogin
-                        onSuccess={handleSuccess}
-                        onError={() => {
-                            toast.error(
-                                "Google Sign In was cancelled or failed",
-                            );
-                        }}
-                        text={
-                            text === "Sign up with Google"
-                                ? "signup_with"
-                                : "continue_with"
-                        }
-                        shape="rectangular"
-                        theme="outline"
-                        width="100%"
-                    />
+                <div
+                    style={{ width: buttonWidth }}
+                    className="group/google relative mx-auto h-10 max-w-full"
+                >
+                    {/* Themed face of the button (purely visual). */}
+                    <div
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-0 flex items-center justify-center gap-2.5 rounded-md border border-input bg-card text-sm font-medium text-foreground shadow-xs transition-[background-color,border-color,box-shadow] group-focus-within/google:border-ring group-focus-within/google:ring-3 group-focus-within/google:ring-ring/25 group-hover/google:border-foreground/20 group-hover/google:bg-accent dark:bg-input/20 dark:group-hover/google:bg-accent"
+                    >
+                        <GoogleIcon className="size-[18px]" />
+                        {text}
+                    </div>
+                    {/* Google's official button sits on top, transparent, and
+                        handles the click — so the ID-token flow is unchanged. */}
+                    {buttonWidth && (
+                        <div className="absolute inset-0 overflow-hidden rounded-md opacity-0 [color-scheme:normal]">
+                            <GoogleLogin
+                                onSuccess={handleSuccess}
+                                onError={() => {
+                                    toast.error(
+                                        "Google Sign In was cancelled or failed",
+                                    );
+                                }}
+                                text={
+                                    text === "Sign up with Google"
+                                        ? "signup_with"
+                                        : "continue_with"
+                                }
+                                shape="rectangular"
+                                theme="outline"
+                                size="large"
+                                width={buttonWidth}
+                            />
+                        </div>
+                    )}
                 </div>
             )}
         </div>
