@@ -44,14 +44,16 @@ export const getInitials = (name: string) => {
  * @returns
  */
 export const getColor = (input: string) => {
+    // Muted, professional hues that all carry white initials at AA contrast.
     const colors = [
         "#4f46e5",
         "#0f766e",
-        "#be123c",
-        "#7c3aed",
-        "#0ea5e9",
-        "#16a34a",
-        "#d97706",
+        "#be185d",
+        "#6d28d9",
+        "#0369a1",
+        "#15803d",
+        "#b45309",
+        "#475569",
     ];
     let hash = 0;
     for (let i = 0; i < input.length; i += 1) {

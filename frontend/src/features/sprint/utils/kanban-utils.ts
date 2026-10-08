@@ -1,12 +1,13 @@
+import { TONE_BORDER_TOP, WORKFLOW_TONE } from "@/lib/tones";
 import { SPRINT_STATUSES } from "../constants/sprint.constants";
 import { type SprintStatus } from "../types/sprint.types";
 
 export const STATUS_COLORS: Record<SprintStatus, string> = {
-    new: "border-t-purple-500",
-    active: "border-t-green-500",
-    closed: "border-t-gray-400",
-    removed: "border-t-red-500",
-    onhold: "border-t-amber-500",
+    new: TONE_BORDER_TOP[WORKFLOW_TONE.new],
+    active: TONE_BORDER_TOP[WORKFLOW_TONE.active],
+    closed: TONE_BORDER_TOP[WORKFLOW_TONE.closed],
+    removed: TONE_BORDER_TOP[WORKFLOW_TONE.removed],
+    onhold: TONE_BORDER_TOP[WORKFLOW_TONE.onhold],
 };
 
 export function getItemId(id: string) {

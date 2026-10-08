@@ -111,7 +111,7 @@ export const ForgotPasswordOtpStep = ({
                 </p>
             </div>
 
-            <div className="space-y-3 p-4 rounded-2xl border border-border bg-muted/30">
+            <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-card">
                 <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                         <MailCheck className="w-4 h-4 text-primary" />

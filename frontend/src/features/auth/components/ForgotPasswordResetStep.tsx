@@ -45,9 +45,9 @@ export const ForgotPasswordResetStep = ({
     const strengthColors = [
         "",
         "bg-destructive",
-        "bg-yellow-400",
-        "bg-blue-400",
-        "bg-green-500",
+        "bg-warning",
+        "bg-info",
+        "bg-success",
     ];
 
     const onSubmit = async (data: ResetFormData) => {

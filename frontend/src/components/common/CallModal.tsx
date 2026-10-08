@@ -63,7 +63,12 @@ export const CallModal: React.FC = () => {
         };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md animate-in fade-in duration-200 p-0 md:p-4">
+        <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Call"
+            className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 p-0 backdrop-blur-sm duration-200 animate-in fade-in md:p-4"
+        >
             <audio
                 ref={(el) => {
                     if (el && remoteStream) {
@@ -83,10 +88,10 @@ export const CallModal: React.FC = () => {
                 className="hidden"
             />
             <div
-                className={`relative w-full flex flex-col justify-between overflow-y-auto text-center text-white transition-all duration-300 bg-slate-900/95 border-white/10 ${
+                className={`relative w-full flex flex-col justify-between overflow-y-auto text-center text-white transition-all duration-300 bg-[#0f0f16] border-white/10 ${
                     isVideoActive
-                        ? "h-full md:h-auto max-h-[100vh] md:max-h-[92vh] rounded-none md:rounded-3xl border-0 md:border p-3 md:p-5 max-w-full md:max-w-6xl shadow-2xl"
-                        : "max-w-sm h-auto p-8 rounded-3xl border shadow-2xl"
+                        ? "h-full md:h-auto max-h-[100vh] md:max-h-[92vh] rounded-none md:rounded-2xl border-0 md:border p-3 md:p-5 max-w-full md:max-w-6xl shadow-2xl"
+                        : "max-w-sm h-auto p-8 rounded-2xl border shadow-2xl"
                 }`}
             >
                 {isVideoActive ? (
@@ -124,7 +129,7 @@ export const CallModal: React.FC = () => {
                                     className="mb-3"
                                     memberId={activeCall.targetId}
                                 />
-                                <p className="text-xs text-slate-400 font-medium">
+                                <p className="text-xs text-white/60 font-medium">
                                     Waiting for {activeCall.targetName}'s
                                     camera...
                                 </p>
@@ -137,7 +142,7 @@ export const CallModal: React.FC = () => {
                             <div className="absolute bottom-3 right-3 flex items-end gap-2 z-20">
                                 {hasRemoteCamera &&
                                     (hasLocalScreen || hasRemoteScreen) && (
-                                        <div className="relative w-20 md:w-32 aspect-video rounded-lg overflow-hidden bg-slate-950 border border-white/20 shadow-2xl">
+                                        <div className="relative w-20 md:w-32 aspect-video rounded-lg overflow-hidden bg-black border border-white/15 shadow-2xl">
                                             <video
                                                 ref={bindVideo(remoteStream)}
                                                 autoPlay
@@ -152,7 +157,7 @@ export const CallModal: React.FC = () => {
                                     )}
 
                                 {hasLocalCamera && (
-                                    <div className="relative w-20 md:w-32 aspect-video rounded-lg overflow-hidden bg-slate-950 border border-white/20 shadow-2xl">
+                                    <div className="relative w-20 md:w-32 aspect-video rounded-lg overflow-hidden bg-black border border-white/15 shadow-2xl">
                                         <video
                                             ref={bindVideo(localCameraStream)}
                                             autoPlay
@@ -168,7 +173,7 @@ export const CallModal: React.FC = () => {
                             </div>
                         )}
 
-                        <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 text-[11px] font-medium text-white">
+                        <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/60 px-2.5 py-1 rounded-full border border-white/10 text-[11px] font-medium text-white">
                             <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                             {hasLocalScreen
                                 ? "You are sharing screen"
@@ -202,7 +207,7 @@ export const CallModal: React.FC = () => {
                     >
                         {activeCall.targetName}
                     </h3>
-                    <p className="text-[11px] md:text-xs font-medium text-slate-400">
+                    <p className="text-[11px] md:text-xs font-medium text-white/60">
                         {callStatus === "calling" &&
                             `Calling (${activeCall.callType === "video" ? "Video" : "Voice"})...`}
                         {callStatus === "incoming" &&
@@ -222,14 +227,14 @@ export const CallModal: React.FC = () => {
                         <>
                             <button
                                 onClick={declineCall}
-                                className="flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 transition-all hover:scale-110 active:scale-95 cursor-pointer"
+                                className="flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 transition-[background-color,transform] active:scale-95"
                                 title="Decline Call"
                             >
                                 <PhoneOff className="h-4.5 w-4.5 md:h-5 md:w-5" />
                             </button>
                             <button
                                 onClick={acceptCall}
-                                className="flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg hover:bg-emerald-600 transition-all hover:scale-110 active:scale-95 cursor-pointer"
+                                className="flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg hover:bg-emerald-600 transition-[background-color,transform] active:scale-95"
                                 title="Accept Call"
                             >
                                 <Phone className="h-4.5 w-4.5 md:h-5 md:w-5" />
@@ -240,7 +245,7 @@ export const CallModal: React.FC = () => {
                     {callStatus === "calling" && (
                         <button
                             onClick={endCall}
-                            className="flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 transition-all hover:scale-110 active:scale-95 cursor-pointer"
+                            className="flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 transition-[background-color,transform] active:scale-95"
                             title="Cancel Call"
                         >
                             <PhoneOff className="h-4.5 w-4.5 md:h-5 md:w-5" />
@@ -251,7 +256,7 @@ export const CallModal: React.FC = () => {
                         <>
                             <button
                                 onClick={toggleMute}
-                                className={`flex h-10 w-10 md:h-11 md:w-11 items-center justify-center rounded-full border transition-all hover:scale-105 cursor-pointer ${
+                                className={`flex h-10 w-10 md:h-11 md:w-11 items-center justify-center rounded-full border transition-colors ${
                                     isMuted
                                         ? "bg-amber-500 text-slate-950 border-amber-400"
                                         : "bg-white/10 text-white border-white/20 hover:bg-white/20"
@@ -270,7 +275,7 @@ export const CallModal: React.FC = () => {
                             </button>
                             <button
                                 onClick={toggleCamera}
-                                className={`flex h-10 w-10 md:h-11 md:w-11 items-center justify-center rounded-full border transition-all hover:scale-105 cursor-pointer ${
+                                className={`flex h-10 w-10 md:h-11 md:w-11 items-center justify-center rounded-full border transition-colors ${
                                     isVideoEnabled
                                         ? "bg-primary text-primary-foreground border-primary"
                                         : "bg-white/10 text-white border-white/20 hover:bg-white/20"
@@ -289,7 +294,7 @@ export const CallModal: React.FC = () => {
                             </button>
                             <button
                                 onClick={toggleScreenShare}
-                                className={`flex h-10 w-10 md:h-11 md:w-11 items-center justify-center rounded-full border transition-all hover:scale-105 cursor-pointer ${
+                                className={`flex h-10 w-10 md:h-11 md:w-11 items-center justify-center rounded-full border transition-colors ${
                                     isScreenSharing
                                         ? "bg-primary text-primary-foreground border-primary"
                                         : "bg-white/10 text-white border-white/20 hover:bg-white/20"
@@ -308,7 +313,7 @@ export const CallModal: React.FC = () => {
                             </button>
                             <button
                                 onClick={endCall}
-                                className="flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 transition-all hover:scale-110 active:scale-95 cursor-pointer"
+                                className="flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 transition-[background-color,transform] active:scale-95"
                                 title="End Call"
                             >
                                 <PhoneOff className="h-4.5 w-4.5 md:h-5 md:w-5" />

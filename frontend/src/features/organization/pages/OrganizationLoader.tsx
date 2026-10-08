@@ -1,8 +1,11 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useOrganizationsQuery } from "../hooks/useOrganizations";
-import Spinner from "@/components/common/Spinner";
 import { useOrganizationStore } from "@/store/organization.store";
+import { Loading } from "@/components/common/Loading";
+import { ErrorState } from "@/components/common/EmptyState";
+import { Button } from "@/components/ui/button";
+import { OnboardingShell } from "../components/OnboardingShell";
 
 const OrganizationLoader = () => {
     const navigate = useNavigate();
@@ -29,28 +32,23 @@ const OrganizationLoader = () => {
 
     if (isError) {
         return (
-            <div className="flex h-screen items-center justify-center">
-                <div className="text-center">
-                    <p className="text-red-500 mb-4">
-                        Failed to load organizations
-                    </p>
-                    <button
-                        onClick={() => navigate("/", { replace: true })}
-                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                    >
-                        Go Home
-                    </button>
-                </div>
-            </div>
+            <OnboardingShell>
+                <ErrorState
+                    title="We couldn't load your organizations"
+                    description="Please check your connection and try again."
+                    action={
+                        <Button
+                            onClick={() => navigate("/", { replace: true })}
+                        >
+                            Go home
+                        </Button>
+                    }
+                />
+            </OnboardingShell>
         );
     }
 
-    // Show loading spinner while fetching
-    return (
-        <div className="flex h-screen items-center justify-center">
-            <Spinner />
-        </div>
-    );
+    return <Loading />;
 };
 
 export default OrganizationLoader;

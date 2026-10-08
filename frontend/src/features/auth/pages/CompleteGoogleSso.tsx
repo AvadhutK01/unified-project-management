@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
+import { BrandLogo } from "@/components/common/BrandLogo";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-    Layers,
     ArrowRight,
     Loader2,
     Smartphone,
@@ -140,28 +140,21 @@ const CompleteGoogleSso = () => {
     };
 
     return (
-        <div className="flex min-h-screen bg-background">
+        <div className="flex min-h-dvh bg-background">
             <RegisterBrandPanel />
 
             <div className="flex-1 flex flex-col items-center justify-center px-6 py-10">
                 <div className="w-full max-w-100 space-y-6">
                     {/* Mobile logo */}
-                    <div className="flex items-center gap-2 lg:hidden">
-                        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                            <Layers className="w-4 h-4 text-primary-foreground" />
-                        </div>
-                        <span className="font-bold text-lg text-foreground">
-                            Unified
-                        </span>
-                    </div>
+                    <BrandLogo className="lg:hidden" />
 
                     {/* Google verified banner */}
-                    <div className="flex items-center gap-3 p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-sm font-medium">
+                    <div className="flex items-center gap-3 p-3.5 rounded-xl border border-success/20 bg-success/10 text-success text-sm font-medium">
                         <GoogleIcon className="w-5 h-5 shrink-0" />
                         <div className="flex-1 min-w-0">
                             <p className="truncate font-semibold">{email}</p>
                             <p className="text-xs opacity-90 flex items-center gap-1">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                <CheckCircle2 className="w-3.5 h-3.5 text-success" />
                                 Email verified via Google SSO
                             </p>
                         </div>
@@ -243,7 +236,7 @@ const CompleteGoogleSso = () => {
                                 </p>
                             </div>
 
-                            <div className="space-y-3 p-4 rounded-2xl border border-border bg-muted/30">
+                            <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-card">
                                 <OtpInputRow
                                     otp_length={OTP_LENGTH}
                                     otp={phoneOtp.otp}

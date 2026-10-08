@@ -17,6 +17,7 @@ import { getItemId, parseItemId, parseColumnId } from "../utils/kanban-utils";
 import { useWorkItemsKanban } from "../hooks/useWorkItemsKanban";
 import KanbanColumn from "./KanbanColumn";
 import DragOverlayCard from "./DragOverlayCard";
+import { KanbanBoardScroller } from "@/components/common/Kanban";
 
 const WORK_ITEM_TRANSITIONS: Record<string, string[]> = {
     new: ["active", "removed"],
@@ -239,27 +240,22 @@ const WorkItemKanbanBoard = ({
                 setOverId(null);
             }}
         >
-            <div className="overflow-x-auto pb-2">
-                <div
-                    className="flex gap-4 min-w-0"
-                    style={{ width: "max-content" }}
-                >
-                    {WORK_ITEM_STATUSES.map((status) => (
-                        <KanbanColumn
-                            key={status}
-                            status={status}
-                            items={grouped[status]}
-                            isHighlighted={overStatus === status}
-                            onEditRequest={onEditRequest}
-                            canView={canView}
-                            canEdit={canEdit}
-                            loading={loading[status]}
-                            hasMore={hasMore[status]}
-                            onLoadMore={() => loadMore(status)}
-                        />
-                    ))}
-                </div>
-            </div>
+            <KanbanBoardScroller>
+                {WORK_ITEM_STATUSES.map((status) => (
+                    <KanbanColumn
+                        key={status}
+                        status={status}
+                        items={grouped[status]}
+                        isHighlighted={overStatus === status}
+                        onEditRequest={onEditRequest}
+                        canView={canView}
+                        canEdit={canEdit}
+                        loading={loading[status]}
+                        hasMore={hasMore[status]}
+                        onLoadMore={() => loadMore(status)}
+                    />
+                ))}
+            </KanbanBoardScroller>
 
             <DragOverlay>
                 {activeWorkItem ? (

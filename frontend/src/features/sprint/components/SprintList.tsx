@@ -1,9 +1,12 @@
 import { useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
-import { Trash2, ListTodo, Edit, Eye, ListChecks } from "lucide-react";
+import { Trash2, ListTodo, Pencil, Eye, ListChecks } from "lucide-react";
 import { type SprintItem, type SprintListProps } from "../types/sprint.types";
 import StatusSelectCell from "./StatusSelectCell";
-import { useNavigate } from "react-router-dom";
+import { IconAction } from "@/components/common/Toolbar";
+import { EmptyState } from "@/components/common/EmptyState";
+import { formatDate } from "@/lib/utils";
 
 const SprintList = ({
     sprints,
@@ -22,38 +25,25 @@ const SprintList = ({
         () => [
             {
                 key: "title",
-                label: "Title",
+                label: "Sprint",
                 render: (sprint) => (
-                    <div className="flex items-center gap-3 min-w-0">
-                        <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                            <ListTodo className="size-4 text-primary" />
-                        </div>
-                        <div className="min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">
+                    <div className="flex max-w-[24rem] min-w-0 items-center gap-3">
+                        <span className="tabular flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-xs font-semibold text-muted-foreground">
+                            {sprint.sequence ?? "—"}
+                        </span>
+                        {canView ? (
+                            <Link
+                                to={`${sprint.id}`}
+                                className="truncate font-medium text-foreground hover:text-primary"
+                            >
                                 {sprint.title}
-                            </p>
-                        </div>
+                            </Link>
+                        ) : (
+                            <span className="truncate font-medium text-foreground">
+                                {sprint.title}
+                            </span>
+                        )}
                     </div>
-                ),
-            },
-            {
-                key: "startDate",
-                label: "Start Date",
-                className: "hidden sm:table-cell",
-                render: (sprint) => (
-                    <span className="text-sm text-muted-foreground">
-                        {sprint.startDate ?? "-"}
-                    </span>
-                ),
-            },
-            {
-                key: "endDate",
-                label: "End Date",
-                className: "hidden sm:table-cell",
-                render: (sprint) => (
-                    <span className="text-sm text-muted-foreground">
-                        {sprint.endDate ?? "-"}
-                    </span>
                 ),
             },
             {
@@ -67,51 +57,71 @@ const SprintList = ({
                     />
                 ),
             },
+            {
+                key: "startDate",
+                label: "Start",
+                className: "hidden sm:table-cell",
+                render: (sprint) => (
+                    <span className="tabular text-[13px] text-muted-foreground">
+                        {sprint.startDate ? formatDate(sprint.startDate) : "—"}
+                    </span>
+                ),
+            },
+            {
+                key: "endDate",
+                label: "End",
+                className: "hidden sm:table-cell",
+                render: (sprint) => (
+                    <span className="tabular text-[13px] text-muted-foreground">
+                        {sprint.endDate ? formatDate(sprint.endDate) : "—"}
+                    </span>
+                ),
+            },
             ...(hasAnyAction
                 ? [
                       {
                           key: "actions" as const,
-                          label: "Actions",
-                          className: "w-24 text-right",
+                          label: "",
+                          className: "w-px text-right",
                           render: (sprint: SprintItem) => (
-                              <div className="flex items-center justify-end gap-2">
+                              <div className="flex items-center justify-end gap-0.5">
                                   {canView && (
-                                      <button
+                                      <IconAction
+                                          label={`Open ${sprint.title}`}
+                                          icon={Eye}
                                           onClick={() =>
                                               navigate(`${sprint.id}`)
                                           }
-                                          className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
-                                      >
-                                          <Eye className="size-4" />
-                                      </button>
-                                  )}
-                                  {canEdit && (
-                                      <button
-                                          onClick={() =>
-                                              onEditRequest?.(sprint)
-                                          }
-                                          className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
-                                      >
-                                          <Edit className="size-4" />
-                                      </button>
-                                  )}
-                                  {canDelete && (
-                                      <button className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer">
-                                          <Trash2 className="size-4" />
-                                      </button>
+                                      />
                                   )}
                                   {canViewWorkItems && (
-                                      <button
+                                      <IconAction
+                                          label="Work items"
+                                          icon={ListChecks}
                                           onClick={() =>
                                               navigate(
                                                   `${sprint.id}/work-items`,
                                               )
                                           }
-                                          className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-indigo-500 hover:bg-indigo-500/10 transition-colors cursor-pointer"
-                                          title="Work Items"
-                                      >
-                                          <ListChecks className="size-4" />
-                                      </button>
+                                      />
+                                  )}
+                                  {canEdit && (
+                                      <IconAction
+                                          label={`Edit ${sprint.title}`}
+                                          icon={Pencil}
+                                          onClick={() =>
+                                              onEditRequest?.(sprint)
+                                          }
+                                      />
+                                  )}
+                                  {canDelete && (
+                                      // NOTE: this button had no handler before the
+                                      // redesign; behaviour intentionally preserved.
+                                      <IconAction
+                                          label={`Delete ${sprint.title}`}
+                                          icon={Trash2}
+                                          tone="danger"
+                                      />
                                   )}
                               </div>
                           ),
@@ -128,6 +138,7 @@ const SprintList = ({
             canView,
             canViewWorkItems,
             hasAnyAction,
+            navigate,
         ],
     );
 
@@ -138,16 +149,11 @@ const SprintList = ({
             getRowId={(s) => s.id}
             showDefaultFooter={false}
             emptyState={
-                <tr>
-                    <td colSpan={6}>
-                        <div className="flex flex-col items-center justify-center py-16 gap-2">
-                            <ListTodo className="size-8 text-muted-foreground/40" />
-                            <p className="text-sm font-medium text-muted-foreground">
-                                No sprints yet
-                            </p>
-                        </div>
-                    </td>
-                </tr>
+                <EmptyState
+                    icon={ListTodo}
+                    title="No sprints yet"
+                    description="Plan your first sprint to start delivering this phase in iterations."
+                />
             }
         />
     );

@@ -2,6 +2,12 @@ import { useEffect, useState } from "react";
 import { X, UserCog, Loader2, User, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import {
     Select,
     SelectContent,
     SelectItem,
@@ -106,36 +112,31 @@ export function EditMemberModal({
         : "??";
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in-0"
-                onClick={handleClose}
-            />
-
-            <div className="relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200">
-                <div className="flex shrink-0 items-start justify-between p-4 pb-5 sm:p-6 sm:pb-5">
+        <Dialog open onOpenChange={(o) => !o && handleClose()}>
+            <DialogContent
+                showCloseButton={false}
+                className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg sm:p-0"
+            >
+                <div className="flex shrink-0 items-start justify-between gap-3 border-b border-border px-5 py-4 sm:px-6">
                     <div className="flex items-start gap-3 min-w-0">
-                        <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                            <UserCog className="size-5 text-primary" />
+                        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <UserCog className="size-[18px]" />
                         </div>
                         <div className="min-w-0">
-                            <h2 className="text-base font-semibold text-foreground">
-                                Edit Member
-                            </h2>
-                            <p className="text-sm text-muted-foreground mt-0.5">
+                            <DialogTitle>Edit Member</DialogTitle>
+                            <DialogDescription className="mt-0.5">
                                 Update member role and status.
-                            </p>
+                            </DialogDescription>
                         </div>
                     </div>
                     <button
                         onClick={handleClose}
-                        className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 shrink-0"
+                        aria-label="Close"
+                        className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                     >
                         <X className="size-4" />
                     </button>
                 </div>
-
-                <div className="h-px bg-border mx-4 sm:mx-6 shrink-0" />
 
                 {isLoadingMember ? (
                     <div className="flex items-center justify-center py-16">
@@ -143,7 +144,7 @@ export function EditMemberModal({
                     </div>
                 ) : member ? (
                     <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-4 sm:p-6">
-                        <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/30 border border-border/50">
+                        <div className="flex items-center gap-4 rounded-xl border border-border bg-muted/40 p-4">
                             <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-sm font-semibold text-primary">
                                 {initials}
                             </div>
@@ -209,7 +210,7 @@ export function EditMemberModal({
                                 <SelectContent>
                                     <SelectItem value="active">
                                         <span className="flex items-center gap-2">
-                                            <span className="size-2 rounded-full bg-green-500 shrink-0" />
+                                            <span className="size-2 shrink-0 rounded-full bg-success" />
                                             Active
                                         </span>
                                     </SelectItem>
@@ -221,7 +222,7 @@ export function EditMemberModal({
                                     </SelectItem>
                                     <SelectItem value="onleave">
                                         <span className="flex items-center gap-2">
-                                            <span className="size-2 rounded-full bg-muted-foreground shrink-0" />
+                                            <span className="size-2 shrink-0 rounded-full bg-warning" />
                                             On Leave
                                         </span>
                                     </SelectItem>
@@ -238,9 +239,7 @@ export function EditMemberModal({
                     </div>
                 )}
 
-                <div className="h-px bg-border mx-4 sm:mx-6 shrink-0" />
-
-                <div className="flex shrink-0 items-center justify-end gap-2 p-4 pt-4 sm:p-6 sm:pt-4">
+                <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border bg-muted/30 px-5 py-3.5 sm:px-6">
                     <Button
                         variant="outline"
                         size="sm"
@@ -258,14 +257,14 @@ export function EditMemberModal({
                         {isUpdating ? (
                             <>
                                 <Loader2 className="size-3.5 animate-spin" />
-                                Saving...
+                                Saving…
                             </>
                         ) : (
                             "Save Changes"
                         )}
                     </Button>
                 </div>
-            </div>
-        </div>
+            </DialogContent>
+        </Dialog>
     );
 }

@@ -1,33 +1,20 @@
-import { Users } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { ArrowRight, Clock, Shield, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-// type BadgeVariant =
-//     | "default"
-//     | "secondary"
-//     | "outline"
-//     | "success"
-//     | "warning"
-//     | "info"
-//     | "destructive";
+import { OrganizationAvatar } from "@/components/common/OrgSwitcher";
 
 interface OrganizationCardProps {
     id: string;
     name: string;
     initials: string;
     color: string;
-    role: string;
-    memberCount: number;
+    role?: string;
+    memberCount?: number;
     lastActive: string;
+    slug?: string;
+    logoUrl?: string | null;
     isSelected: boolean;
     onClick: () => void;
 }
-
-// const ROLE_VARIANT: Record<string, BadgeVariant> = {
-//     Owner: "default",
-//     Admin: "warning",
-//     Member: "secondary",
-// };
 
 export function OrganizationCard({
     name,
@@ -36,65 +23,60 @@ export function OrganizationCard({
     role,
     memberCount,
     lastActive,
+    slug,
+    logoUrl,
     isSelected,
     onClick,
 }: OrganizationCardProps) {
     return (
-        <div
+        <button
+            type="button"
             onClick={onClick}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => e.key === "Enter" && onClick()}
             className={cn(
-                "relative flex flex-col gap-4 p-5 rounded-xl border-2 bg-card cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-h-[170px]",
+                "group flex w-full flex-col gap-4 rounded-xl border bg-card p-4 text-left shadow-card transition-[border-color,box-shadow] outline-none hover:shadow-elevated focus-visible:ring-3 focus-visible:ring-ring/40",
                 isSelected
-                    ? "border-primary shadow-md shadow-primary/10"
+                    ? "border-primary"
                     : "border-border hover:border-primary/40",
             )}
         >
-            {/* Selected checkmark */}
-            {isSelected && (
-                <div className="absolute top-3 right-3 size-5 rounded-full bg-primary flex items-center justify-center">
-                    <svg
-                        className="size-3 text-white"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={3}
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M5 13l4 4L19 7"
-                        />
-                    </svg>
-                </div>
-            )}
-
-            {/* Avatar + Info */}
             <div className="flex items-center gap-3">
-                <div
-                    className="size-12 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-sm shrink-0"
-                    style={{ backgroundColor: color }}
-                >
-                    {initials}
-                </div>
-                <div className="flex flex-col gap-1.5 min-w-0">
-                    <span className="font-semibold text-foreground text-sm truncate">
+                <OrganizationAvatar
+                    organization={{ name, logoUrl: logoUrl ?? null }}
+                    color={color}
+                    initials={initials}
+                    className="size-11 rounded-lg text-sm"
+                />
+                <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-foreground">
                         {name}
-                    </span>
-                    <Badge className="w-fit text-xs">{role}</Badge>
+                    </p>
+                    {slug && (
+                        <p className="truncate text-xs text-muted-foreground">
+                            /{slug}
+                        </p>
+                    )}
                 </div>
+                <ArrowRight className="size-4 shrink-0 text-muted-foreground opacity-0 transition-[opacity,transform] group-hover:translate-x-0.5 group-hover:opacity-100 group-focus-visible:opacity-100" />
             </div>
 
-            {/* Meta */}
-            <div className="flex items-center justify-between text-xs text-muted-foreground mt-auto">
-                <div className="flex items-center gap-1.5">
-                    <Users className="size-3.5" />
-                    <span>{memberCount} Members</span>
-                </div>
-                <span>{lastActive}</span>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-border pt-3 text-xs text-muted-foreground">
+                {role && (
+                    <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/60 px-1.5 py-0.5 font-medium text-foreground">
+                        <Shield className="size-3" />
+                        {role}
+                    </span>
+                )}
+                {memberCount !== undefined && (
+                    <span className="tabular inline-flex items-center gap-1">
+                        <Users className="size-3.5" />
+                        {memberCount} member{memberCount === 1 ? "" : "s"}
+                    </span>
+                )}
+                <span className="inline-flex items-center gap-1 sm:ml-auto">
+                    <Clock className="size-3.5" />
+                    {lastActive}
+                </span>
             </div>
-        </div>
+        </button>
     );
 }

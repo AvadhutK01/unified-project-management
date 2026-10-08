@@ -50,7 +50,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
     return (
         <div
             ref={containerRef}
-            className="absolute bottom-14 left-2 z-50 rounded-2xl shadow-2xl transition-all duration-200 overflow-hidden border border-border/60"
+            className="absolute bottom-14 left-2 z-50 overflow-hidden rounded-xl border border-border shadow-elevated transition-opacity duration-150"
         >
             <EmojiPickerReact
                 onEmojiClick={handleEmojiClick}

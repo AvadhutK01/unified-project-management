@@ -1,23 +1,23 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useOrganizationStore } from "@/store/organization.store";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
-    Edit,
+    Pencil,
     Trash2,
     Globe,
     Calendar,
     FileText,
-    Hash,
+    AtSign,
     Shield,
     Building2,
     ExternalLink,
     Loader2,
+    Copy,
+    Check,
+    AlertTriangle,
 } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getColor } from "@/lib/utils";
 import { OrganizationEditModal } from "../components/OrganizationEditModal";
 import {
     useUpdateOrganization,
@@ -26,14 +26,71 @@ import {
 import { useConfirm } from "@/providers/ConfirmProvider";
 import { toast } from "sonner";
 import type { OrganizationFormState } from "../types/organization.types";
+import { PageContainer, PageHeader } from "@/components/common/PageHeader";
+import { SectionCard } from "@/components/common/SectionCard";
+import { StatusBadge } from "@/components/common/StatusBadge";
+import { EmptyState } from "@/components/common/EmptyState";
+import { OrganizationAvatar } from "@/components/common/OrgSwitcher";
+import { SimpleTooltip } from "@/components/ui/tooltip";
+import type { Tone } from "@/lib/tones";
 
-const STATUS_STYLES: Record<string, string> = {
-    active: "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800",
-    pending:
-        "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800",
-    archived:
-        "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800/40 dark:text-gray-400 dark:border-gray-700",
+const STATUS_TONE: Record<string, Tone> = {
+    active: "success",
+    pending: "warning",
+    archived: "neutral",
 };
+
+function Field({
+    icon: Icon,
+    label,
+    children,
+    className,
+}: {
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+    children: React.ReactNode;
+    className?: string;
+}) {
+    return (
+        <div className={className}>
+            <dt className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                <Icon className="size-3.5" />
+                {label}
+            </dt>
+            <dd className="mt-1.5 text-sm text-foreground">{children}</dd>
+        </div>
+    );
+}
+
+function CopyValue({ value }: { value: string }) {
+    const [copied, setCopied] = useState(false);
+    return (
+        <span className="inline-flex max-w-full items-center gap-1 rounded-md border border-border bg-muted/60 py-0.5 pr-0.5 pl-2">
+            <code className="truncate font-mono text-xs text-foreground">
+                {value}
+            </code>
+            <SimpleTooltip label={copied ? "Copied" : "Copy"}>
+                <button
+                    type="button"
+                    aria-label={`Copy ${value}`}
+                    onClick={() => {
+                        navigator.clipboard?.writeText(value).then(() => {
+                            setCopied(true);
+                            setTimeout(() => setCopied(false), 1500);
+                        });
+                    }}
+                    className="flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                >
+                    {copied ? (
+                        <Check className="size-3.5 text-success" />
+                    ) : (
+                        <Copy className="size-3.5" />
+                    )}
+                </button>
+            </SimpleTooltip>
+        </span>
+    );
+}
 
 const OrganizationInfo = () => {
     const {
@@ -61,12 +118,13 @@ const OrganizationInfo = () => {
 
     if (!activeOrganization) {
         return (
-            <div className="flex h-screen items-center justify-center">
-                <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                    <Building2 className="size-10" />
-                    <p>No organization selected</p>
-                </div>
-            </div>
+            <PageContainer>
+                <EmptyState
+                    icon={Building2}
+                    title="No organization selected"
+                    description="Choose a workspace to view its details."
+                />
+            </PageContainer>
         );
     }
 
@@ -163,171 +221,134 @@ const OrganizationInfo = () => {
     };
 
     const statusKey = activeOrganization.status?.toLowerCase() ?? "active";
+    const statusLabel =
+        (activeOrganization.status?.charAt(0).toUpperCase() ?? "") +
+        (activeOrganization.status?.slice(1) ?? "");
 
     return (
-        <div className="space-y-6 p-4 sm:p-6">
-            {/* Header */}
-            <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                    <h1 className="text-lg font-semibold text-foreground">
-                        Organization
-                    </h1>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                        Manage your organization details and settings
-                    </p>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button
-                        onClick={openEditModal}
-                        variant="outline"
-                        size="sm"
-                        className="gap-1.5"
-                    >
-                        <Edit className="size-4" />
-                        Edit
+        <PageContainer size="narrow">
+            <PageHeader
+                title="Organization"
+                description="Manage your organization's profile and settings."
+                actions={
+                    <Button onClick={openEditModal} variant="outline">
+                        <Pencil />
+                        Edit details
                     </Button>
+                }
+            />
+
+            <SectionCard flush>
+                <div className="flex items-center gap-4 border-b border-border px-5 py-5">
+                    <OrganizationAvatar
+                        organization={activeOrganization}
+                        color={getColor(activeOrganization.slug)}
+                        className="size-14 rounded-xl text-lg"
+                    />
+                    <div className="min-w-0">
+                        <h2 className="truncate text-lg font-semibold tracking-tight text-foreground">
+                            {activeOrganization.name}
+                        </h2>
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                            <StatusBadge
+                                tone={STATUS_TONE[statusKey] ?? "neutral"}
+                            >
+                                {statusLabel}
+                            </StatusBadge>
+                            <span className="text-[13px] text-muted-foreground">
+                                /{activeOrganization.slug}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <dl className="grid gap-x-8 gap-y-6 p-5 sm:grid-cols-2">
+                    <Field icon={AtSign} label="Slug">
+                        <CopyValue value={activeOrganization.slug} />
+                    </Field>
+                    <Field icon={Shield} label="Status">
+                        <StatusBadge tone={STATUS_TONE[statusKey] ?? "neutral"}>
+                            {statusLabel}
+                        </StatusBadge>
+                    </Field>
+                    <Field icon={Globe} label="Website">
+                        {activeOrganization.websiteUrl ? (
+                            <a
+                                href={activeOrganization.websiteUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 break-all text-primary hover:underline"
+                            >
+                                {activeOrganization.websiteUrl}
+                                <ExternalLink className="size-3 shrink-0" />
+                            </a>
+                        ) : (
+                            <span className="text-muted-foreground">
+                                No website provided
+                            </span>
+                        )}
+                    </Field>
+                    <Field icon={Calendar} label="Created">
+                        {formatDate(activeOrganization.createdAt)}
+                    </Field>
+                    <Field
+                        icon={FileText}
+                        label="Description"
+                        className="sm:col-span-2"
+                    >
+                        {activeOrganization.description ? (
+                            <p className="leading-relaxed">
+                                {activeOrganization.description}
+                            </p>
+                        ) : (
+                            <span className="text-muted-foreground">
+                                No description provided
+                            </span>
+                        )}
+                    </Field>
+                    <Field
+                        icon={Building2}
+                        label="Organization ID"
+                        className="sm:col-span-2"
+                    >
+                        <CopyValue value={activeOrganization.id} />
+                    </Field>
+                </dl>
+            </SectionCard>
+
+            <section className="overflow-hidden rounded-xl border border-destructive/30 bg-card">
+                <div className="flex items-center gap-2 border-b border-destructive/20 bg-destructive/[0.04] px-5 py-3">
+                    <AlertTriangle className="size-4 text-destructive" />
+                    <h2 className="text-sm font-semibold text-destructive">
+                        Danger zone
+                    </h2>
+                </div>
+                <div className="flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p className="text-sm font-medium text-foreground">
+                            Delete this organization
+                        </p>
+                        <p className="mt-0.5 text-[13px] text-muted-foreground">
+                            Permanently removes the organization, its projects
+                            and all associated data. This cannot be undone.
+                        </p>
+                    </div>
                     <Button
                         onClick={handleDelete}
-                        variant="destructive"
-                        size="sm"
-                        className="gap-1.5"
+                        variant="danger"
+                        className="shrink-0"
                         disabled={isDeleting}
                     >
                         {isDeleting ? (
-                            <Loader2 className="size-4 animate-spin" />
+                            <Loader2 className="animate-spin" />
                         ) : (
-                            <Trash2 className="size-4" />
+                            <Trash2 />
                         )}
-                        Delete
+                        Delete organization
                     </Button>
                 </div>
-            </div>
+            </section>
 
-            {/* Organization Card */}
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center gap-4">
-                        {activeOrganization.logoUrl ? (
-                            <img
-                                src={activeOrganization.logoUrl}
-                                alt={`${activeOrganization.name} logo`}
-                                className="size-14 rounded-xl object-cover"
-                            />
-                        ) : (
-                            <div className="flex size-14 items-center justify-center rounded-xl bg-primary/10 text-lg font-semibold text-primary shrink-0">
-                                {activeOrganization.name
-                                    ?.slice(0, 2)
-                                    .toUpperCase()}
-                            </div>
-                        )}
-                        <div className="min-w-0">
-                            <CardTitle className="text-lg truncate">
-                                {activeOrganization.name}
-                            </CardTitle>
-                            <Badge
-                                variant="outline"
-                                className={`mt-1.5 ${STATUS_STYLES[statusKey] ?? ""}`}
-                            >
-                                {activeOrganization.status
-                                    ?.charAt(0)
-                                    .toUpperCase() +
-                                    activeOrganization.status?.slice(1)}
-                            </Badge>
-                        </div>
-                    </div>
-                </CardHeader>
-                <Separator />
-                <CardContent className="pt-6">
-                    <div className="grid gap-6 md:grid-cols-2">
-                        {/* Slug */}
-                        <div className="space-y-1.5">
-                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                                <Hash className="size-4" />
-                                <span>Slug</span>
-                            </div>
-                            <code className="text-sm font-mono text-foreground bg-muted px-2 py-1 rounded-md block w-fit">
-                                {activeOrganization.slug}
-                            </code>
-                        </div>
-
-                        {/* Status */}
-                        <div className="space-y-1.5">
-                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                                <Shield className="size-4" />
-                                <span>Status</span>
-                            </div>
-                            <Badge
-                                variant="outline"
-                                className={STATUS_STYLES[statusKey] ?? ""}
-                            >
-                                {activeOrganization.status
-                                    ?.charAt(0)
-                                    .toUpperCase() +
-                                    activeOrganization.status?.slice(1)}
-                            </Badge>
-                        </div>
-
-                        {/* Description */}
-                        <div className="space-y-1.5">
-                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                                <FileText className="size-4" />
-                                <span>Description</span>
-                            </div>
-                            <p className="text-sm text-foreground">
-                                {activeOrganization.description ||
-                                    "No description provided"}
-                            </p>
-                        </div>
-
-                        {/* Website */}
-                        <div className="space-y-1.5">
-                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                                <Globe className="size-4" />
-                                <span>Website</span>
-                            </div>
-                            {activeOrganization.websiteUrl ? (
-                                <a
-                                    href={activeOrganization.websiteUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="inline-flex items-center gap-1 text-sm text-primary hover:underline break-all"
-                                >
-                                    {activeOrganization.websiteUrl}
-                                    <ExternalLink className="size-3 shrink-0" />
-                                </a>
-                            ) : (
-                                <p className="text-sm text-muted-foreground">
-                                    No website provided
-                                </p>
-                            )}
-                        </div>
-
-                        {/* Created At */}
-                        <div className="space-y-1.5">
-                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                                <Calendar className="size-4" />
-                                <span>Created</span>
-                            </div>
-                            <p className="text-sm text-foreground">
-                                {formatDate(activeOrganization.createdAt)}
-                            </p>
-                        </div>
-
-                        {/* Org ID */}
-                        <div className="space-y-1.5">
-                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                                <Building2 className="size-4" />
-                                <span>Organization ID</span>
-                            </div>
-                            <code className="text-xs font-mono text-muted-foreground bg-muted px-2 py-1 rounded-md block w-fit">
-                                {activeOrganization.id}
-                            </code>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Edit Modal */}
             {showEditModal && (
                 <OrganizationEditModal
                     formState={formState}
@@ -338,7 +359,7 @@ const OrganizationInfo = () => {
                     onSave={handleSave}
                 />
             )}
-        </div>
+        </PageContainer>
     );
 };
 

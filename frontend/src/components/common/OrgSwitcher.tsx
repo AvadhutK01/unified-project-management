@@ -2,30 +2,34 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, ChevronsUpDown, Plus, LayoutGrid } from "lucide-react";
 import { cn, getColor, getInitials } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
 import { useOrganizationStore } from "@/store/organization.store";
 import { useOrganizationsQuery } from "@/features/organization/hooks/useOrganizations";
+import { useSubscriptionQuery } from "@/features/subscriptions/hooks/useSubscription";
+import {
+    PLAN_LABELS,
+    type SubscriptionPlan,
+} from "@/features/subscriptions/utils/subscriptionHelpers";
 import type { Organization } from "@/features/organization/types/organization.types";
 
 interface OrgSwitcherProps {
     collapsed: boolean;
 }
 
-function OrganizationAvatar({
+/** Organization logo with deterministic initials fallback. */
+export function OrganizationAvatar({
     organization,
     color,
     initials,
     className,
 }: {
     organization?: Pick<Organization, "name" | "logoUrl"> | null;
-    color: string;
-    initials: string;
+    color?: string;
+    initials?: string;
     className?: string;
 }) {
     const [imageError, setImageError] = useState(false);
@@ -39,7 +43,10 @@ function OrganizationAvatar({
             <img
                 src={organization.logoUrl}
                 alt={`${organization.name} logo`}
-                className={cn("object-cover", className)}
+                className={cn(
+                    "rounded-md object-cover ring-1 ring-border",
+                    className,
+                )}
                 onError={() => setImageError(true)}
             />
         );
@@ -47,13 +54,16 @@ function OrganizationAvatar({
 
     return (
         <div
+            aria-hidden="true"
             className={cn(
-                "flex items-center justify-center rounded-lg bg-muted text-white text-xs font-bold shadow-sm select-none",
+                "flex items-center justify-center rounded-md text-[11px] font-semibold text-white select-none",
                 className,
             )}
-            style={{ backgroundColor: color }}
+            style={{
+                backgroundColor: color ?? getColor(organization?.name ?? ""),
+            }}
         >
-            {initials}
+            {initials ?? getInitials(organization?.name ?? "")}
         </div>
     );
 }
@@ -64,10 +74,14 @@ export function OrgSwitcher({ collapsed }: OrgSwitcherProps) {
     const { activeOrganization, setActiveOrganization } =
         useOrganizationStore();
     const { data: response } = useOrganizationsQuery();
+    const { data: subscription } = useSubscriptionQuery();
     const organizations: Organization[] = response?.data?.organizations ?? [];
 
     const activeColor = getColor(activeOrganization?.slug ?? "");
     const activeInitials = getInitials(activeOrganization?.name ?? "");
+    const planLabel = subscription?.plan
+        ? PLAN_LABELS[subscription.plan as SubscriptionPlan]
+        : null;
 
     const handleSwitch = (org: Organization) => {
         setActiveOrganization(org);
@@ -80,36 +94,33 @@ export function OrgSwitcher({ collapsed }: OrgSwitcherProps) {
             <PopoverTrigger asChild>
                 <button
                     className={cn(
-                        "w-full flex items-center gap-2.5 rounded-lg px-2 py-2 transition-all duration-200 cursor-pointer border border-transparent",
-                        "hover:bg-primary/5 hover:border-border/60",
-                        open && "bg-primary/5 border-border/60",
-                        collapsed ? "justify-center" : "justify-between",
+                        "flex w-full items-center gap-2.5 rounded-md p-1.5 text-left transition-colors outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+                        open && "bg-sidebar-accent",
+                        collapsed && "w-auto justify-center",
                     )}
-                    aria-label="Switch organization"
+                    aria-label={`Switch workspace — current: ${activeOrganization?.name ?? "none"}`}
                 >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                        {/* Org avatar */}
-                        <OrganizationAvatar
-                            organization={activeOrganization}
-                            color={activeColor}
-                            initials={activeInitials}
-                            className="size-7 shrink-0 rounded-lg"
-                        />
-
-                        {!collapsed && (
-                            <div className="flex flex-col items-start min-w-0">
-                                <span className="text-xs font-semibold text-foreground truncate max-w-32.5 leading-tight">
-                                    {activeOrganization?.name ?? "No workspace"}
-                                </span>
-                                <span className="text-[10px] text-muted-foreground leading-tight">
-                                    Switch workspace
-                                </span>
-                            </div>
-                        )}
-                    </div>
+                    <OrganizationAvatar
+                        organization={activeOrganization}
+                        color={activeColor}
+                        initials={activeInitials}
+                        className="size-7 shrink-0"
+                    />
 
                     {!collapsed && (
-                        <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground/70" />
+                        <>
+                            <span className="flex min-w-0 flex-1 flex-col">
+                                <span className="truncate text-[13px] leading-tight font-semibold text-foreground">
+                                    {activeOrganization?.name ?? "No workspace"}
+                                </span>
+                                <span className="truncate text-[11px] leading-tight text-muted-foreground">
+                                    {planLabel
+                                        ? `${planLabel} plan`
+                                        : "Workspace"}
+                                </span>
+                            </span>
+                            <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" />
+                        </>
                     )}
                 </button>
             </PopoverTrigger>
@@ -117,84 +128,71 @@ export function OrgSwitcher({ collapsed }: OrgSwitcherProps) {
             <PopoverContent
                 align="start"
                 side="bottom"
-                sideOffset={8}
-                className="z-80 w-64 p-2 shadow-xl rounded-xl border border-border/80"
+                sideOffset={6}
+                className="z-[80] w-64 rounded-lg border border-border p-1 shadow-elevated"
             >
-                {/* Header */}
-                <div className="px-2 py-1.5 mb-1">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
-                        Your Workspaces
-                    </p>
-                </div>
+                <p className="px-2 pt-1.5 pb-1 text-xs font-medium text-muted-foreground">
+                    Workspaces
+                </p>
 
-                {/* Org list */}
-                <div className="flex flex-col gap-0.5 max-h-52 overflow-y-auto">
+                <div
+                    role="listbox"
+                    aria-label="Workspaces"
+                    className="flex max-h-60 flex-col gap-px overflow-y-auto"
+                >
                     {organizations.map((org) => {
-                        const color = getColor(org.slug);
-                        const initials = getInitials(org.name);
                         const isActive = org.id === activeOrganization?.id;
-
                         return (
                             <button
                                 key={org.id}
+                                role="option"
+                                aria-selected={isActive}
                                 onClick={() => handleSwitch(org)}
                                 className={cn(
-                                    "w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-all duration-150 cursor-pointer",
-                                    isActive
-                                        ? "bg-primary/10 text-primary"
-                                        : "hover:bg-muted/60 text-foreground",
+                                    "flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors outline-none hover:bg-accent focus-visible:bg-accent",
+                                    isActive && "bg-accent",
                                 )}
                             >
-                                {/* Avatar */}
                                 <OrganizationAvatar
                                     organization={org}
-                                    color={color}
-                                    initials={initials}
-                                    className="size-7 shrink-0 rounded-lg"
+                                    color={getColor(org.slug)}
+                                    initials={getInitials(org.name)}
+                                    className="size-6 shrink-0 text-[10px]"
                                 />
-
-                                {/* Name */}
-                                <span className="flex-1 text-sm font-medium truncate">
+                                <span className="flex-1 truncate text-[13px] font-medium text-foreground">
                                     {org.name}
                                 </span>
-
-                                {/* Active check */}
                                 {isActive && (
-                                    <Check className="size-3.5 shrink-0 text-primary" />
+                                    <Check className="size-4 shrink-0 text-primary" />
                                 )}
                             </button>
                         );
                     })}
                 </div>
 
-                <Separator className="my-2" />
+                <div className="-mx-1 my-1 h-px bg-border" />
 
-                {/* Footer actions */}
-                <div className="flex flex-col gap-0.5">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start gap-2 h-8 text-xs font-medium text-muted-foreground hover:text-foreground"
+                <div className="flex flex-col gap-px">
+                    <button
+                        className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-foreground focus-visible:bg-accent"
                         onClick={() => {
                             navigate("/org-setup/select");
                             setOpen(false);
                         }}
                     >
-                        <LayoutGrid className="size-3.5" />
+                        <LayoutGrid className="size-4" />
                         All workspaces
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start gap-2 h-8 text-xs font-medium text-muted-foreground hover:text-foreground"
+                    </button>
+                    <button
+                        className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-foreground focus-visible:bg-accent"
                         onClick={() => {
                             navigate("/org-setup/create");
                             setOpen(false);
                         }}
                     >
-                        <Plus className="size-3.5" />
-                        Create new workspace
-                    </Button>
+                        <Plus className="size-4" />
+                        Create workspace
+                    </button>
                 </div>
             </PopoverContent>
         </Popover>

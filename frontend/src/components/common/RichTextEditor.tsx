@@ -58,16 +58,20 @@ export default function RichTextEditor({
     if (!editor) return null;
 
     const btn = (active: boolean) =>
-        `px-2 py-1 text-sm rounded-md transition ${
+        `h-7 min-w-7 px-1.5 text-[13px] font-semibold rounded-md transition-colors ${
             active
-                ? "bg-primary/15 text-primary"
-                : "text-foreground hover:bg-accent hover:text-accent-foreground"
+                ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary dark:bg-primary/20"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground"
         }`;
 
     return (
-        <div className="border border-input rounded-md bg-transparent shadow-xs overflow-hidden transition-[color,box-shadow]">
+        <div className="overflow-hidden rounded-md border border-input bg-card shadow-xs transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/25 dark:bg-input/20">
             {/* Toolbar */}
-            <div className="flex flex-wrap items-center gap-1 border-b border-input px-2 py-1.5 bg-secondary/50">
+            <div
+                role="toolbar"
+                aria-label="Text formatting"
+                className="flex flex-wrap items-center gap-0.5 border-b border-input bg-muted/50 px-1.5 py-1"
+            >
                 <Button
                     type="button"
                     variant="ghost"
@@ -75,6 +79,9 @@ export default function RichTextEditor({
                         editor.chain().focus().toggleHeading({ level: 1 }).run()
                     }
                     className={btn(editor.isActive("heading", { level: 1 }))}
+                    aria-label="Heading 1"
+                    title="Heading 1"
+                    aria-pressed={editor.isActive("heading", { level: 1 })}
                 >
                     H1
                 </Button>
@@ -86,17 +93,23 @@ export default function RichTextEditor({
                         editor.chain().focus().toggleHeading({ level: 2 }).run()
                     }
                     className={btn(editor.isActive("heading", { level: 2 }))}
+                    aria-label="Heading 2"
+                    title="Heading 2"
+                    aria-pressed={editor.isActive("heading", { level: 2 })}
                 >
                     H2
                 </Button>
 
-                <div className="w-px h-5 bg-border mx-1" />
+                <div aria-hidden="true" className="mx-1 h-4 w-px bg-border" />
 
                 <Button
                     type="button"
                     variant="ghost"
                     onClick={() => editor.chain().focus().toggleBold().run()}
                     className={btn(editor.isActive("bold"))}
+                    aria-label="Bold"
+                    title="Bold"
+                    aria-pressed={editor.isActive("bold")}
                 >
                     B
                 </Button>
@@ -106,6 +119,9 @@ export default function RichTextEditor({
                     variant="ghost"
                     onClick={() => editor.chain().focus().toggleItalic().run()}
                     className={btn(editor.isActive("italic"))}
+                    aria-label="Italic"
+                    title="Italic"
+                    aria-pressed={editor.isActive("italic")}
                 >
                     I
                 </Button>
@@ -117,11 +133,14 @@ export default function RichTextEditor({
                         editor.chain().focus().toggleUnderline().run()
                     }
                     className={btn(editor.isActive("underline"))}
+                    aria-label="Underline"
+                    title="Underline"
+                    aria-pressed={editor.isActive("underline")}
                 >
                     U
                 </Button>
 
-                <div className="w-px h-5 bg-border mx-1" />
+                <div aria-hidden="true" className="mx-1 h-4 w-px bg-border" />
 
                 <Button
                     type="button"
@@ -130,6 +149,9 @@ export default function RichTextEditor({
                         editor.chain().focus().toggleBulletList().run()
                     }
                     className={btn(editor.isActive("bulletList"))}
+                    aria-label="Bulleted list"
+                    title="Bulleted list"
+                    aria-pressed={editor.isActive("bulletList")}
                 >
                     <List className="w-4 h-4" />
                 </Button>
@@ -141,11 +163,14 @@ export default function RichTextEditor({
                         editor.chain().focus().toggleOrderedList().run()
                     }
                     className={btn(editor.isActive("orderedList"))}
+                    aria-label="Numbered list"
+                    title="Numbered list"
+                    aria-pressed={editor.isActive("orderedList")}
                 >
                     <ListOrdered className="w-4 h-4" />
                 </Button>
 
-                <div className="w-px h-5 bg-border mx-1" />
+                <div aria-hidden="true" className="mx-1 h-4 w-px bg-border" />
 
                 {/* 🔗 Link Button */}
                 <Button
@@ -156,20 +181,24 @@ export default function RichTextEditor({
                         setLinkUrl(editor.getAttributes("link").href || "");
                     }}
                     className={btn(editor.isActive("link"))}
+                    aria-label="Link"
+                    title="Link"
+                    aria-pressed={editor.isActive("link")}
                 >
                     <LinkIcon className="w-4 h-4" />
                 </Button>
             </div>
 
-            {/* ✅ Modern Link Input */}
+            {/* Link input */}
             {showLinkInput && (
-                <div className="flex items-center gap-2 border-b px-2 py-2 bg-muted/40">
+                <div className="flex items-center gap-2 border-b border-input bg-muted/40 px-2 py-2">
                     <input
                         type="text"
                         placeholder="Enter URL..."
                         value={linkUrl}
                         onChange={(e) => setLinkUrl(e.target.value)}
-                        className="flex-1 px-2 py-1 text-sm border rounded-md bg-background outline-none"
+                        aria-label="Link URL"
+                        className="h-8 flex-1 rounded-md border border-input bg-card px-2.5 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25"
                         autoFocus
                     />
 
@@ -187,7 +216,7 @@ export default function RichTextEditor({
                             }
                             setShowLinkInput(false);
                         }}
-                        className="px-2 py-1 text-sm bg-primary text-primary-foreground rounded-md cursor-pointer"
+                        className="h-8 rounded-md bg-primary px-3 text-[13px] font-medium text-primary-foreground hover:bg-primary/90"
                     >
                         Apply
                     </button>
@@ -195,7 +224,7 @@ export default function RichTextEditor({
                     <button
                         type="button"
                         onClick={() => setShowLinkInput(false)}
-                        className="px-2 py-1 text-sm text-muted-foreground cursor-pointer"
+                        className="h-8 rounded-md px-2.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
                     >
                         Cancel
                     </button>

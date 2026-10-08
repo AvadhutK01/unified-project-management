@@ -1,16 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
-import {
-    Search,
-    Eye,
-    Edit,
-    Trash2,
-    ChevronLeft,
-    ChevronRight,
-    FolderKanban,
-    Layers,
-} from "lucide-react";
+import { Eye, Pencil, Trash2, FolderKanban, Layers } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
-import { Badge } from "@/components/ui/badge";
 import { formatDate, useDebounce } from "@/lib/utils";
 import {
     useProjectsQuery,
@@ -20,11 +10,22 @@ import { toast } from "sonner";
 import { useConfirm } from "@/providers/ConfirmProvider";
 import ProjectCreateModal from "../components/ProjectCreateModal";
 import ProjectEditModal from "../components/ProjectEditModal";
-import { STATUS_STYLES, STATUS_LABELS } from "../constants/projects.constants";
+import { STATUS_LABELS } from "../constants/projects.constants";
 import type { Project } from "../types/project.types";
 import { usePermission } from "@/features/rbac/hooks/usePermission";
 import { PERMISSIONS } from "@/features/rbac/types/rbac.types";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { PageContainer, PageHeader } from "@/components/common/PageHeader";
+import {
+    IconAction,
+    Pagination,
+    SearchInput,
+    Toolbar,
+} from "@/components/common/Toolbar";
+import { StatusBadge } from "@/components/common/StatusBadge";
+import { EmptyState } from "@/components/common/EmptyState";
+import { LIFECYCLE_TONE } from "@/lib/tones";
+import { ProjectLogo } from "../components/ProjectLogo";
 
 const ProjectsListPage = () => {
     const confirm = useConfirm();
@@ -62,6 +63,7 @@ const ProjectsListPage = () => {
     const canView = hasPermission(PERMISSIONS.PROJECTS.VIEW);
     const canEdit = hasPermission(PERMISSIONS.PROJECTS.EDIT);
     const canDelete = hasPermission(PERMISSIONS.PROJECTS.DELETE);
+    const canAdd = hasPermission(PERMISSIONS.PROJECTS.ADD);
     const hasPhaseAccess = hasPermission(PERMISSIONS.PHASES.LIST);
     const hasAnyAction = canView || canEdit || canDelete || hasPhaseAccess;
 
@@ -89,16 +91,6 @@ const ProjectsListPage = () => {
     const totalProjects = projectsData?.data?.pagination?.total ?? 0;
     const totalPages = projectsData?.data?.pagination?.totalPages ?? 1;
     const safePage = Math.min(currentPage, totalPages);
-
-    const getImageUrl = (logoPath?: string) => {
-        if (!logoPath) return "";
-        if (logoPath.startsWith("http://") || logoPath.startsWith("https://")) {
-            return logoPath;
-        }
-        const apiBase = import.meta.env.VITE_PUBLIC_API_BASE_URL || "";
-        const rootBase = apiBase.replace("/api/v1", "");
-        return `${rootBase}${logoPath.startsWith("/") ? "" : "/"}${logoPath}`;
-    };
 
     const handleView = (project: Project) => {
         navigate(`${project.id}`);
@@ -137,25 +129,26 @@ const ProjectsListPage = () => {
                 key: "name",
                 label: "Project",
                 render: (project) => (
-                    <div className="flex items-center gap-3 min-w-0">
-                        <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
-                            {project.logo ? (
-                                <img
-                                    src={getImageUrl(project.logo)}
-                                    alt={project.name}
-                                    className="size-full object-cover"
-                                />
-                            ) : (
-                                <FolderKanban className="size-4 text-primary" />
-                            )}
-                        </div>
+                    <div className="flex max-w-[22rem] min-w-0 items-center gap-3">
+                        <ProjectLogo logo={project.logo} name={project.name} />
                         <div className="min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">
-                                {project.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate">
-                                {project.manager}
-                            </p>
+                            {canView ? (
+                                <Link
+                                    to={`${project.id}`}
+                                    className="block truncate font-medium text-foreground hover:text-primary hover:underline-offset-4"
+                                >
+                                    {project.name}
+                                </Link>
+                            ) : (
+                                <p className="truncate font-medium text-foreground">
+                                    {project.name}
+                                </p>
+                            )}
+                            {project.manager && (
+                                <p className="truncate text-xs text-muted-foreground md:hidden">
+                                    {project.manager}
+                                </p>
+                            )}
                         </div>
                     </div>
                 ),
@@ -164,12 +157,11 @@ const ProjectsListPage = () => {
                 key: "status",
                 label: "Status",
                 render: (project) => (
-                    <Badge
-                        variant="outline"
-                        className={STATUS_STYLES[project.status] ?? ""}
+                    <StatusBadge
+                        tone={LIFECYCLE_TONE[project.status] ?? "neutral"}
                     >
                         {STATUS_LABELS[project.status] ?? project.status}
-                    </Badge>
+                    </StatusBadge>
                 ),
             },
             {
@@ -177,28 +169,30 @@ const ProjectsListPage = () => {
                 label: "Client",
                 className: "hidden md:table-cell",
                 render: (project) => (
-                    <span className="text-sm text-muted-foreground">
-                        {project.manager}
+                    <span className="text-[13px] text-muted-foreground">
+                        {project.manager || "—"}
                     </span>
                 ),
             },
             {
                 key: "startDate",
-                label: "Start Date",
+                label: "Start",
                 className: "hidden lg:table-cell",
                 render: (project) => (
-                    <span className="text-sm text-muted-foreground">
-                        {formatDate(project.startDate)}
+                    <span className="tabular text-[13px] text-muted-foreground">
+                        {project.startDate
+                            ? formatDate(project.startDate)
+                            : "—"}
                     </span>
                 ),
             },
             {
                 key: "endDate",
-                label: "End Date",
+                label: "End",
                 className: "hidden lg:table-cell",
                 render: (project) => (
-                    <span className="text-sm text-muted-foreground">
-                        {formatDate(project.endDate)}
+                    <span className="tabular text-[13px] text-muted-foreground">
+                        {project.endDate ? formatDate(project.endDate) : "—"}
                     </span>
                 ),
             },
@@ -206,47 +200,40 @@ const ProjectsListPage = () => {
                 ? [
                       {
                           key: "actions" as const,
-                          label: "Actions",
-                          className: "w-24 text-right",
+                          label: "",
+                          className: "w-px text-right",
                           render: (project: Project) => (
-                              <div className="flex items-center justify-end gap-2">
+                              <div className="flex items-center justify-end gap-0.5">
                                   {canView && (
-                                      <button
-                                          title={`View ${project.name}`}
+                                      <IconAction
+                                          label={`Open ${project.name}`}
+                                          icon={Eye}
                                           onClick={() => handleView(project)}
-                                          className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
-                                      >
-                                          <Eye className="size-4" />
-                                      </button>
-                                  )}
-                                  {canEdit && (
-                                      <button
-                                          title={`Edit ${project.name}`}
-                                          onClick={() => handleEdit(project)}
-                                          className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
-                                      >
-                                          <Edit className="size-4" />
-                                      </button>
-                                  )}
-                                  {canDelete && (
-                                      <button
-                                          title={`Delete ${project.name}`}
-                                          onClick={() => handleDelete(project)}
-                                          className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
-                                      >
-                                          <Trash2 className="size-4" />
-                                      </button>
+                                      />
                                   )}
                                   {hasPhaseAccess && (
-                                      <button
-                                          title={`Project Phases`}
+                                      <IconAction
+                                          label="Phases"
+                                          icon={Layers}
                                           onClick={() =>
                                               navigate(`${project.id}/phases`)
                                           }
-                                          className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
-                                      >
-                                          <Layers className="size-4" />
-                                      </button>
+                                      />
+                                  )}
+                                  {canEdit && (
+                                      <IconAction
+                                          label={`Edit ${project.name}`}
+                                          icon={Pencil}
+                                          onClick={() => handleEdit(project)}
+                                      />
+                                  )}
+                                  {canDelete && (
+                                      <IconAction
+                                          label={`Delete ${project.name}`}
+                                          icon={Trash2}
+                                          tone="danger"
+                                          onClick={() => handleDelete(project)}
+                                      />
                                   )}
                               </div>
                           ),
@@ -254,61 +241,39 @@ const ProjectsListPage = () => {
                   ]
                 : []),
         ],
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [hasAnyAction, canView, canEdit, canDelete],
     );
 
-    const activeCount = projects.filter((p) => p.status === "started").length;
-
     return (
         <>
-            <div className="p-4 sm:p-6 space-y-5">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div>
-                        <h1 className="text-lg font-semibold text-foreground">
-                            Projects
-                        </h1>
-                        <p className="text-sm text-muted-foreground mt-0.5">
-                            Manage and monitor all your agency projects.
-                        </p>
-                    </div>
+            <PageContainer>
+                <PageHeader
+                    title="Projects"
+                    description="Plan, track and deliver work across your organization."
+                    actions={<ProjectCreateModal />}
+                />
 
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card border border-border">
-                            <FolderKanban className="size-3.5 text-muted-foreground" />
-                            <span className="text-xs font-medium text-foreground">
-                                {totalProjects} total
-                            </span>
-                        </div>
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card border border-border">
-                            <span className="size-1.5 rounded-full bg-blue-500" />
-                            <span className="text-xs font-medium text-foreground">
-                                {activeCount} active
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <ProjectCreateModal />
-
-                    <div className="relative w-full sm:w-auto sm:min-w-xs">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-                        <input
-                            type="text"
-                            placeholder="Search..."
-                            value={search}
-                            onChange={(e) => {
-                                setSearch(e.target.value);
-                                setSearchParams((prev) => {
-                                    const next = new URLSearchParams(prev);
-                                    next.delete("page");
-                                    return next;
-                                });
-                            }}
-                            className="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-border bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-primary transition"
-                        />
-                    </div>
-                </div>
+                <Toolbar>
+                    <SearchInput
+                        value={search}
+                        placeholder="Search projects…"
+                        onChange={(value) => {
+                            setSearch(value);
+                            setSearchParams((prev) => {
+                                const next = new URLSearchParams(prev);
+                                next.delete("page");
+                                return next;
+                            });
+                        }}
+                    />
+                    {!isLoading && (
+                        <span className="tabular text-[13px] text-muted-foreground sm:ml-1">
+                            {totalProjects} project
+                            {totalProjects !== 1 ? "s" : ""}
+                        </span>
+                    )}
+                </Toolbar>
 
                 <DataTable
                     columns={columns}
@@ -318,65 +283,29 @@ const ProjectsListPage = () => {
                     loading={isLoading}
                     showDefaultFooter={false}
                     emptyState={
-                        <tr>
-                            <td colSpan={hasAnyAction ? 6 : 5}>
-                                <div className="flex flex-col items-center justify-center py-16 gap-2">
-                                    <FolderKanban className="size-8 text-muted-foreground/40" />
-                                    <p className="text-sm font-medium text-muted-foreground">
-                                        No projects yet
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                        Create your first project to get
-                                        started.
-                                    </p>
-                                </div>
-                            </td>
-                        </tr>
+                        <EmptyState
+                            icon={FolderKanban}
+                            title="No projects yet"
+                            description="Create your first project to start organizing your work."
+                            action={canAdd ? <ProjectCreateModal /> : undefined}
+                        />
                     }
                 />
 
-                <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
-                    <p className="text-xs text-muted-foreground px-1">
-                        Showing{" "}
-                        <span className="font-medium text-foreground">
-                            {projects.length}
-                        </span>{" "}
-                        of{" "}
-                        <span className="font-medium text-foreground">
-                            {totalProjects}
-                        </span>{" "}
-                        project{totalProjects !== 1 ? "s" : ""}
-                    </p>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setPage((p) => Math.max(1, p - 1))}
-                            disabled={safePage === 1}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                        >
-                            <ChevronLeft className="w-4 h-4" />
-                        </button>
-                        <span className="text-xs text-muted-foreground px-2">
-                            Page{" "}
-                            <span className="font-medium text-foreground">
-                                {safePage}
-                            </span>{" "}
-                            of{" "}
-                            <span className="font-medium text-foreground">
-                                {totalPages}
-                            </span>
-                        </span>
-                        <button
-                            onClick={() =>
-                                setPage((p) => Math.min(totalPages, p + 1))
-                            }
-                            disabled={safePage === totalPages}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                        >
-                            <ChevronRight className="w-4 h-4" />
-                        </button>
-                    </div>
-                </div>
-            </div>
+                {projects.length > 0 && (
+                    <Pagination
+                        page={safePage}
+                        totalPages={totalPages}
+                        onPrevious={() => setPage((p) => Math.max(1, p - 1))}
+                        onNext={() =>
+                            setPage((p) => Math.min(totalPages, p + 1))
+                        }
+                        shown={projects.length}
+                        total={totalProjects}
+                        noun="project"
+                    />
+                )}
+            </PageContainer>
             <ProjectEditModal
                 project={editingProject}
                 open={editModalOpen}

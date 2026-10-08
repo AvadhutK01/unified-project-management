@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { OnboardingShell } from "../components/OnboardingShell";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Link2, Hash, Info, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,7 @@ export default function JoinOrganization() {
     };
 
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <OnboardingShell>
             <div className="w-full max-w-lg space-y-6">
                 {/* Back */}
                 <button
@@ -59,7 +60,7 @@ export default function JoinOrganization() {
                 />
 
                 {/* Main card with tabs */}
-                <Card className="border-2">
+                <Card className="shadow-card">
                     <CardContent className="pt-6">
                         <Tabs defaultValue="link">
                             <TabsList className="w-full grid grid-cols-2">
@@ -103,7 +104,7 @@ export default function JoinOrganization() {
                                         {loading === "link" ? (
                                             <>
                                                 <Loader2 className="size-4 animate-spin" />
-                                                Joining...
+                                                Joining…
                                             </>
                                         ) : (
                                             <>
@@ -148,7 +149,7 @@ export default function JoinOrganization() {
                                         {loading === "code" ? (
                                             <>
                                                 <Loader2 className="size-4 animate-spin" />
-                                                Sending Request...
+                                                Sending request…
                                             </>
                                         ) : (
                                             <>
@@ -164,9 +165,9 @@ export default function JoinOrganization() {
                 </Card>
 
                 {/* Info banner */}
-                <div className="flex items-start gap-3 p-4 rounded-xl bg-accent border border-border">
-                    <Info className="size-4 text-primary mt-0.5 shrink-0" />
-                    <p className="text-sm text-foreground leading-relaxed">
+                <div className="flex items-start gap-3 rounded-lg border border-info/20 bg-info/[0.06] p-3.5">
+                    <Info className="mt-0.5 size-4 shrink-0 text-info" />
+                    <p className="text-[13px] leading-relaxed text-foreground">
                         If you don't have an invite link, contact your
                         organization administrator to request an invitation.
                     </p>
@@ -182,6 +183,6 @@ export default function JoinOrganization() {
                     </button>
                 </p>
             </div>
-        </div>
+        </OnboardingShell>
     );
 }

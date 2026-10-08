@@ -1,5 +1,9 @@
+import { isValidElement } from "react";
+import { SearchX, Inbox } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { EmptyState } from "./EmptyState";
 
 // ─── Column definition ────────────────────────────────────────────────────────
 
@@ -26,7 +30,8 @@ export interface DataTableProps<T> {
     skeletonRows?: number;
 
     // Empty / no-results
-    /** Shown when `data` is empty and `hasActiveFilters` is false. */
+    /** Shown when `data` is empty and `hasActiveFilters` is false.
+     *  May be a full `<tr>` or any node (it will be wrapped in a row). */
     emptyState?: React.ReactNode;
     /** Shown when `data` is empty and `hasActiveFilters` is true. */
     noResultsState?: React.ReactNode;
@@ -57,12 +62,17 @@ export interface DataTableProps<T> {
         clearSelection: () => void;
     }) => React.ReactNode;
 
+    /** Keep the header row visible while the table body scrolls. */
+    stickyHeader?: boolean;
+    /** Constrain body height (enables internal scroll, pairs with stickyHeader). */
+    maxHeight?: string;
+
     className?: string;
 }
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
-function TableSkeleton({
+function TableSkeletonRows({
     cols,
     rows,
     selectable,
@@ -73,29 +83,28 @@ function TableSkeleton({
     selectable: boolean;
     hasActions: boolean;
 }) {
-    // const totalCols = cols + (selectable ? 1 : 0) + (hasActions ? 1 : 0);
     return (
         <>
             {Array.from({ length: rows }).map((_, i) => (
-                <tr key={i} className="border-b border-border">
+                <tr key={i} className="border-b border-border last:border-0">
                     {selectable && (
-                        <td className="px-4 py-3.5 w-10">
-                            <div className="h-4 w-4 rounded bg-muted animate-pulse" />
+                        <td className="w-10 px-4 py-3.5">
+                            <Skeleton className="size-4 rounded-sm" />
                         </td>
                     )}
                     {Array.from({ length: cols }).map((_, j) => (
                         <td key={j} className="px-4 py-3.5">
-                            <div
-                                className="h-3.5 rounded bg-muted animate-pulse"
+                            <Skeleton
+                                className="h-3.5"
                                 style={{
-                                    width: `${60 + ((i * 3 + j * 7) % 40)}%`,
+                                    width: `${55 + ((i * 3 + j * 7) % 40)}%`,
                                 }}
                             />
                         </td>
                     ))}
                     {hasActions && (
-                        <td className="px-4 py-3.5 w-16">
-                            <div className="h-4 w-4 bg-muted rounded animate-pulse ml-auto" />
+                        <td className="w-16 px-4 py-3.5">
+                            <Skeleton className="ml-auto size-4" />
                         </td>
                     )}
                 </tr>
@@ -122,6 +131,8 @@ export function DataTable<T extends object>({
     renderFooter,
     showDefaultFooter = true,
     renderBulkActions,
+    stickyHeader = false,
+    maxHeight,
     className,
 }: DataTableProps<T>) {
     const totalSpan =
@@ -146,38 +157,44 @@ export function DataTable<T extends object>({
 
     const clearSelection = () => onSelectionChange?.([]);
 
-    // ── Empty / no-results fallback ──
+    /** Accept either a ready `<tr>` or arbitrary content. */
+    const asRow = (node: React.ReactNode) =>
+        isValidElement(node) && node.type === "tr" ? (
+            node
+        ) : (
+            <tr>
+                <td colSpan={totalSpan}>{node}</td>
+            </tr>
+        );
+
     const defaultEmpty = (
-        <tr>
-            <td colSpan={totalSpan}>
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <p className="text-sm font-medium text-muted-foreground">
-                        No data
-                    </p>
-                </div>
-            </td>
-        </tr>
+        <EmptyState
+            icon={Inbox}
+            title="Nothing here yet"
+            description="Records will appear here once they are created."
+        />
     );
 
     const defaultNoResults = (
-        <tr>
-            <td colSpan={totalSpan}>
-                <div className="flex flex-col items-center justify-center py-14 text-center">
-                    <p className="text-sm font-medium mb-1">No results found</p>
-                    <p className="text-xs text-muted-foreground">
-                        Try adjusting your search or filters.
-                    </p>
-                </div>
-            </td>
-        </tr>
+        <EmptyState
+            icon={SearchX}
+            title="No results found"
+            description="Try a different search term or clear your filters."
+        />
     );
 
-    const emptyRow =
+    const emptyNode =
         data.length === 0 && !loading
             ? hasActiveFilters
                 ? (noResultsState ?? defaultNoResults)
                 : (emptyState ?? defaultEmpty)
             : null;
+    // Legacy callers pass a full <tr>; anything else renders below the
+    // table (outside the horizontal scroller) so it stays centred on
+    // narrow screens.
+    const emptyIsRow = isValidElement(emptyNode) && emptyNode.type === "tr";
+    const emptyRow = emptyNode && emptyIsRow ? asRow(emptyNode) : null;
+    const emptyBlock = emptyNode && !emptyIsRow ? emptyNode : null;
 
     // ── Footer ──
     const footerContent = (() => {
@@ -190,8 +207,8 @@ export function DataTable<T extends object>({
             });
         if (!showDefaultFooter) return null;
         return (
-            <div className="px-4 py-3 border-t border-border bg-muted/10 flex items-center justify-between">
-                <p className="text-xs text-muted-foreground">
+            <div className="flex items-center justify-between px-4 py-2.5">
+                <p className="tabular text-xs text-muted-foreground">
                     Showing{" "}
                     <span className="font-medium text-foreground">
                         {data.length}
@@ -210,7 +227,7 @@ export function DataTable<T extends object>({
                 {selectedIds.length > 0 && (
                     <button
                         onClick={clearSelection}
-                        className="text-xs text-muted-foreground hover:text-foreground agency-transition"
+                        className="text-xs text-muted-foreground transition-colors hover:text-foreground"
                     >
                         Clear selection
                     </button>
@@ -221,8 +238,6 @@ export function DataTable<T extends object>({
 
     return (
         <div className={cn("space-y-2", className)}>
-            <style>{`.datatable-scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; } .datatable-scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
-            {/* Bulk actions */}
             {selectable &&
                 selectedIds.length > 0 &&
                 renderBulkActions?.({
@@ -230,18 +245,23 @@ export function DataTable<T extends object>({
                     clearSelection,
                 })}
 
-            {/* Table container */}
-            <div className="rounded-xl border border-border overflow-hidden">
-                <div className="overflow-x-auto datatable-scrollbar-hide">
-                    <table className="w-full text-sm min-w-max">
-                        <thead>
-                            <tr className="border-b border-border bg-muted/20">
-                                {renderRowActions && (
-                                    <th className="px-4 py-3 w-16" />
-                                )}
+            <div className="overflow-hidden rounded-xl border border-border bg-card shadow-card">
+                <div
+                    className={cn(
+                        "overflow-x-auto",
+                        maxHeight && "overflow-y-auto",
+                    )}
+                    style={maxHeight ? { maxHeight } : undefined}
+                >
+                    <table className="w-full min-w-max text-sm">
+                        <thead
+                            className={cn(stickyHeader && "sticky top-0 z-10")}
+                        >
+                            <tr className="border-b border-border bg-muted/60 backdrop-blur supports-backdrop-filter:bg-muted/80">
                                 {selectable && (
-                                    <th className="px-4 py-3 w-10 text-left">
+                                    <th className="w-10 px-4 py-2.5 text-left">
                                         <Checkbox
+                                            aria-label="Select all rows"
                                             checked={
                                                 allSelected
                                                     ? true
@@ -252,27 +272,32 @@ export function DataTable<T extends object>({
                                             onCheckedChange={(v) =>
                                                 handleSelectAll(!!v)
                                             }
-                                            className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                                         />
                                     </th>
                                 )}
                                 {columns.map((col) => (
                                     <th
                                         key={col.key}
+                                        scope="col"
                                         className={cn(
-                                            "px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground",
+                                            "h-10 px-4 text-left text-xs font-medium whitespace-nowrap text-muted-foreground",
                                             col.className,
                                         )}
                                     >
                                         {col.label}
                                     </th>
                                 ))}
+                                {renderRowActions && (
+                                    <th className="w-16 px-4 py-2.5">
+                                        <span className="sr-only">Actions</span>
+                                    </th>
+                                )}
                             </tr>
                         </thead>
 
                         <tbody>
                             {loading ? (
-                                <TableSkeleton
+                                <TableSkeletonRows
                                     cols={columns.length}
                                     rows={skeletonRows}
                                     selectable={selectable}
@@ -280,7 +305,7 @@ export function DataTable<T extends object>({
                                 />
                             ) : emptyRow ? (
                                 emptyRow
-                            ) : (
+                            ) : emptyBlock ? null : (
                                 data.map((row, i) => {
                                     const id = getRowId(row, i);
                                     const isSelected = selectedIds.includes(id);
@@ -288,25 +313,16 @@ export function DataTable<T extends object>({
                                         <tr
                                             key={id}
                                             className={cn(
-                                                "border-b border-border group/row agency-transition",
+                                                "group/row border-b border-border transition-colors last:border-0",
                                                 isSelected
-                                                    ? "bg-primary/4"
-                                                    : "hover:bg-muted/20",
+                                                    ? "bg-primary/5"
+                                                    : "hover:bg-muted/40",
                                             )}
                                         >
-                                            {renderRowActions && (
-                                                <td className="px-4 py-3.5 w-16">
-                                                    <div className="flex items-center justify-end">
-                                                        {renderRowActions(
-                                                            row,
-                                                            i,
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            )}
                                             {selectable && (
-                                                <td className="px-4 py-3.5 w-10">
+                                                <td className="w-10 px-4 py-3">
                                                     <Checkbox
+                                                        aria-label="Select row"
                                                         checked={isSelected}
                                                         onCheckedChange={(v) =>
                                                             handleSelectRow(
@@ -314,7 +330,6 @@ export function DataTable<T extends object>({
                                                                 !!v,
                                                             )
                                                         }
-                                                        className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                                                     />
                                                 </td>
                                             )}
@@ -322,7 +337,7 @@ export function DataTable<T extends object>({
                                                 <td
                                                     key={col.key}
                                                     className={cn(
-                                                        "px-4 py-3.5",
+                                                        "px-4 py-3 align-middle text-foreground",
                                                         col.className,
                                                     )}
                                                 >
@@ -338,6 +353,16 @@ export function DataTable<T extends object>({
                                                           )}
                                                 </td>
                                             ))}
+                                            {renderRowActions && (
+                                                <td className="w-16 px-4 py-3">
+                                                    <div className="flex items-center justify-end">
+                                                        {renderRowActions(
+                                                            row,
+                                                            i,
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            )}
                                         </tr>
                                     );
                                 })
@@ -346,8 +371,12 @@ export function DataTable<T extends object>({
                     </table>
                 </div>
 
+                {emptyBlock && (
+                    <div className="border-t border-border">{emptyBlock}</div>
+                )}
+
                 {footerContent && (
-                    <div className="sticky bottom-0 bg-card border-t border-border z-10">
+                    <div className="border-t border-border bg-muted/30">
                         {footerContent}
                     </div>
                 )}

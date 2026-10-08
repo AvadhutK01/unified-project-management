@@ -1,8 +1,10 @@
-import { Brain, RefreshCw, Sparkles, Loader2, ArrowRight } from "lucide-react";
+import { RefreshCw, Sparkles, Loader2, ArrowRight, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useSubscriptionQuery } from "@/features/subscriptions/hooks/useSubscription";
 import { useOrganizationStore } from "@/store/organization.store";
 import { usePermission } from "@/features/rbac/hooks/usePermission";
+import { cn } from "@/lib/utils";
 import type { DashboardData } from "../types/dashboard.types";
 
 interface Props {
@@ -10,6 +12,11 @@ interface Props {
     summary?: string;
     isPending?: boolean;
     onGenerate?: () => void;
+    /** Heading shown on the card. */
+    title?: string;
+    /** What is being summarised — used in helper copy. */
+    subject?: string;
+    className?: string;
 }
 
 function renderInline(text: string): React.ReactNode {
@@ -26,7 +33,7 @@ function renderInline(text: string): React.ReactNode {
             return (
                 <code
                     key={i}
-                    className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[10px] text-primary"
+                    className="rounded bg-muted px-1 py-0.5 font-mono text-[11px] text-foreground"
                 >
                     {part.slice(1, -1)}
                 </code>
@@ -49,15 +56,12 @@ function formatSummary(text: string) {
         const sectionMatch = trimmed.match(/^\*{1,3}\s+\*{2}(.+?)\*{2}:?\s*$/);
         if (sectionMatch) {
             elements.push(
-                <div
+                <li
                     key={key++}
-                    className="mt-5 mb-2 flex items-center gap-2 rounded-full border border-primary/15 bg-primary/10 px-3 py-1.5 w-fit"
+                    className="pt-3 pb-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase first:pt-0"
                 >
-                    <span className="h-2.5 w-2.5 rounded-full bg-primary shrink-0" />
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-foreground/80">
-                        {sectionMatch[1].replace(/:$/, "")}
-                    </span>
-                </div>,
+                    {sectionMatch[1].replace(/:$/, "")}
+                </li>,
             );
             continue;
         }
@@ -65,12 +69,12 @@ function formatSummary(text: string) {
         const boldHeaderMatch = trimmed.match(/^\*{2}(.+?)\*{2}:?\s*$/);
         if (boldHeaderMatch) {
             elements.push(
-                <p
+                <li
                     key={key++}
-                    className="mt-3 mb-1 text-sm font-semibold text-foreground"
+                    className="pt-3 pb-1 text-[13px] font-semibold text-foreground first:pt-0"
                 >
                     {boldHeaderMatch[1].replace(/:$/, "")}
-                </p>,
+                </li>,
             );
             continue;
         }
@@ -82,9 +86,9 @@ function formatSummary(text: string) {
             elements.push(
                 <li
                     key={key++}
-                    className="mb-2 ml-1 flex items-start gap-2 rounded-xl border border-primary/10 bg-primary/[0.03] px-3 py-2.5 text-[12.5px] leading-relaxed text-foreground/80"
+                    className="flex items-start gap-2.5 py-1 text-[13px] leading-relaxed text-foreground/85"
                 >
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/70" />
+                    <span className="mt-2 size-1.5 shrink-0 rounded-full bg-primary" />
                     <span>
                         <strong className="font-semibold text-foreground">
                             {boldBulletMatch[1]}:
@@ -101,9 +105,9 @@ function formatSummary(text: string) {
             elements.push(
                 <li
                     key={key++}
-                    className="mb-2 ml-1 flex items-start gap-2 rounded-xl border border-border/60 bg-background/70 px-3 py-2.5 text-[12.5px] leading-relaxed text-foreground/75"
+                    className="flex items-start gap-2.5 py-1 text-[13px] leading-relaxed text-foreground/85"
                 >
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/50" />
+                    <span className="mt-2 size-1.5 shrink-0 rounded-full bg-muted-foreground/50" />
                     <span>{renderInline(plainBulletMatch[1])}</span>
                 </li>,
             );
@@ -111,19 +115,42 @@ function formatSummary(text: string) {
         }
 
         elements.push(
-            <p
+            <li
                 key={key++}
-                className="mt-1 mb-1 text-[12.5px] leading-relaxed text-muted-foreground"
+                className="py-1 text-[13px] leading-relaxed text-muted-foreground"
             >
                 {renderInline(trimmed)}
-            </p>,
+            </li>,
         );
     }
 
     return elements;
 }
 
-const AiSummary = ({ summary, isPending, onGenerate }: Props) => {
+/** Small brand-tinted AI glyph tile. */
+function AiGlyph({ muted = false }: { muted?: boolean }) {
+    return (
+        <span
+            className={cn(
+                "flex size-8 shrink-0 items-center justify-center rounded-lg",
+                muted
+                    ? "bg-muted text-muted-foreground"
+                    : "bg-primary/10 text-primary ring-1 ring-primary/15 dark:bg-primary/15",
+            )}
+        >
+            <Sparkles className="size-4" />
+        </span>
+    );
+}
+
+const AiSummary = ({
+    summary,
+    isPending,
+    onGenerate,
+    title = "AI Insights",
+    subject = "workspace",
+    className,
+}: Props) => {
     const activeOrganization = useOrganizationStore(
         (s) => s.activeOrganization,
     );
@@ -133,140 +160,130 @@ const AiSummary = ({ summary, isPending, onGenerate }: Props) => {
 
     if (!isPremium) {
         return (
-            <div className="overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-card to-background p-6 shadow-md">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-500">
-                            <Sparkles size={20} className="animate-pulse" />
-                        </div>
-                        <div>
-                            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                <span>AI Workspace Insights</span>
-                                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                                    PRO
+            <section
+                className={cn(
+                    "rounded-xl border border-border bg-card p-5 shadow-card",
+                    className,
+                )}
+            >
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-start gap-3">
+                        <AiGlyph muted />
+                        <div className="min-w-0">
+                            <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                {title}
+                                <span className="inline-flex items-center gap-1 rounded border border-warning/25 bg-warning/10 px-1.5 py-px text-[10px] font-semibold text-warning">
+                                    <Lock className="size-2.5" />
+                                    Premium
                                 </span>
                             </h3>
-                            <p className="text-xs text-muted-foreground mt-0.5">
+                            <p className="mt-0.5 max-w-xl text-[13px] leading-relaxed text-muted-foreground">
                                 {isOrgOwner
-                                    ? "Upgrade your organization plan to generate automated AI summaries and intelligent metric breakdowns."
+                                    ? `Upgrade to Premium to generate AI summaries of your ${subject}'s progress and activity.`
                                     : "This feature requires an Organization Premium subscription. Contact your organization owner to upgrade."}
                             </p>
                         </div>
                     </div>
                     {isOrgOwner && (
-                        <Button
-                            asChild
-                            size="sm"
-                            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold shadow-sm shrink-0 cursor-pointer"
-                        >
+                        <Button asChild size="sm" variant="outline">
                             <a href={`/${activeOrganization?.slug}/billing`}>
-                                Upgrade Plan
-                                <ArrowRight size={13} className="ml-1.5" />
+                                View plans
+                                <ArrowRight className="size-3.5" />
                             </a>
                         </Button>
                     )}
                 </div>
-            </div>
+            </section>
         );
     }
 
     return (
-        <div className="overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-br from-background via-card to-primary/[0.04] shadow-[0_20px_45px_-24px_rgba(15,23,42,0.20)]">
-            <div className="flex items-center justify-between border-b border-border/70 bg-gradient-to-r from-primary/[0.08] via-transparent to-transparent px-5 py-3.5">
-                <div className="flex items-center gap-2.5">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/15">
-                        <Brain size={16} className="text-primary" />
-                    </div>
-                    <div>
-                        <span className="text-sm font-semibold text-foreground">
-                            AI Summary
-                        </span>
-                        {!summary && !isPending && (
-                            <span className="ml-2 hidden text-xs text-muted-foreground sm:inline">
-                                Workspace insights in seconds
-                            </span>
-                        )}
+        <section
+            className={cn(
+                "relative overflow-hidden rounded-xl border border-border bg-card shadow-card",
+                className,
+            )}
+        >
+            {/* Subtle brand edge */}
+            <span
+                aria-hidden="true"
+                className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary/50 to-transparent"
+            />
+            <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3.5">
+                <div className="flex min-w-0 items-center gap-3">
+                    <AiGlyph />
+                    <div className="min-w-0">
+                        <h3 className="text-sm font-semibold text-foreground">
+                            {title}
+                        </h3>
+                        <p className="truncate text-xs text-muted-foreground">
+                            AI-generated overview of your {subject}
+                        </p>
                     </div>
                 </div>
                 <Button
-                    variant="default"
+                    variant={summary ? "outline" : "default"}
                     size="sm"
                     onClick={onGenerate}
                     disabled={isPending}
-                    className="bg-linear-to-r from-primary to-primary/80 text-primary-foreground shadow-sm hover:opacity-90 cursor-pointer"
+                    className="shrink-0"
                 >
                     {isPending ? (
                         <>
-                            <Loader2 size={13} className="animate-spin" />
+                            <Loader2 className="size-3.5 animate-spin" />
                             Generating…
                         </>
                     ) : summary ? (
                         <>
-                            <RefreshCw size={13} />
+                            <RefreshCw className="size-3.5" />
                             Regenerate
                         </>
                     ) : (
                         <>
-                            <Sparkles size={13} />
+                            <Sparkles className="size-3.5" />
                             Generate
                         </>
                     )}
                 </Button>
             </div>
 
-            <div className="relative">
-                <div className="absolute bottom-0 left-0 top-0 w-0.75 bg-gradient-to-b from-primary/20 via-primary/8 to-transparent" />
-
+            <div className="px-5 py-4" aria-live="polite" aria-busy={isPending}>
                 {isPending && !summary ? (
-                    <div className="flex flex-col items-center justify-center gap-3 px-5 py-8">
-                        <div className="relative">
-                            <div className="absolute inset-0 rounded-full bg-primary/15 blur-xl" />
-                            <Brain
-                                size={32}
-                                className="relative text-primary/70 animate-pulse"
-                            />
-                        </div>
-                        <div className="text-center">
-                            <p className="text-sm font-medium text-foreground">
-                                Analyzing your workspace
-                            </p>
-                            <p className="mt-0.5 text-xs text-muted-foreground">
-                                Generating an AI-powered overview of recent
-                                activity…
-                            </p>
-                        </div>
+                    <div className="space-y-2.5">
+                        <p className="text-[13px] text-muted-foreground">
+                            Analyzing your {subject}…
+                        </p>
+                        <Skeleton className="h-3.5 w-11/12" />
+                        <Skeleton className="h-3.5 w-4/5" />
+                        <Skeleton className="h-3.5 w-3/5" />
                     </div>
                 ) : summary ? (
-                    <div className="px-5 py-3 pl-7">
-                        <div className="rounded-2xl border border-border/70 bg-background/70 p-3 shadow-sm">
-                            <ul className="m-0 list-none space-y-0 p-0">
-                                {formatSummary(summary)}
-                            </ul>
-                        </div>
-                        <div className="mt-4 flex items-center justify-between border-t border-border/70 pt-3">
-                            <p className="text-[11px] text-muted-foreground/70">
-                                Powered by AI — may not be perfectly accurate
-                            </p>
-                        </div>
-                    </div>
+                    <>
+                        <ul
+                            className={cn(
+                                "m-0 list-none p-0 transition-opacity",
+                                isPending && "opacity-60",
+                            )}
+                        >
+                            {formatSummary(summary)}
+                        </ul>
+                        <p className="mt-4 border-t border-border pt-3 text-[11px] text-muted-foreground">
+                            Generated by AI — review before acting on it.
+                        </p>
+                    </>
                 ) : (
-                    <div className="flex flex-col items-center justify-center gap-3 px-5 py-8">
-                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
-                            <Sparkles size={22} className="text-primary" />
-                        </div>
-                        <div className="max-w-xs text-center">
-                            <p className="text-sm font-medium text-foreground">
-                                No summary yet
-                            </p>
-                            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                                Generate an AI-powered overview of your
-                                organization's performance and recent activity.
-                            </p>
-                        </div>
+                    <div className="py-4 text-center">
+                        <p className="text-[13px] font-medium text-foreground">
+                            No summary yet
+                        </p>
+                        <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-muted-foreground">
+                            Generate an AI overview of your {subject}'s
+                            progress, risks and recent activity.
+                        </p>
                     </div>
                 )}
             </div>
-        </div>
+        </section>
     );
 };
 

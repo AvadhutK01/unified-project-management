@@ -1,12 +1,7 @@
 import { useState, useEffect } from "react";
+import { BrandLogo } from "@/components/common/BrandLogo";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import {
-    Layers,
-    ArrowRight,
-    Loader2,
-    MailCheck,
-    Smartphone,
-} from "lucide-react";
+import { ArrowRight, Loader2, MailCheck, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { RegisterBrandPanel } from "@/features/auth/components/RegisterBrandPanel";
@@ -127,20 +122,13 @@ const VerifyOtp = () => {
     };
 
     return (
-        <div className="flex min-h-screen bg-background">
+        <div className="flex min-h-dvh bg-background">
             <RegisterBrandPanel />
 
             <div className="flex-1 flex flex-col items-center justify-center px-6 py-10">
-                <div className="w-full max-w-100 space-y-3">
+                <div className="w-full max-w-100 space-y-5">
                     {/* Mobile logo */}
-                    <div className="flex items-center gap-2 lg:hidden">
-                        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                            <Layers className="w-4 h-4 text-primary-foreground" />
-                        </div>
-                        <span className="font-bold text-lg text-foreground">
-                            Unified
-                        </span>
-                    </div>
+                    <BrandLogo className="lg:hidden" />
 
                     {/* Heading */}
                     <div className="space-y-1.5">
@@ -154,7 +142,7 @@ const VerifyOtp = () => {
                     </div>
 
                     {/* Email OTP */}
-                    <div className="space-y-3 p-4 rounded-2xl border border-border bg-muted/30">
+                    <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-card">
                         <div className="flex items-center gap-2.5">
                             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                                 <MailCheck className="w-4 h-4 text-primary" />
@@ -200,7 +188,7 @@ const VerifyOtp = () => {
                     </div>
 
                     {/* Mobile OTP */}
-                    <div className="space-y-3 p-4 rounded-2xl border border-border bg-muted/30">
+                    <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-card">
                         <div className="flex items-center gap-2.5">
                             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                                 <Smartphone className="w-4 h-4 text-primary" />

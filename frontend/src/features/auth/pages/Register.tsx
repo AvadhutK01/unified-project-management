@@ -1,11 +1,11 @@
 import { useState } from "react";
+import { BrandLogo } from "@/components/common/BrandLogo";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
     Eye,
     EyeOff,
-    Layers,
     ArrowRight,
     ArrowLeft,
     Loader2,
@@ -24,7 +24,7 @@ import {
 } from "@/features/auth/schema/auth.schema";
 import { useRegisterUser } from "../hooks/useAuth";
 
-const STEPS = [{ label: "Your info" }, { label: "Security" }];
+const STEPS = [{ label: "Your information" }, { label: "Security" }];
 
 const STEP_FIELDS: (keyof RegisterFormData)[][] = [
     ["fullName", "email", "mobile"],
@@ -44,9 +44,9 @@ const strengthLabels = ["", "Weak", "Fair", "Good", "Strong"];
 const strengthColors = [
     "",
     "bg-destructive",
-    "bg-yellow-500",
-    "bg-blue-500",
-    "bg-green-500",
+    "bg-warning",
+    "bg-info",
+    "bg-success",
 ];
 
 const Register = () => {
@@ -115,20 +115,13 @@ const Register = () => {
     ];
 
     return (
-        <div className="flex min-h-screen bg-background">
+        <div className="flex min-h-dvh bg-background">
             <RegisterBrandPanel />
 
             <div className="flex-1 flex flex-col items-center justify-center px-6 py-10">
                 <div className="w-full max-w-105 space-y-6">
                     {/* Mobile logo */}
-                    <div className="flex items-center gap-2 lg:hidden">
-                        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                            <Layers className="w-4 h-4 text-primary-foreground" />
-                        </div>
-                        <span className="font-bold text-lg text-foreground">
-                            Unified
-                        </span>
-                    </div>
+                    <BrandLogo className="lg:hidden" />
 
                     {/* Step indicator */}
                     <StepIndicator current={step} steps={STEPS} />
@@ -334,11 +327,11 @@ const Register = () => {
                                                         strength <= 1 &&
                                                             "text-destructive",
                                                         strength === 2 &&
-                                                            "text-yellow-600",
+                                                            "text-warning",
                                                         strength === 3 &&
-                                                            "text-blue-600",
+                                                            "text-info",
                                                         strength === 4 &&
-                                                            "text-green-600",
+                                                            "text-success",
                                                     )}
                                                 >
                                                     {strengthLabels[strength] ||

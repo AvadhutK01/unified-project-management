@@ -33,46 +33,49 @@ export const MemberAvatar = ({
     const realTimePresence = effectiveId ? presenceMap[effectiveId] : undefined;
 
     const statusLower = (status || "").toLowerCase();
-    let statusColor = "#94a3b8";
-    let statusLabel = "Offline";
+    let statusColor: string;
+    let statusLabel: string;
 
     if (realTimePresence === "onleave" || realTimePresence === "on_leave") {
-        statusColor = "#f59e0b";
+        statusColor = "var(--warning)";
         statusLabel = "On Leave";
     } else if (realTimePresence === "away") {
-        statusColor = "#8b5cf6";
+        statusColor = "var(--violet)";
         statusLabel = "Away";
     } else if (realTimePresence === "active" || realTimePresence === "online") {
-        statusColor = "#10b981";
+        statusColor = "var(--success)";
         statusLabel = "Online";
     } else if (
         statusLower === "on leave" ||
         statusLower === "onleave" ||
         statusLower === "on_leave"
     ) {
-        statusColor = "#f59e0b";
+        statusColor = "var(--warning)";
         statusLabel = "On Leave";
     } else if (statusLower === "pending") {
-        statusColor = "#d97706";
+        statusColor = "var(--warning)";
         statusLabel = "Pending";
     } else {
-        statusColor = "#94a3b8";
+        statusColor = "var(--neutral)";
         statusLabel = "Offline";
     }
 
     return (
         <Avatar
             size={size}
-            className={cn("shadow-inner shrink-0 select-none", className)}
+            className={cn("shrink-0 select-none", className)}
             style={{ backgroundColor: bgColor }}
+            title={name}
         >
-            <AvatarFallback className="font-bold text-white bg-transparent">
+            <AvatarFallback className="bg-transparent text-[11px] font-semibold text-white group-data-[size=lg]/avatar:text-sm group-data-[size=sm]/avatar:text-[10px]">
                 {initials}
             </AvatarFallback>
             <AvatarBadge
                 title={statusLabel}
+                aria-label={statusLabel}
+                role="img"
                 style={{ backgroundColor: statusColor }}
-                className="ring-2 ring-background border-none cursor-default"
+                className="cursor-default border-none ring-2 ring-card"
             ></AvatarBadge>
         </Avatar>
     );

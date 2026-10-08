@@ -264,8 +264,12 @@ export const DirectChatDrawer: React.FC = () => {
 
     return (
         <>
-            <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-card border-l border-border shadow-2xl transition-all duration-300 ease-in-out">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card/80 backdrop-blur-md">
+            <div
+                role="dialog"
+                aria-label={`Chat with ${activeRecipient.name}`}
+                className="fixed inset-y-0 right-0 z-50 flex w-full flex-col border-l border-border bg-popover shadow-elevated duration-200 animate-in slide-in-from-right-4 sm:max-w-md"
+            >
+                <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-4">
                     <div className="flex items-center gap-2.5 min-w-0">
                         <MemberAvatar
                             name={activeRecipient.name}
@@ -278,7 +282,7 @@ export const DirectChatDrawer: React.FC = () => {
                             <h3 className="text-sm font-semibold text-foreground truncate">
                                 {activeRecipient.name}
                             </h3>
-                            <p className="text-[11px] text-muted-foreground truncate">
+                            <p className="truncate text-xs text-muted-foreground">
                                 {activeRecipient.email || "Active now"}
                             </p>
                         </div>
@@ -293,8 +297,9 @@ export const DirectChatDrawer: React.FC = () => {
                                     "voice",
                                 )
                             }
-                            className="p-2 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer"
-                            title={`Voice Call ${activeRecipient.name}`}
+                            className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                            title={`Voice call ${activeRecipient.name}`}
+                            aria-label={`Voice call ${activeRecipient.name}`}
                         >
                             <Phone className="size-4" />
                         </button>
@@ -306,15 +311,17 @@ export const DirectChatDrawer: React.FC = () => {
                                     "video",
                                 )
                             }
-                            className="p-2 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 transition-colors cursor-pointer"
-                            title={`Video Call ${activeRecipient.name}`}
+                            className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                            title={`Video call ${activeRecipient.name}`}
+                            aria-label={`Video call ${activeRecipient.name}`}
                         >
                             <Video className="size-4" />
                         </button>
                         <button
                             onClick={closeChat}
-                            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                            className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                             title="Close chat"
+                            aria-label="Close chat"
                         >
                             <X className="size-4" />
                         </button>
@@ -353,7 +360,7 @@ export const DirectChatDrawer: React.FC = () => {
                         </div>
                     </div>
                 )}
-                <div className="flex-1 flex flex-col min-h-0 bg-background/50 relative">
+                <div className="relative flex min-h-0 flex-1 flex-col bg-background">
                     {showScrollBottomBtn && (
                         <div className="absolute bottom-4 right-4 z-30">
                             <button
@@ -364,7 +371,7 @@ export const DirectChatDrawer: React.FC = () => {
                                     });
                                     setShowScrollBottomBtn(false);
                                 }}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-xl hover:bg-primary/90 transition-all animate-bounce cursor-pointer"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-xl transition-colors hover:bg-primary/90"
                             >
                                 <ArrowDown className="size-3.5" />
                                 <span>New messages</span>
@@ -445,12 +452,12 @@ export const DirectChatDrawer: React.FC = () => {
                                             )}
 
                                         <div
-                                            className={`relative max-w-[82%] rounded-2xl px-3.5 py-2.5 shadow-sm text-xs space-y-1.5 ${
+                                            className={`relative max-w-[82%] space-y-1.5 rounded-2xl px-3.5 py-2 text-[13px] ${
                                                 msg.isDeleted
                                                     ? "bg-muted/50 border border-border/60 text-muted-foreground italic rounded-xl"
                                                     : isMe
-                                                      ? "bg-primary text-primary-foreground rounded-br-xs"
-                                                      : "bg-card border border-border text-foreground rounded-bl-xs"
+                                                      ? "rounded-tr-md bg-primary text-primary-foreground"
+                                                      : "rounded-tl-md border border-border bg-card text-foreground shadow-card"
                                             }`}
                                         >
                                             {msg.isDeleted ? (
@@ -598,7 +605,7 @@ export const DirectChatDrawer: React.FC = () => {
                                             )}
                                         </div>
                                         {!msg.isDeleted && (
-                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5 bg-card/90 border border-border p-1 rounded-xl shadow-md backdrop-blur-sm self-center">
+                                            <div className="flex items-center gap-0.5 self-center rounded-lg border border-border bg-popover p-0.5 opacity-0 shadow-elevated transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
                                                 <button
                                                     type="button"
                                                     onClick={() =>
@@ -627,7 +634,7 @@ export const DirectChatDrawer: React.FC = () => {
                                                                 msg.id,
                                                             )
                                                         }
-                                                        className="p-1 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-500 cursor-pointer transition-colors"
+                                                        className="p-1 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive cursor-pointer transition-colors"
                                                         title="Delete (Within 1 Hour)"
                                                     >
                                                         <Trash2 className="size-3.5" />
@@ -717,7 +724,7 @@ export const DirectChatDrawer: React.FC = () => {
                     )}
                     <form
                         onSubmit={handleSend}
-                        className="p-3 border-t border-border bg-card flex items-center gap-2 relative"
+                        className="relative flex items-center gap-1.5 border-t border-border bg-popover p-3"
                     >
                         <input
                             type="file"
@@ -730,12 +737,13 @@ export const DirectChatDrawer: React.FC = () => {
                             ref={emojiButtonRef}
                             type="button"
                             onClick={() => setShowEmojiPicker((prev) => !prev)}
-                            className={`p-2 rounded-lg transition-colors cursor-pointer shrink-0 ${
+                            className={`flex size-9 shrink-0 items-center justify-center rounded-md transition-colors ${
                                 showEmojiPicker
                                     ? "bg-primary/10 text-primary"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
                             }`}
-                            title="Insert Emoji"
+                            title="Insert emoji"
+                            aria-label="Insert emoji"
                         >
                             <Smile className="size-4" />
                         </button>
@@ -743,8 +751,9 @@ export const DirectChatDrawer: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
-                            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer shrink-0"
+                            className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                             title="Attach file or image"
+                            aria-label="Attach file or image"
                         >
                             <Paperclip className="size-4" />
                         </button>
@@ -759,7 +768,8 @@ export const DirectChatDrawer: React.FC = () => {
                             value={inputText}
                             onChange={handleTextChange}
                             disabled={isUploading}
-                            className="flex-1 px-3 py-2 text-xs rounded-xl border border-border bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+                            aria-label={`Message ${activeRecipient.name}`}
+                            className="h-9 min-w-0 flex-1 rounded-md border border-input bg-card px-3 text-[13px] text-foreground shadow-xs transition-[border-color,box-shadow] outline-none placeholder:text-muted-foreground/80 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25 disabled:opacity-50 dark:bg-input/20"
                         />
 
                         <button
@@ -768,8 +778,9 @@ export const DirectChatDrawer: React.FC = () => {
                                 (!inputText.trim() && !selectedFile) ||
                                 isUploading
                             }
-                            className="p-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shrink-0"
+                            className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
                             title="Send message"
+                            aria-label="Send message"
                         >
                             {isUploading ? (
                                 <div className="size-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
@@ -789,7 +800,7 @@ export const DirectChatDrawer: React.FC = () => {
             />
             {lightboxImageUrl && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4"
                     onClick={() => setLightboxImageUrl(null)}
                 >
                     <div

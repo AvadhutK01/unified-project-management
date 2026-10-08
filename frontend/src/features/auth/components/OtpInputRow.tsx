@@ -27,6 +27,8 @@ export const OtpInputRow = ({
                 }}
                 type="text"
                 inputMode="numeric"
+                autoComplete={i === 0 ? "one-time-code" : "off"}
+                aria-label={`Digit ${i + 1} of ${otp_length}`}
                 maxLength={1}
                 value={otp[i]}
                 autoFocus={autoFocus && i === 0}
@@ -34,9 +36,9 @@ export const OtpInputRow = ({
                 onKeyDown={(e) => handleKeyDown(i, e)}
                 onPaste={handlePaste}
                 className={cn(
-                    "w-full aspect-square max-w-12 rounded-xl border-2 bg-background text-center text-xl font-bold text-foreground outline-none transition-all duration-150",
-                    "border-border hover:border-ring",
-                    "focus:border-primary focus:ring-4 focus:ring-primary/10",
+                    "tabular aspect-square w-full max-w-12 rounded-lg border bg-card text-center text-lg font-semibold text-foreground shadow-xs outline-none transition-[border-color,box-shadow] duration-150 dark:bg-input/20",
+                    "border-input hover:border-foreground/25",
+                    "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25 focus-visible:outline-none",
                     otp[i] && "border-primary/60",
                 )}
             />

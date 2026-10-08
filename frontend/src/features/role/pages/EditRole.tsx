@@ -2,13 +2,13 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { PageContainer, PageHeader } from "@/components/common/PageHeader";
+import { SectionCard } from "@/components/common/SectionCard";
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
 import { roleSchema, type RoleFormValues } from "../schema/roleSchema";
 import type { PermissionRow } from "../utils/permissionHelpers";
@@ -213,7 +213,7 @@ const EditRole = () => {
         () => [
             {
                 key: "module",
-                label: "Permission",
+                label: "Module",
                 render: (row) => (
                     <span className="font-medium text-foreground">
                         {row.module}
@@ -223,18 +223,26 @@ const EditRole = () => {
             ...availableFields.map(({ field, label }) => ({
                 key: field,
                 label,
+                className: "w-24 text-center",
                 render: (row: PermissionRow) =>
                     row.permissionIds[field] ? (
-                        <Switch
-                            checked={row.fields[field] ?? false}
-                            onCheckedChange={(value) =>
-                                handlePermissionChange(row.module, field, value)
-                            }
-                            size="sm"
-                            aria-label={`Toggle ${row.module} ${label}`}
-                        />
+                        <span className="flex justify-center">
+                            <Checkbox
+                                checked={row.fields[field] ?? false}
+                                onCheckedChange={(value) =>
+                                    handlePermissionChange(
+                                        row.module,
+                                        field,
+                                        value === true,
+                                    )
+                                }
+                                aria-label={`${label} ${row.module}`}
+                            />
+                        </span>
                     ) : (
-                        <span className="text-muted-foreground">—</span>
+                        <span className="block text-center text-muted-foreground/60">
+                            —
+                        </span>
                     ),
             })),
         ],
@@ -281,93 +289,94 @@ const EditRole = () => {
     };
 
     return (
-        <div className="p-4 sm:p-6 space-y-5">
-            <div className="flex items-center gap-3">
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate(`/${slug}/roles`)}
-                    className="gap-1.5"
-                >
-                    <ArrowLeft className="w-4 h-4" />
-                </Button>
-                <h1 className="text-lg font-semibold text-foreground">
-                    Edit Role
-                </h1>
-            </div>
+        <PageContainer size="narrow" className="pb-0">
+            <PageHeader
+                breadcrumbs={[
+                    { label: "Roles", to: `/${slug}/roles` },
+                    { label: "Edit role" },
+                ]}
+                title="Edit role"
+                description="Name the role and choose exactly which modules and actions it can access."
+            />
 
             <form
                 onSubmit={handleSubmit(onSubmit)}
                 noValidate
-                className="space-y-8"
+                className="space-y-6"
             >
-                <Card>
-                    <CardHeader className="border-b border-border">
-                        <CardTitle>Role Details</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <Label htmlFor="name">
-                                    Role Name{" "}
-                                    <span className="text-destructive">*</span>
-                                </Label>
-                                <Input
-                                    id="name"
-                                    placeholder="Enter role name"
-                                    aria-invalid={!!errors.name}
-                                    {...register("name")}
-                                />
-                                {errors.name && (
-                                    <p className="text-xs text-destructive">
-                                        {errors.name.message}
-                                    </p>
-                                )}
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="description">
-                                    Description{" "}
-                                    <span className="text-destructive">*</span>
-                                </Label>
-                                <Textarea
-                                    id="description"
-                                    placeholder="Enter role description"
-                                    rows={3}
-                                    aria-invalid={!!errors.description}
-                                    className="resize-none"
-                                    {...register("description")}
-                                />
-                                {errors.description && (
-                                    <p className="text-xs text-destructive">
-                                        {errors.description.message}
-                                    </p>
-                                )}
-                            </div>
+                <SectionCard
+                    title="Role details"
+                    description="Shown to admins when assigning roles to members."
+                >
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">
+                                Role name{" "}
+                                <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                                id="name"
+                                placeholder="e.g. Project Manager"
+                                aria-invalid={!!errors.name}
+                                {...register("name")}
+                            />
+                            {errors.name && (
+                                <p className="text-xs text-destructive">
+                                    {errors.name.message}
+                                </p>
+                            )}
                         </div>
-                    </CardContent>
-                </Card>
 
-                <div className="space-y-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                        <h3 className="text-xl font-semibold">Permissions</h3>
+                        <div className="space-y-2">
+                            <Label htmlFor="description">
+                                Description{" "}
+                                <span className="text-destructive">*</span>
+                            </Label>
+                            <Textarea
+                                id="description"
+                                placeholder="What is this role responsible for?"
+                                rows={3}
+                                aria-invalid={!!errors.description}
+                                className="min-h-9 resize-none"
+                                {...register("description")}
+                            />
+                            {errors.description && (
+                                <p className="text-xs text-destructive">
+                                    {errors.description.message}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                </SectionCard>
 
-                        <div className="flex items-center gap-3">
-                            <span className="text-sm text-muted-foreground">
-                                Select All
-                            </span>
-
-                            <Switch
+                <section className="space-y-3">
+                    <div className="flex flex-wrap items-end justify-between gap-3">
+                        <div>
+                            <h2 className="text-sm font-semibold text-foreground">
+                                Permissions
+                            </h2>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                                Dependent permissions (such as List for Edit)
+                                are selected automatically.
+                            </p>
+                        </div>
+                        <label className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-[13px] font-medium text-foreground shadow-xs">
+                            <Checkbox
                                 checked={allSelected}
-                                onCheckedChange={handleSelectAll}
+                                onCheckedChange={(value) =>
+                                    handleSelectAll(value === true)
+                                }
                                 aria-label="Select all permissions"
                             />
-                        </div>
+                            Select all
+                        </label>
                     </div>
 
                     {permissionError && (
-                        <p className="text-xs text-destructive">
+                        <p
+                            role="alert"
+                            className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-xs text-destructive"
+                        >
                             {permissionError}
                         </p>
                     )}
@@ -378,10 +387,12 @@ const EditRole = () => {
                         getRowId={(row) => row.module}
                         showDefaultFooter={false}
                         loading={isFetchingPermissions}
+                        stickyHeader
+                        maxHeight="min(60vh, 560px)"
                     />
-                </div>
+                </section>
 
-                <div className="flex items-center justify-end gap-3 pt-2 pb-4">
+                <div className="sticky bottom-0 z-10 -mx-4 flex items-center justify-end gap-2 border-t border-border bg-background/95 px-4 py-3 backdrop-blur supports-backdrop-filter:bg-background/80 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
                     <Button
                         type="button"
                         variant="outline"
@@ -390,11 +401,11 @@ const EditRole = () => {
                         Cancel
                     </Button>
                     <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? "Saving..." : "Save Changes"}
+                        {isSubmitting ? "Saving…" : "Save changes"}
                     </Button>
                 </div>
             </form>
-        </div>
+        </PageContainer>
     );
 };
 

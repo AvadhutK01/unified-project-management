@@ -141,22 +141,27 @@ const MentionInput = ({
                 onKeyDown={handleKeyDown}
                 onBlur={() => setOpen(false)}
                 placeholder={placeholder}
+                aria-label={placeholder ?? "Write a comment"}
                 className={cn(
-                    "flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50",
+                    "flex min-h-20 w-full resize-y rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground shadow-xs transition-[border-color,box-shadow] outline-none placeholder:text-muted-foreground/80 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/20",
                     className,
                 )}
             />
             {open && filteredUsers.length > 0 && (
-                <div className="absolute z-50 top-full mt-1 w-full rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
+                <div
+                    role="listbox"
+                    aria-label="Mention a member"
+                    className="absolute top-full z-50 mt-1 max-h-60 w-full max-w-xs overflow-y-auto rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-elevated"
+                >
                     {filteredUsers.map((user, idx) => (
                         <div
                             key={user.id}
                             role="option"
                             aria-selected={idx === highlightedIndex}
                             className={cn(
-                                "relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none select-none",
+                                "relative flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none select-none",
                                 idx === highlightedIndex &&
-                                    "bg-muted text-foreground",
+                                    "bg-accent text-accent-foreground",
                             )}
                             onPointerDown={(e) => {
                                 e.preventDefault();

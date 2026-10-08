@@ -16,14 +16,24 @@ const MainLayoutContent = ({ children }: { children: ReactNode }) => {
     useUserActivityTracker();
 
     return (
-        <div className="flex h-screen">
+        <div className="flex h-dvh overflow-hidden bg-background">
+            <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[300] focus:rounded-md focus:bg-card focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:shadow-elevated"
+            >
+                Skip to content
+            </a>
             <Sidebar />
-            <main className="flex-1 min-w-0 w-full bg-card">
+            <div className="flex min-w-0 flex-1 flex-col">
                 <Header />
-                <div className="h-[calc(100vh-65px)]! overflow-y-auto">
+                <main
+                    id="main-content"
+                    tabIndex={-1}
+                    className="flex-1 overflow-x-hidden overflow-y-auto outline-none"
+                >
                     {children}
-                </div>
-            </main>
+                </main>
+            </div>
             <ChatBot />
             <CallModal />
             <DirectChatDrawer />

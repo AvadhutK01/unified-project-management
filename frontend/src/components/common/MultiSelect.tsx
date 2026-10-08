@@ -54,7 +54,7 @@ const MultiSelect = ({
                 <button
                     ref={triggerRef}
                     type="button"
-                    className="flex w-full items-start justify-between min-h-9 rounded-md border border-input bg-transparent px-2.5 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                    className="flex min-h-9 w-full items-start justify-between rounded-md border border-input bg-card px-2.5 py-1.5 text-sm text-foreground shadow-xs transition-[border-color,box-shadow] outline-none hover:border-foreground/20 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25 dark:bg-input/20"
                 >
                     <div className="flex flex-wrap gap-1 max-h-[80px] overflow-y-auto pr-1 flex-1">
                         {value.length > 0 ? (

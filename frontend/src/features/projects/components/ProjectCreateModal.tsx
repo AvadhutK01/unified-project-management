@@ -154,7 +154,7 @@ const ProjectCreateModal = () => {
                         Add a new project to your agency.
                     </SheetDescription>
                 </SheetHeader>
-                <div className="grid flex-1 min-h-0 auto-rows-min gap-6 px-4 overflow-y-auto">
+                <div className="grid min-h-0 flex-1 auto-rows-min gap-6 overflow-y-auto px-5 pt-5">
                     <Form {...form}>
                         <form
                             onSubmit={form.handleSubmit(onSubmit)}
@@ -171,7 +171,6 @@ const ProjectCreateModal = () => {
                                                 {...field}
                                                 id="projectName"
                                                 placeholder="Enter project name"
-                                                className="ring-0!"
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -198,7 +197,7 @@ const ProjectCreateModal = () => {
                                 )}
                             />
 
-                            <div className="flex items-center gap-2 w-full">
+                            <div className="grid w-full gap-4 sm:grid-cols-2 sm:items-start">
                                 <FormField
                                     control={form.control}
                                     name="client"
@@ -209,7 +208,6 @@ const ProjectCreateModal = () => {
                                                 <Input
                                                     {...field}
                                                     placeholder="Enter client name"
-                                                    className="ring-0!"
                                                 />
                                             </FormControl>
                                             <FormMessage />
@@ -279,7 +277,7 @@ const ProjectCreateModal = () => {
                                 )}
                             />
 
-                            <div className="flex items-center gap-2 w-full">
+                            <div className="grid w-full gap-4 sm:grid-cols-2 sm:items-start">
                                 <FormField
                                     control={form.control}
                                     name="startDate"
@@ -296,7 +294,7 @@ const ProjectCreateModal = () => {
                                                         <button
                                                             type="button"
                                                             className={cn(
-                                                                "w-full flex items-center justify-between border rounded-md px-3 py-2 text-sm",
+                                                                "flex h-9 w-full items-center justify-between rounded-md border border-input bg-card px-3 text-sm text-foreground shadow-xs transition-[border-color,box-shadow] outline-none hover:border-foreground/20 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25 dark:bg-input/20",
                                                                 !field.value &&
                                                                     "text-muted-foreground",
                                                             )}
@@ -352,7 +350,7 @@ const ProjectCreateModal = () => {
                                                         <button
                                                             type="button"
                                                             className={cn(
-                                                                "w-full flex items-center justify-between border rounded-md px-3 py-2 text-sm",
+                                                                "flex h-9 w-full items-center justify-between rounded-md border border-input bg-card px-3 text-sm text-foreground shadow-xs transition-[border-color,box-shadow] outline-none hover:border-foreground/20 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25 dark:bg-input/20",
                                                                 !field.value &&
                                                                     "text-muted-foreground",
                                                             )}
@@ -412,13 +410,13 @@ const ProjectCreateModal = () => {
                                 )}
                             />
 
-                            <SheetFooter className="flex flex-col-reverse gap-2 px-0 mt-6 sm:flex-row sm:justify-end">
+                            <SheetFooter className="sticky bottom-0 -mx-5 mt-6 flex flex-col-reverse gap-2 border-t border-border bg-popover px-5 py-4 sm:flex-row sm:justify-end">
                                 <SheetClose asChild>
                                     <Button
                                         variant="outline"
                                         className="w-full sm:w-auto"
                                     >
-                                        Close
+                                        Cancel
                                     </Button>
                                 </SheetClose>
                                 <Button
@@ -428,8 +426,8 @@ const ProjectCreateModal = () => {
                                 >
                                     {isSubmitting ? (
                                         <>
-                                            <Loader2 className="h-4 w-4 mr-2" />
-                                            Saving...
+                                            <Loader2 className="size-4 animate-spin" />
+                                            Saving…
                                         </>
                                     ) : (
                                         "Save changes"

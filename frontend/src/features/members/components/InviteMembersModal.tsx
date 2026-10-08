@@ -2,6 +2,12 @@ import { useState, useEffect } from "react";
 import { X, Plus, Send, Trash2, UserPlus, Mail, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import {
     Select,
     SelectContent,
     SelectItem,
@@ -206,40 +212,37 @@ export function InviteMembersModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                onClick={handleClose}
-            />
-
-            <div className="relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
-                <div className="flex shrink-0 items-start justify-between p-4 pb-5 sm:p-6 sm:pb-5">
+        <Dialog open onOpenChange={(o) => !o && handleClose()}>
+            <DialogContent
+                showCloseButton={false}
+                className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg sm:p-0"
+            >
+                <div className="flex shrink-0 items-start justify-between gap-3 border-b border-border px-5 py-4 sm:px-6">
                     <div className="flex items-start gap-3 min-w-0">
-                        <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                            <UserPlus className="size-5 text-primary" />
+                        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <UserPlus className="size-[18px]" />
                         </div>
                         <div className="min-w-0">
-                            <h2 className="text-base font-semibold text-foreground">
+                            <DialogTitle>
                                 {reInviteMode
                                     ? "Re-invite Team Member"
                                     : "Invite Team Members"}
-                            </h2>
-                            <p className="text-sm text-muted-foreground mt-0.5">
+                            </DialogTitle>
+                            <DialogDescription className="mt-0.5">
                                 {reInviteMode
                                     ? "Change the role and resend the invitation."
                                     : "Send invitations to multiple people at once."}
-                            </p>
+                            </DialogDescription>
                         </div>
                     </div>
                     <button
                         onClick={handleClose}
-                        className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+                        aria-label="Close"
+                        className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                     >
                         <X className="size-4" />
                     </button>
                 </div>
-
-                <div className="h-px bg-border mx-4 sm:mx-6 shrink-0" />
 
                 <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-2.5">
                     <div className="hidden sm:flex items-center gap-2 px-0.5 mb-1">
@@ -272,12 +275,12 @@ export function InviteMembersModal({
                                             }
                                             readOnly={reInviteMode}
                                             className={cn(
-                                                "w-full pl-9 pr-3 py-2 text-sm rounded-lg border bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition",
+                                                "h-9 w-full rounded-md border bg-card pr-3 pl-9 text-sm text-foreground shadow-xs transition-[border-color,box-shadow] outline-none placeholder:text-muted-foreground/80 focus-visible:ring-3 dark:bg-input/20",
                                                 reInviteMode &&
                                                     "cursor-not-allowed opacity-60",
                                                 errors.email
-                                                    ? "border-destructive focus:ring-destructive/30 focus:border-destructive"
-                                                    : "border-border focus:ring-ring/40 focus:border-primary",
+                                                    ? "border-destructive focus-visible:ring-destructive/20"
+                                                    : "border-input focus-visible:border-ring focus-visible:ring-ring/25",
                                             )}
                                         />
                                     </div>
@@ -366,9 +369,7 @@ export function InviteMembersModal({
                     )}
                 </div>
 
-                <div className="h-px bg-border mx-4 sm:mx-6 shrink-0" />
-
-                <div className="flex shrink-0 flex-col-reverse gap-3 p-4 pt-4 sm:flex-row sm:items-center sm:justify-between sm:p-6 sm:pt-4">
+                <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-border bg-muted/30 px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                     <p className="text-xs text-muted-foreground text-center sm:text-left">
                         {reInviteMode
                             ? "Re-invite 1 member"
@@ -407,7 +408,7 @@ export function InviteMembersModal({
                         </Button>
                     </div>
                 </div>
-            </div>
-        </div>
+            </DialogContent>
+        </Dialog>
     );
 }

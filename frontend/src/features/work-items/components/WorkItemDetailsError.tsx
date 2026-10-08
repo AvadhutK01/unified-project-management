@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, AlertCircle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ErrorState } from "@/components/common/EmptyState";
+import { PageContainer } from "@/components/common/PageHeader";
 
 interface WorkItemDetailsErrorProps {
     slug: string;
@@ -15,30 +17,24 @@ const WorkItemDetailsError = ({
     projectId,
     phaseId,
     sprintId,
-    workItemError,
 }: WorkItemDetailsErrorProps) => {
     return (
-        <div className="p-4 sm:p-6 max-w-2xl mx-auto mt-12 text-center bg-card/60 backdrop-blur-md rounded-2xl border border-destructive/20 shadow-lg">
-            <AlertCircle className="size-12 mx-auto text-destructive mb-4" />
-            <h2 className="text-lg font-bold text-foreground">
-                Failed to Load Work Item
-            </h2>
-            <p className="text-sm text-muted-foreground mt-2">
-                {workItemError instanceof Error
-                    ? workItemError.message
-                    : "The requested work item details could not be loaded."}
-            </p>
-            <div className="mt-6">
-                <Button asChild variant="outline">
-                    <Link
-                        to={`/${slug}/projects/${projectId}/phases/${phaseId}/sprints/${sprintId}/work-items`}
-                    >
-                        <ArrowLeft className="mr-2 size-4" />
-                        Back to Work Items
-                    </Link>
-                </Button>
-            </div>
-        </div>
+        <PageContainer>
+            <ErrorState
+                title="We couldn't load this work item"
+                description="It may have been removed, or there was a problem reaching the server."
+                action={
+                    <Button asChild variant="outline" size="sm">
+                        <Link
+                            to={`/${slug}/projects/${projectId}/phases/${phaseId}/sprints/${sprintId}/work-items`}
+                        >
+                            <ArrowLeft />
+                            Back to work items
+                        </Link>
+                    </Button>
+                }
+            />
+        </PageContainer>
     );
 };
 

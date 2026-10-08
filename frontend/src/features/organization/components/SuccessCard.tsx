@@ -1,4 +1,4 @@
-import { CheckCircle } from "lucide-react";
+import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SuccessCardProps {
@@ -17,29 +17,25 @@ export function SuccessCard({
     return (
         <div
             className={cn(
-                "flex flex-col items-center gap-6 py-10 text-center",
+                "flex flex-col items-center gap-5 py-4 text-center",
                 className,
             )}
         >
-            {/* Animated icon */}
-            <div className="relative">
-                <div className="size-24 rounded-full bg-green-100 flex items-center justify-center animate-in zoom-in-75 duration-500">
-                    <CheckCircle className="size-12 text-green-600" />
-                </div>
-                <div className="absolute inset-0 rounded-full bg-green-200 animate-ping opacity-30" />
+            <div className="flex size-14 items-center justify-center rounded-full bg-success/10 ring-8 ring-success/5 duration-300 animate-in zoom-in-90">
+                <Check className="size-7 text-success" strokeWidth={2.5} />
             </div>
 
-            <div className="flex flex-col gap-3 max-w-md">
-                <h2 className="text-2xl font-bold text-foreground leading-tight">
+            <div className="flex max-w-md flex-col gap-2">
+                <h2 className="text-xl font-semibold tracking-tight text-foreground">
                     {title}
                 </h2>
-                <p className="text-muted-foreground leading-relaxed text-sm">
+                <p className="text-sm leading-relaxed text-muted-foreground">
                     {description}
                 </p>
             </div>
 
             {children && (
-                <div className="flex flex-wrap items-center justify-center gap-3 mt-2">
+                <div className="mt-1 flex w-full flex-col-reverse items-stretch justify-center gap-2 sm:w-auto sm:flex-row sm:items-center">
                     {children}
                 </div>
             )}

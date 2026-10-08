@@ -1,15 +1,14 @@
 import { useState, useMemo } from "react";
-import {
-    FileDown,
-    Activity,
-    Calendar,
-    AlertCircle,
-    Users,
-    Clock,
-    CheckSquare,
-} from "lucide-react";
+import { FileDown, Activity, Users, Clock, CheckSquare } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
 import { Button } from "@/components/ui/button";
+import { PageContainer, PageHeader } from "@/components/common/PageHeader";
+import { StatCard, StatGrid } from "@/components/common/StatCard";
+import { EmptyState } from "@/components/common/EmptyState";
+import {
+    ReportDateFilter,
+    ReportErrorBanner,
+} from "../components/ReportFilters";
 import { useMemberActivityQuery } from "../hooks/useReports";
 import { exportMemberActivityToExcel } from "../utils/exportToExcel";
 import type { MemberActivityItem } from "../types/reports.types";
@@ -24,7 +23,6 @@ const MemberActivity = () => {
         data: reportData,
         isLoading,
         isError,
-        error,
     } = useMemberActivityQuery({
         startDate,
         endDate,
@@ -123,7 +121,7 @@ const MemberActivity = () => {
                 key: "newWorkitems",
                 label: "New",
                 render: (item) => (
-                    <span className="text-sm font-medium text-purple-600 dark:text-purple-400">
+                    <span className="text-sm font-medium tabular text-violet">
                         {item.statusCounts?.new || 0}
                     </span>
                 ),
@@ -132,7 +130,7 @@ const MemberActivity = () => {
                 key: "activeWorkitems",
                 label: "Active",
                 render: (item) => (
-                    <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                    <span className="text-sm font-medium tabular text-info">
                         {item.statusCounts?.active || 0}
                     </span>
                 ),
@@ -141,7 +139,7 @@ const MemberActivity = () => {
                 key: "resolvedWorkitems",
                 label: "Resolved",
                 render: (item) => (
-                    <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                    <span className="text-sm font-medium tabular text-success">
                         {item.statusCounts?.resolved || 0}
                     </span>
                 ),
@@ -150,7 +148,7 @@ const MemberActivity = () => {
                 key: "closedWorkitems",
                 label: "Closed",
                 render: (item) => (
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    <span className="text-sm font-medium tabular text-muted-foreground">
                         {item.statusCounts?.closed || 0}
                     </span>
                 ),
@@ -170,144 +168,67 @@ const MemberActivity = () => {
     );
 
     return (
-        <div className="p-6 space-y-6">
-            {/* Header section */}
-            <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-xl font-bold text-foreground">
-                        Member Activity Report
-                    </h1>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                        Track individual member work item status distribution
-                        and logged activity hours.
-                    </p>
-                </div>
+        <PageContainer>
+            <PageHeader
+                breadcrumbs={[
+                    { label: "Reports" },
+                    { label: "Member Activity Report" },
+                ]}
+                title="Member Activity Report"
+                description="Track individual member work item status distribution and logged activity hours."
+                actions={
+                    <Button
+                        onClick={handleExport}
+                        disabled={activityList.length === 0 || isLoading}
+                        variant="outline"
+                    >
+                        <FileDown />
+                        Export to Excel
+                    </Button>
+                }
+            />
 
-                <Button
-                    onClick={handleExport}
-                    disabled={activityList.length === 0 || isLoading}
-                    className="gap-2 cursor-pointer"
-                >
-                    <FileDown className="size-4" />
-                    Export Excel
-                </Button>
-            </div>
+            <ReportDateFilter
+                startDate={startDate}
+                endDate={endDate}
+                onStartDateChange={setStartDate}
+                onEndDateChange={setEndDate}
+            />
 
-            {/* Date Filters block */}
-            <div className="flex flex-wrap items-end gap-4 p-4 bg-card rounded-xl border border-border shadow-xs">
-                <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                        <Calendar className="size-3.5" />
-                        Start Date
-                    </label>
-                    <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="block w-44 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition"
-                    />
-                </div>
+            <StatGrid columns={4}>
+                <StatCard
+                    label="Active Members"
+                    value={isLoading ? "…" : metrics.uniqueMembers}
+                    icon={Users}
+                    tone="primary"
+                />
+                <StatCard
+                    label="Total Work Items"
+                    value={isLoading ? "…" : metrics.totalWorkitems}
+                    icon={Activity}
+                    tone="info"
+                />
+                <StatCard
+                    label="Completed Items"
+                    value={isLoading ? "…" : metrics.completedWorkitems}
+                    icon={CheckSquare}
+                    tone="violet"
+                />
+                <StatCard
+                    label="Total Worked Time"
+                    value={isLoading ? "…" : `${metrics.totalWorkedTime} Hrs`}
+                    icon={Clock}
+                    tone="success"
+                />
+            </StatGrid>
 
-                <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                        <Calendar className="size-3.5" />
-                        End Date
-                    </label>
-                    <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="block w-44 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition"
-                    />
-                </div>
-
-                {startDate > endDate && (
-                    <div className="flex items-center gap-1.5 text-xs text-destructive pb-2.5">
-                        <AlertCircle className="size-4" />
-                        Start date cannot be after end date
-                    </div>
-                )}
-            </div>
-
-            {/* KPI Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-card p-5 rounded-xl border border-border flex items-center gap-4 shadow-2xs hover:shadow-xs transition">
-                    <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                        <Users className="size-5 text-primary" />
-                    </div>
-                    <div>
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Active Members
-                        </p>
-                        <p className="text-2xl font-bold text-foreground mt-0.5">
-                            {isLoading ? "..." : metrics.uniqueMembers}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="bg-card p-5 rounded-xl border border-border flex items-center gap-4 shadow-2xs hover:shadow-xs transition">
-                    <div className="size-10 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
-                        <Activity className="size-5 text-emerald-500" />
-                    </div>
-                    <div>
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Total Work Items
-                        </p>
-                        <p className="text-2xl font-bold text-foreground mt-0.5">
-                            {isLoading ? "..." : metrics.totalWorkitems}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="bg-card p-5 rounded-xl border border-border flex items-center gap-4 shadow-2xs hover:shadow-xs transition">
-                    <div className="size-10 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
-                        <CheckSquare className="size-5 text-amber-500" />
-                    </div>
-                    <div>
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Completed Items
-                        </p>
-                        <p className="text-2xl font-bold text-foreground mt-0.5">
-                            {isLoading ? "..." : metrics.completedWorkitems}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="bg-card p-5 rounded-xl border border-border flex items-center gap-4 shadow-2xs hover:shadow-xs transition">
-                    <div className="size-10 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0">
-                        <Clock className="size-5 text-indigo-500" />
-                    </div>
-                    <div>
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Total Worked Time
-                        </p>
-                        <p className="text-2xl font-bold text-foreground mt-0.5">
-                            {isLoading
-                                ? "..."
-                                : `${metrics.totalWorkedTime} Hrs`}
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Error State */}
-            {isError && (
-                <div className="flex items-center gap-3 p-4 bg-destructive/10 text-destructive rounded-lg border border-destructive/20">
-                    <AlertCircle className="size-5" />
-                    <div>
-                        <p className="font-semibold text-sm">
-                            Failed to fetch member activity report data
-                        </p>
-                        <p className="text-xs opacity-90">
-                            {error?.message || "An unexpected error occurred."}
-                        </p>
-                    </div>
-                </div>
-            )}
+            {isError && <ReportErrorBanner subject="member activity report" />}
 
             {/* Table section */}
             <DataTable
                 columns={columns}
+                stickyHeader
+                maxHeight="min(70vh, 720px)"
                 data={activityList}
                 getRowId={(item) =>
                     `${item.memberName}-${item.projectName}-${item.phaseName}-${item.sprintName}`
@@ -315,23 +236,14 @@ const MemberActivity = () => {
                 loading={isLoading}
                 showDefaultFooter={true}
                 emptyState={
-                    <tr>
-                        <td colSpan={8}>
-                            <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
-                                <Users className="size-8 text-muted-foreground/30" />
-                                <p className="text-sm font-medium text-muted-foreground">
-                                    No member activity in date range
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                    Adjust dates to view activity records for a
-                                    different period.
-                                </p>
-                            </div>
-                        </td>
-                    </tr>
+                    <EmptyState
+                        icon={Users}
+                        title="No member activity in date range"
+                        description="Adjust dates to view activity records for a different period."
+                    />
                 }
             />
-        </div>
+        </PageContainer>
     );
 };
 

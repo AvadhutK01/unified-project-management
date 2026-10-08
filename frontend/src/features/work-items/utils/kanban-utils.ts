@@ -1,13 +1,14 @@
+import { TONE_BORDER_TOP, WORKFLOW_TONE } from "@/lib/tones";
 import { WORK_ITEM_STATUSES } from "../constants/workitem.constants";
 import type { WorkItemStatus } from "../types/workitem.types";
 
 export const STATUS_COLORS: Record<WorkItemStatus, string> = {
-    new: "border-t-purple-500",
-    active: "border-t-green-500",
-    resolved: "border-t-blue-500",
-    closed: "border-t-gray-400",
-    removed: "border-t-red-500",
-    onhold: "border-t-amber-500",
+    new: TONE_BORDER_TOP[WORKFLOW_TONE.new],
+    active: TONE_BORDER_TOP[WORKFLOW_TONE.active],
+    resolved: TONE_BORDER_TOP[WORKFLOW_TONE.resolved],
+    closed: TONE_BORDER_TOP[WORKFLOW_TONE.closed],
+    removed: TONE_BORDER_TOP[WORKFLOW_TONE.removed],
+    onhold: TONE_BORDER_TOP[WORKFLOW_TONE.onhold],
 };
 
 export function getItemId(id: string) {

@@ -1,36 +1,32 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, AlertCircle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ErrorState } from "@/components/common/EmptyState";
+import { PageContainer } from "@/components/common/PageHeader";
 import type { SprintDetailsErrorProps } from "../types/sprint.types";
 
 const SprintDetailsError = ({
     slug,
     projectId,
     phaseId,
-    sprintError,
 }: SprintDetailsErrorProps) => {
     return (
-        <div className="p-4 sm:p-6 max-w-2xl mx-auto mt-12 text-center bg-card/60 backdrop-blur-md rounded-2xl border border-destructive/20 shadow-lg">
-            <AlertCircle className="size-12 mx-auto text-destructive mb-4" />
-            <h2 className="text-lg font-bold text-foreground">
-                Failed to Load Sprint
-            </h2>
-            <p className="text-sm text-muted-foreground mt-2">
-                {sprintError instanceof Error
-                    ? sprintError.message
-                    : "The requested sprint details could not be loaded."}
-            </p>
-            <div className="mt-6">
-                <Button asChild variant="outline">
-                    <Link
-                        to={`/${slug}/projects/${projectId}/phases/${phaseId}/sprints`}
-                    >
-                        <ArrowLeft className="mr-2 size-4" />
-                        Back to Sprints
-                    </Link>
-                </Button>
-            </div>
-        </div>
+        <PageContainer>
+            <ErrorState
+                title="We couldn't load this sprint"
+                description="It may have been removed, or there was a problem reaching the server."
+                action={
+                    <Button asChild variant="outline" size="sm">
+                        <Link
+                            to={`/${slug}/projects/${projectId}/phases/${phaseId}/sprints`}
+                        >
+                            <ArrowLeft />
+                            Back to sprints
+                        </Link>
+                    </Button>
+                }
+            />
+        </PageContainer>
     );
 };
 

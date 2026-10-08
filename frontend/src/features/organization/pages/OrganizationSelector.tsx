@@ -1,8 +1,8 @@
 import { useMemo, useState, useEffect } from "react";
+import { OnboardingShell } from "../components/OnboardingShell";
 import { useNavigate } from "react-router-dom";
 import {
     Plus,
-    Building2,
     MailOpen,
     CheckCircle2,
     X,
@@ -117,22 +117,17 @@ export default function OrganizationSelector() {
     };
 
     return (
-        <div className="min-h-screen bg-background flex justify-center px-4 py-8 sm:px-8 sm:py-12">
-            <div className="flex flex-col gap-5 w-full">
+        <OnboardingShell align="top">
+            <div className="flex w-full max-w-6xl flex-col gap-8">
                 {/* Header */}
-                <div className="flex items-center gap-3">
-                    <div className="inline-flex size-10 items-center justify-center rounded-xl bg-primary/10 shrink-0">
-                        <Building2 className="size-5 text-primary" />
-                    </div>
-                    <div>
-                        <h1 className="text-xl font-bold tracking-tight text-foreground leading-tight">
-                            Select Your Workspace
-                        </h1>
-                        <p className="text-xs text-muted-foreground leading-snug">
-                            Choose an organization or accept a pending
-                            invitation.
-                        </p>
-                    </div>
+                <div className="space-y-1.5">
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                        Choose your workspace
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                        Pick an organization to continue, or respond to a
+                        pending invitation.
+                    </p>
                 </div>
 
                 {/* Two-column body */}
@@ -140,12 +135,12 @@ export default function OrganizationSelector() {
                     {/* LEFT — Organizations */}
                     <div className="flex flex-col gap-4">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            <h2 className="text-sm font-semibold text-foreground">
                                 Your Organizations
                             </h2>
                             <Badge
                                 variant="secondary"
-                                className="text-xs font-medium"
+                                className="tabular text-xs font-medium"
                             >
                                 {organizationCards.length}{" "}
                                 {organizationCards.length === 1
@@ -159,6 +154,7 @@ export default function OrganizationSelector() {
                                 <OrganizationCard
                                     key={org.id}
                                     {...org}
+                                    logoUrl={org.__original.logoUrl}
                                     isSelected={false}
                                     onClick={() => handleOrgClick(org)}
                                 />
@@ -172,14 +168,14 @@ export default function OrganizationSelector() {
                                     e.key === "Enter" &&
                                     navigate("/org-setup/create")
                                 }
-                                className="group flex flex-col items-center justify-center gap-2.5 p-5 rounded-xl border-2 border-dashed border-border bg-card/50 cursor-pointer hover:border-primary/50 hover:bg-accent/30 transition-all duration-200 min-h-[170px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                className="group flex min-h-[124px] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-input bg-transparent p-4 transition-colors outline-none hover:border-primary/50 hover:bg-primary/[0.03] focus-visible:ring-3 focus-visible:ring-ring/40"
                             >
                                 <div className="size-10 rounded-full bg-muted group-hover:bg-primary/10 flex items-center justify-center transition-colors duration-200">
                                     <Plus className="size-5 text-muted-foreground group-hover:text-primary transition-colors duration-200" />
                                 </div>
                                 <div className="text-center">
                                     <p className="text-sm font-semibold text-foreground">
-                                        Create New
+                                        Create workspace
                                     </p>
                                     <p className="text-xs text-muted-foreground mt-0.5">
                                         Start a fresh workspace
@@ -194,14 +190,14 @@ export default function OrganizationSelector() {
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1.5">
                                 <MailOpen className="size-3.5 text-muted-foreground" />
-                                <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                <h2 className="text-sm font-semibold text-foreground">
                                     Pending Invitations
                                 </h2>
                             </div>
                             {invitations.length > 0 && (
                                 <Badge
                                     variant="secondary"
-                                    className="bg-primary/12 text-primary border border-primary/20 font-semibold text-xs"
+                                    className="tabular text-xs font-semibold"
                                 >
                                     {invitations.length}{" "}
                                     {invitations.length === 1
@@ -227,7 +223,7 @@ export default function OrganizationSelector() {
                                 ))}
                             </div>
                         ) : (
-                            <div className="text-center py-8 px-5 rounded-xl border border-dashed border-border bg-card/50 flex flex-col items-center gap-2">
+                            <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-input px-5 py-8 text-center">
                                 <div className="inline-flex size-10 items-center justify-center rounded-xl bg-muted/50">
                                     <Inbox className="size-5 text-muted-foreground" />
                                 </div>
@@ -244,19 +240,8 @@ export default function OrganizationSelector() {
                         )}
                     </div>
                 </div>
-
-                {/* Footer */}
-                <p className="text-center text-xs text-muted-foreground">
-                    Need help?{" "}
-                    <a
-                        href="#"
-                        className="text-primary hover:underline font-medium"
-                    >
-                        Contact support
-                    </a>
-                </p>
             </div>
-        </div>
+        </OnboardingShell>
     );
 }
 
@@ -277,13 +262,16 @@ function InvitationCard({
     const inviterColor = getColor(invitation.invitedBy);
 
     return (
-        <Card className="border hover:border-primary/35 hover:shadow-sm transition-all duration-200 bg-card">
+        <Card
+            size="sm"
+            className="py-0 transition-[border-color,box-shadow] hover:border-primary/35"
+        >
             <CardContent className="p-4">
                 {/* Top row: avatar + info + role badge */}
                 <div className="flex items-start gap-3">
                     {/* Org avatar */}
                     <div
-                        className="size-10 shrink-0 rounded-xl flex items-center justify-center text-white text-sm font-bold select-none"
+                        className="flex size-10 shrink-0 items-center justify-center rounded-lg text-sm font-semibold text-white select-none"
                         style={{ backgroundColor: orgColor }}
                     >
                         {orgInitials}
@@ -324,7 +312,7 @@ function InvitationCard({
                 </div>
 
                 {/* Bottom row: date + actions */}
-                <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-border/40">
+                <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-border">
                     <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
                         <Clock className="size-3 shrink-0" />
                         <span className="whitespace-nowrap">
@@ -336,7 +324,7 @@ function InvitationCard({
                             variant="outline"
                             size="sm"
                             onClick={onDecline}
-                            className="h-7 px-2.5 text-xs text-muted-foreground hover:text-destructive hover:border-destructive/50 transition-colors"
+                            className="h-7 px-2.5 text-xs hover:border-destructive/40 hover:text-destructive"
                         >
                             <X className="size-3" />
                             Decline

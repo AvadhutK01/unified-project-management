@@ -1,41 +1,37 @@
+import { CheckCircle2, FileText } from "lucide-react";
+import { SectionCard } from "@/components/common/SectionCard";
 import type { SprintOverviewTabProps } from "../types/sprint.types";
 
 const SprintOverviewTab = ({ sprint }: SprintOverviewTabProps) => {
     return (
-        <div className="grid grid-cols-1 gap-6">
-            <div className="p-6 rounded-2xl border border-border/60 bg-card/60 backdrop-blur-md shadow-xs">
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                    Description
-                </h3>
+        <div className="space-y-4">
+            <SectionCard title="Description" icon={FileText}>
                 {sprint.description ? (
                     <div
-                        className="prose dark:prose-invert max-w-none text-sm leading-relaxed text-foreground"
+                        className="rich-content overflow-x-auto"
                         dangerouslySetInnerHTML={{ __html: sprint.description }}
                     />
                 ) : (
-                    <p className="text-sm text-muted-foreground italic">
+                    <p className="text-[13px] text-muted-foreground">
                         No description provided for this sprint.
                     </p>
                 )}
-            </div>
+            </SectionCard>
 
-            <div className="p-6 rounded-2xl border border-border/60 bg-card/60 backdrop-blur-md shadow-xs">
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                    Acceptance Criteria
-                </h3>
+            <SectionCard title="Acceptance criteria" icon={CheckCircle2}>
                 {sprint.acceptanceCriteria ? (
                     <div
-                        className="prose dark:prose-invert max-w-none text-sm leading-relaxed text-foreground"
+                        className="rich-content overflow-x-auto"
                         dangerouslySetInnerHTML={{
                             __html: sprint.acceptanceCriteria,
                         }}
                     />
                 ) : (
-                    <p className="text-sm text-muted-foreground italic">
+                    <p className="text-[13px] text-muted-foreground">
                         No acceptance criteria defined for this sprint.
                     </p>
                 )}
-            </div>
+            </SectionCard>
         </div>
     );
 };

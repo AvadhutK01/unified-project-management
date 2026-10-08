@@ -9,49 +9,60 @@ interface StepperProps {
 
 export function Stepper({ steps, currentStep }: StepperProps) {
     return (
-        <div className="flex w-full items-start">
-            {steps.map((step, index) => (
-                <React.Fragment key={step}>
-                    <div className="flex flex-col items-center gap-2 shrink-0">
-                        <div
-                            className={cn(
-                                "flex size-9 items-center justify-center rounded-full border-2 text-sm font-semibold transition-all duration-300",
-                                index < currentStep
-                                    ? "border-primary bg-primary text-primary-foreground"
-                                    : index === currentStep
-                                      ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                                      : "border-border bg-card text-muted-foreground",
-                            )}
+        <ol
+            className="flex w-full items-center"
+            aria-label={`Step ${currentStep + 1} of ${steps.length}`}
+        >
+            {steps.map((step, index) => {
+                const done = index < currentStep;
+                const active = index === currentStep;
+                return (
+                    <React.Fragment key={step}>
+                        <li
+                            className="flex shrink-0 items-center gap-2"
+                            aria-current={active ? "step" : undefined}
                         >
-                            {index < currentStep ? (
-                                <CheckIcon className="size-4" />
-                            ) : (
-                                <span>{index + 1}</span>
-                            )}
-                        </div>
-                        <span
-                            className={cn(
-                                "text-xs font-medium text-center max-w-[80px] leading-tight",
-                                index <= currentStep
-                                    ? "text-foreground"
-                                    : "text-muted-foreground",
-                            )}
-                        >
-                            {step}
-                        </span>
-                    </div>
-                    {index < steps.length - 1 && (
-                        <div
-                            className={cn(
-                                "flex-1 h-[2px] mt-[1.1rem] mx-2 rounded-full transition-all duration-300",
-                                index < currentStep
-                                    ? "bg-primary"
-                                    : "bg-border",
-                            )}
-                        />
-                    )}
-                </React.Fragment>
-            ))}
-        </div>
+                            <span
+                                className={cn(
+                                    "flex size-7 items-center justify-center rounded-full text-xs font-semibold transition-colors duration-200",
+                                    done &&
+                                        "bg-primary text-primary-foreground",
+                                    active &&
+                                        "bg-primary text-primary-foreground ring-4 ring-primary/15",
+                                    !done &&
+                                        !active &&
+                                        "bg-muted text-muted-foreground ring-1 ring-border",
+                                )}
+                            >
+                                {done ? (
+                                    <CheckIcon className="size-3.5" />
+                                ) : (
+                                    index + 1
+                                )}
+                            </span>
+                            <span
+                                className={cn(
+                                    "hidden text-[13px] font-medium whitespace-nowrap sm:inline",
+                                    done || active
+                                        ? "text-foreground"
+                                        : "text-muted-foreground",
+                                )}
+                            >
+                                {step}
+                            </span>
+                        </li>
+                        {index < steps.length - 1 && (
+                            <li
+                                aria-hidden="true"
+                                className={cn(
+                                    "mx-3 h-px flex-1 transition-colors duration-200",
+                                    done ? "bg-primary" : "bg-border",
+                                )}
+                            />
+                        )}
+                    </React.Fragment>
+                );
+            })}
+        </ol>
     );
 }

@@ -1,17 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
-    ChevronLeft,
-    ChevronRight,
-    Edit,
-    Eye,
-    ListTodo,
-    Search,
-    Trash2,
-} from "lucide-react";
+    Link,
+    useNavigate,
+    useParams,
+    useSearchParams,
+} from "react-router-dom";
+import { Eye, Layers, ListTodo, Pencil, Trash2 } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
-import { Badge } from "@/components/ui/badge";
-import { useDebounce } from "@/lib/utils";
+import { formatDate, useDebounce } from "@/lib/utils";
 import { useConfirm } from "@/providers/ConfirmProvider";
 import { toast } from "sonner";
 import { usePermission } from "@/features/rbac/hooks/usePermission";
@@ -19,13 +15,21 @@ import { PERMISSIONS } from "@/features/rbac/types/rbac.types";
 import AddPhaseModal from "../components/AddPhaseModal";
 import EditPhaseModal, { type Phase } from "../components/EditPhaseModal";
 import { usePhasesQuery, useDeletePhaseMutation } from "../hooks/usePhases";
+import { PHASE_STATUS_LABELS } from "../schema/phases.schema";
+import { useProjectByIdQuery } from "@/features/projects/hooks/useProjects";
+import { PageContainer, PageHeader } from "@/components/common/PageHeader";
 import {
-    PHASE_STATUS_STYLES,
-    PHASE_STATUS_LABELS,
-} from "../schema/phases.schema";
+    IconAction,
+    Pagination,
+    SearchInput,
+    Toolbar,
+} from "@/components/common/Toolbar";
+import { StatusBadge } from "@/components/common/StatusBadge";
+import { EmptyState } from "@/components/common/EmptyState";
+import { LIFECYCLE_TONE } from "@/lib/tones";
 
 const Phases = () => {
-    const { id: projectId } = useParams<{ id: string }>();
+    const { id: projectId, slug } = useParams<{ id: string; slug: string }>();
     const [searchParams, setSearchParams] = useSearchParams();
     const [search, setSearch] = useState("");
     const [editPhase, setEditPhase] = useState<Phase | null>(null);
@@ -56,6 +60,9 @@ const Phases = () => {
     const confirm = useConfirm();
     const { mutate: deletePhaseMutation } = useDeletePhaseMutation();
     const { hasPermission } = usePermission();
+    const { data: projectRes } = useProjectByIdQuery(projectId);
+    const projectName: string | undefined =
+        projectRes?.data?.title ?? projectRes?.data?.name;
 
     const canView = hasPermission(PERMISSIONS.PHASES.VIEW);
     const canEdit = hasPermission(PERMISSIONS.PHASES.EDIT);
@@ -71,6 +78,7 @@ const Phases = () => {
             next.delete("page");
             return next;
         });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [debouncedSearch]);
 
     const { data: phasesData, isLoading } = usePhasesQuery(
@@ -96,104 +104,135 @@ const Phases = () => {
     const totalPages = phasesData?.data?.pagination?.totalPages ?? 0;
     const safePage = Math.min(currentPage, totalPages || 1);
 
+    const handleDelete = async (phase: Phase) => {
+        const confirmed = await confirm({
+            title: `Delete ${phase.name}?`,
+            description: `Are you sure you want to delete ${phase.name}? This action cannot be undone.`,
+            confirmText: "Delete",
+            cancelText: "Cancel",
+        });
+        if (!confirmed) return;
+        deletePhaseMutation(phase.id, {
+            onSuccess: () => {
+                toast.success(`${phase.name} has been deleted.`);
+            },
+            onError: (error: any) => {
+                toast.error(
+                    error?.response?.data?.message ||
+                        `Failed to delete ${phase.name}. Please try again.`,
+                );
+            },
+        });
+    };
+
     const columns = useMemo<DataTableColumn<Phase>[]>(
         () => [
-            { key: "name", label: "Name" },
-            { key: "type", label: "Type" },
+            {
+                key: "name",
+                label: "Phase",
+                render: (phase) => (
+                    <div className="flex max-w-[22rem] min-w-0 items-center gap-3">
+                        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
+                            <Layers className="size-4" />
+                        </span>
+                        {canView ? (
+                            <Link
+                                to={`${phase.id}`}
+                                className="truncate font-medium text-foreground hover:text-primary"
+                            >
+                                {phase.name}
+                            </Link>
+                        ) : (
+                            <span className="truncate font-medium text-foreground">
+                                {phase.name}
+                            </span>
+                        )}
+                    </div>
+                ),
+            },
+            {
+                key: "type",
+                label: "Type",
+                render: (phase) => (
+                    <span className="inline-flex h-5.5 items-center rounded-md border border-border bg-muted/60 px-2 text-xs font-medium text-muted-foreground">
+                        {phase.type}
+                    </span>
+                ),
+            },
             {
                 key: "status",
                 label: "Status",
                 render: (phase) => (
-                    <Badge
-                        variant="outline"
-                        className={PHASE_STATUS_STYLES[phase.status] ?? ""}
+                    <StatusBadge
+                        tone={LIFECYCLE_TONE[phase.status] ?? "neutral"}
                     >
                         {PHASE_STATUS_LABELS[phase.status] ?? phase.status}
-                    </Badge>
+                    </StatusBadge>
                 ),
             },
             {
                 key: "startDate",
-                label: "Start Date",
+                label: "Start",
                 className: "hidden sm:table-cell",
+                render: (phase) => (
+                    <span className="tabular text-[13px] text-muted-foreground">
+                        {phase.startDate ? formatDate(phase.startDate) : "—"}
+                    </span>
+                ),
             },
             {
                 key: "endDate",
-                label: "End Date",
+                label: "End",
                 className: "hidden sm:table-cell",
+                render: (phase) => (
+                    <span className="tabular text-[13px] text-muted-foreground">
+                        {phase.endDate ? formatDate(phase.endDate) : "—"}
+                    </span>
+                ),
             },
             ...(hasAnyAction
                 ? [
                       {
                           key: "actions" as const,
-                          label: "Actions",
-                          className: "w-28 text-right",
+                          label: "",
+                          className: "w-px text-right",
                           render: (phase: Phase) => (
-                              <div className="flex items-center justify-end gap-2">
+                              <div className="flex items-center justify-end gap-0.5">
                                   {canView && (
-                                      <button
-                                          title={`View ${phase.name}`}
+                                      <IconAction
+                                          label={`Open ${phase.name}`}
+                                          icon={Eye}
                                           onClick={() =>
                                               navigate(`${phase.id}`)
                                           }
-                                          className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
-                                      >
-                                          <Eye className="size-4" />
-                                      </button>
+                                      />
+                                  )}
+                                  {hasSprintAccess && (
+                                      <IconAction
+                                          label="Sprints"
+                                          icon={ListTodo}
+                                          onClick={() =>
+                                              navigate(`${phase.id}/sprints`)
+                                          }
+                                      />
                                   )}
                                   {canEdit && (
-                                      <button
-                                          title={`Edit ${phase.name}`}
+                                      <IconAction
+                                          label={`Edit ${phase.name}`}
+                                          icon={Pencil}
                                           onClick={() => {
                                               setEditPhase(phase);
                                               setEditModalOpen(true);
                                           }}
-                                          className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
-                                      >
-                                          <Edit className="size-4" />
-                                      </button>
+                                      />
                                   )}
                                   {canDelete && (
-                                      <button
-                                          title={`Delete ${phase.name}`}
-                                          onClick={async () => {
-                                              const confirmed = await confirm({
-                                                  title: `Delete ${phase.name}?`,
-                                                  description: `Are you sure you want to delete ${phase.name}? This action cannot be undone.`,
-                                                  confirmText: "Delete",
-                                                  cancelText: "Cancel",
-                                              });
-                                              if (!confirmed) return;
-                                              deletePhaseMutation(phase.id, {
-                                                  onSuccess: () => {
-                                                      toast.success(
-                                                          `${phase.name} has been deleted.`,
-                                                      );
-                                                  },
-                                                  onError: (error: any) => {
-                                                      toast.error(
-                                                          error?.response?.data
-                                                              ?.message ||
-                                                              `Failed to delete ${phase.name}. Please try again.`,
-                                                      );
-                                                  },
-                                              });
-                                          }}
-                                          className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
-                                      >
-                                          <Trash2 className="size-4" />
-                                      </button>
-                                  )}
-                                  {hasSprintAccess && (
-                                      <button
-                                          title={`Sprint of ${phase.name}`}
-                                          onClick={() =>
-                                              navigate(`${phase.id}/sprints`)
-                                          }
-                                          className="inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
-                                      >
-                                          <ListTodo className="size-4" />
-                                      </button>
+                                      <IconAction
+                                          label={`Delete ${phase.name}`}
+                                          icon={Trash2}
+                                          tone="danger"
+                                          onClick={() => handleDelete(phase)}
+                                      />
                                   )}
                               </div>
                           ),
@@ -201,34 +240,38 @@ const Phases = () => {
                   ]
                 : []),
         ],
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [hasAnyAction, canView, canEdit, canDelete],
     );
 
     return (
-        <div className="p-4 sm:p-6 space-y-5">
-            <div>
-                <h1 className="text-lg font-semibold text-foreground">
-                    Phases
-                </h1>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                    Manage project phases and timelines
-                </p>
-            </div>
+        <PageContainer>
+            <PageHeader
+                breadcrumbs={[
+                    { label: "Projects", to: `/${slug}/projects` },
+                    {
+                        label: projectName || "Project",
+                        to: `/${slug}/projects/${projectId}`,
+                    },
+                    { label: "Phases" },
+                ]}
+                title="Phases"
+                description="Organize the project into milestones and track each phase's timeline."
+                actions={<AddPhaseModal />}
+            />
 
-            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <AddPhaseModal />
-
-                <div className="relative w-full sm:w-auto sm:min-w-xs">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                    <input
-                        type="text"
-                        placeholder="Search phases..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-border bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-primary transition"
-                    />
-                </div>
-            </div>
+            <Toolbar>
+                <SearchInput
+                    value={search}
+                    onChange={setSearch}
+                    placeholder="Search phases…"
+                />
+                {!isLoading && (
+                    <span className="tabular text-[13px] text-muted-foreground sm:ml-1">
+                        {totalPhases} phase{totalPhases !== 1 ? "s" : ""}
+                    </span>
+                )}
+            </Toolbar>
 
             <DataTable
                 columns={columns}
@@ -237,50 +280,25 @@ const Phases = () => {
                 hasActiveFilters={search.length > 0}
                 showDefaultFooter={false}
                 loading={isLoading}
+                emptyState={
+                    <EmptyState
+                        icon={Layers}
+                        title="No phases yet"
+                        description="Add a phase to break this project into clear milestones."
+                    />
+                }
             />
 
-            {totalPages > 0 && (
-                <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
-                    <p className="text-xs text-muted-foreground px-1">
-                        Showing{" "}
-                        <span className="font-medium text-foreground">
-                            {phases.length}
-                        </span>{" "}
-                        of{" "}
-                        <span className="font-medium text-foreground">
-                            {totalPhases}
-                        </span>{" "}
-                        phase{totalPhases !== 1 ? "s" : ""}
-                    </p>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setPage((p) => Math.max(1, p - 1))}
-                            disabled={safePage === 1}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                        >
-                            <ChevronLeft className="w-4 h-4" />
-                        </button>
-                        <span className="text-xs text-muted-foreground px-2">
-                            Page{" "}
-                            <span className="font-medium text-foreground">
-                                {safePage}
-                            </span>{" "}
-                            of{" "}
-                            <span className="font-medium text-foreground">
-                                {totalPages}
-                            </span>
-                        </span>
-                        <button
-                            onClick={() =>
-                                setPage((p) => Math.min(totalPages, p + 1))
-                            }
-                            disabled={safePage === totalPages}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                        >
-                            <ChevronRight className="w-4 h-4" />
-                        </button>
-                    </div>
-                </div>
+            {totalPages > 0 && phases.length > 0 && (
+                <Pagination
+                    page={safePage}
+                    totalPages={totalPages}
+                    onPrevious={() => setPage((p) => Math.max(1, p - 1))}
+                    onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    shown={phases.length}
+                    total={totalPhases}
+                    noun="phase"
+                />
             )}
 
             <EditPhaseModal
@@ -291,7 +309,7 @@ const Phases = () => {
                     if (!val) setEditPhase(null);
                 }}
             />
-        </div>
+        </PageContainer>
     );
 };
 

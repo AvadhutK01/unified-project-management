@@ -6,7 +6,7 @@ import {
     Loader2,
     Info,
     AlertTriangle,
-    CheckCircle,
+    CheckCircle2,
     XCircle,
 } from "lucide-react";
 import { useNotificationStore } from "@/store/notification.store";
@@ -17,12 +17,23 @@ import {
 } from "@/features/notifications/hooks/useNotifications";
 import type { Notification } from "@/features/notifications/types/notification.types";
 import { getNotificationRoute } from "@/features/notifications/utils/notification-router";
+import { cn } from "@/lib/utils";
+import { TONE_ICON, type Tone } from "@/lib/tones";
+import { EmptyState } from "./EmptyState";
+import { ListSkeleton } from "./Skeletons";
 
 const typeIcon: Record<string, typeof Bell> = {
     info: Info,
     warning: AlertTriangle,
-    success: CheckCircle,
+    success: CheckCircle2,
     error: XCircle,
+};
+
+const typeTone: Record<string, Tone> = {
+    info: "info",
+    warning: "warning",
+    success: "success",
+    error: "danger",
 };
 
 const NotificationItem = ({
@@ -33,43 +44,50 @@ const NotificationItem = ({
     onClick: (notification: Notification) => void;
 }) => {
     const Icon = typeIcon[notification.type] ?? Bell;
+    const tone = typeTone[notification.type] ?? "info";
 
     return (
         <button
             onClick={() => onClick(notification)}
-            className={`w-full text-left px-4 py-3 border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer ${!notification.isRead ? "bg-blue-50/50 dark:bg-blue-900/10" : ""}`}
+            className={cn(
+                "flex w-full items-start gap-3 px-4 py-3 text-left transition-colors outline-none hover:bg-accent/60 focus-visible:bg-accent",
+                !notification.isRead && "bg-primary/[0.035]",
+            )}
         >
-            <div className="flex items-start gap-3">
-                <Icon
-                    className={`w-4 h-4 mt-0.5 shrink-0 ${
-                        notification.type === "error"
-                            ? "text-red-500"
-                            : notification.type === "warning"
-                              ? "text-amber-500"
-                              : notification.type === "success"
-                                ? "text-emerald-500"
-                                : "text-blue-500"
-                    }`}
-                />
-                <div className="flex-1 min-w-0">
-                    <p
-                        className={`text-sm leading-snug ${!notification.isRead ? "font-semibold text-gray-900 dark:text-gray-100" : "font-medium text-gray-700 dark:text-gray-300"}`}
-                    >
-                        {notification.title}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">
-                        {notification.message}
-                    </p>
-                    <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">
-                        {formatDistanceToNow(new Date(notification.createdAt), {
-                            addSuffix: true,
-                        })}
-                    </p>
-                </div>
-                {!notification.isRead && (
-                    <span className="h-2 w-2 rounded-full bg-blue-500 shrink-0 mt-1.5" />
+            <span
+                className={cn(
+                    "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md",
+                    TONE_ICON[tone],
                 )}
-            </div>
+            >
+                <Icon className="size-3.5" />
+            </span>
+            <span className="min-w-0 flex-1">
+                <span
+                    className={cn(
+                        "block text-[13px] leading-snug",
+                        notification.isRead
+                            ? "font-medium text-foreground/80"
+                            : "font-semibold text-foreground",
+                    )}
+                >
+                    {notification.title}
+                </span>
+                <span className="mt-0.5 line-clamp-2 block text-xs leading-relaxed text-muted-foreground">
+                    {notification.message}
+                </span>
+                <span className="mt-1 block text-[11px] text-muted-foreground/80">
+                    {formatDistanceToNow(new Date(notification.createdAt), {
+                        addSuffix: true,
+                    })}
+                </span>
+            </span>
+            {!notification.isRead && (
+                <span
+                    aria-label="Unread"
+                    className="mt-2 size-2 shrink-0 rounded-full bg-primary"
+                />
+            )}
         </button>
     );
 };
@@ -80,8 +98,9 @@ const NotificationPanel = () => {
     const setPanelOpen = useNotificationStore((s) => s.setPanelOpen);
     const markReadLocal = useNotificationStore((s) => s.markRead);
     const markAllReadLocal = useNotificationStore((s) => s.markAllRead);
+    const unreadCount = useNotificationStore((s) => s.unreadCount);
 
-    const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
         useNotificationsQuery(20);
     const markAsReadMutation = useMarkAsReadMutation();
     const markAllAsReadMutation = useMarkAllAsReadMutation();
@@ -111,35 +130,51 @@ const NotificationPanel = () => {
         <>
             <div
                 className="fixed inset-0 z-40"
+                aria-hidden="true"
                 onClick={() => setPanelOpen(false)}
             />
-            <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-card rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden z-50">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                        Notifications
-                    </h3>
+            <div
+                role="dialog"
+                aria-label="Notifications"
+                className="fixed inset-x-3 top-16 z-50 overflow-hidden rounded-xl border border-border bg-popover shadow-elevated animate-in fade-in-0 slide-in-from-top-1 sm:absolute sm:inset-x-auto sm:top-full sm:right-0 sm:mt-2 sm:w-96"
+            >
+                <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                    <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-semibold text-foreground">
+                            Notifications
+                        </h3>
+                        {unreadCount > 0 && (
+                            <span className="tabular rounded-full bg-primary/10 px-1.5 py-px text-[11px] font-semibold text-primary">
+                                {unreadCount} new
+                            </span>
+                        )}
+                    </div>
                     <button
                         onClick={handleMarkAllRead}
                         disabled={markAllAsReadMutation.isPending}
-                        className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                        className="flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
                     >
                         {markAllAsReadMutation.isPending ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
+                            <Loader2 className="size-3.5 animate-spin" />
                         ) : (
-                            <CheckCheck className="w-3 h-3" />
+                            <CheckCheck className="size-3.5" />
                         )}
                         Mark all as read
                     </button>
                 </div>
 
-                <div className="max-h-96 overflow-y-auto">
-                    {notifications.length === 0 ? (
-                        <div className="py-12 text-center">
-                            <Bell className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                No notifications yet
-                            </p>
+                <div className="max-h-[min(28rem,calc(100dvh-9rem))] divide-y divide-border overflow-y-auto">
+                    {isLoading ? (
+                        <div className="p-4">
+                            <ListSkeleton rows={4} />
                         </div>
+                    ) : notifications.length === 0 ? (
+                        <EmptyState
+                            icon={Bell}
+                            title="You're all caught up"
+                            description="Mentions, assignments and updates will appear here."
+                            size="sm"
+                        />
                     ) : (
                         <>
                             {notifications.map((notification) => (
@@ -153,10 +188,10 @@ const NotificationPanel = () => {
                                 <button
                                     onClick={() => fetchNextPage()}
                                     disabled={isFetchingNextPage}
-                                    className="w-full py-2.5 text-xs text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer disabled:opacity-50"
+                                    className="flex w-full items-center justify-center py-2.5 text-xs font-medium text-primary transition-colors hover:bg-accent/60 disabled:opacity-50"
                                 >
                                     {isFetchingNextPage ? (
-                                        <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                                        <Loader2 className="size-4 animate-spin" />
                                     ) : (
                                         "Load more"
                                     )}

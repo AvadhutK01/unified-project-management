@@ -1,9 +1,10 @@
 import { useState, useRef, useMemo } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { FileText, MessageSquare, Paperclip, History } from "lucide-react";
 import { toast } from "sonner";
 import { useConfirm } from "@/providers/ConfirmProvider";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { DetailTabsList } from "@/components/common/collab/DetailTabsList";
+import { PageContainer } from "@/components/common/PageHeader";
 
 import {
     useWorkItemQuery,
@@ -282,7 +283,7 @@ const WorkItemDetailsPage = () => {
     const mediaCount = mediaList.length;
 
     return (
-        <div className="p-4 sm:p-6 space-y-6 max-w-[1400px] mx-auto">
+        <PageContainer>
             <WorkItemDetailsHeader
                 workItem={workItem}
                 project={project}
@@ -300,65 +301,23 @@ const WorkItemDetailsPage = () => {
                 onStatusChange={handleStatusChange}
             />
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-6">
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+                <div className="min-w-0 space-y-6 xl:col-span-2">
                     <Tabs
                         value={activeTab}
                         onValueChange={setActiveTab}
                         className="w-full"
                     >
-                        <TabsList className="bg-secondary/60 border border-border/40 rounded-xl p-1 w-full sm:w-auto flex flex-wrap gap-1">
-                            <TabsTrigger
-                                value="overview"
-                                className="flex items-center gap-2 px-4 py-2 font-semibold hover:text-primary data-active:bg-primary/10 data-active:text-primary"
-                            >
-                                <FileText className="size-4" />
-                                <span>Overview</span>
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="comments"
-                                className="flex items-center gap-2 px-4 py-2 font-semibold hover:text-primary data-active:bg-primary/10 data-active:text-primary"
-                            >
-                                <MessageSquare className="size-4" />
-                                <span>Comments</span>
-                                {discussionCount > 0 && (
-                                    <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded-full text-[10px] font-bold">
-                                        {discussionCount}
-                                    </span>
-                                )}
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="attachments"
-                                className="flex items-center gap-2 px-4 py-2 font-semibold hover:text-primary data-active:bg-primary/10 data-active:text-primary"
-                            >
-                                <Paperclip className="size-4" />
-                                <span>Attachments</span>
-                                {mediaCount > 0 && (
-                                    <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded-full text-[10px] font-bold">
-                                        {mediaCount}
-                                    </span>
-                                )}
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="activities"
-                                className="flex items-center gap-2 px-4 py-2 font-semibold hover:text-primary data-active:bg-primary/10 data-active:text-primary"
-                            >
-                                <History className="size-4" />
-                                <span>Activity Log</span>
-                            </TabsTrigger>
-                        </TabsList>
+                        <DetailTabsList
+                            commentCount={discussionCount}
+                            attachmentCount={mediaCount}
+                        />
 
-                        <TabsContent
-                            value="overview"
-                            className="mt-4 focus-visible:outline-hidden"
-                        >
+                        <TabsContent value="overview" className="mt-5">
                             <WorkItemOverviewTab workItem={workItem} />
                         </TabsContent>
 
-                        <TabsContent
-                            value="comments"
-                            className="mt-4 focus-visible:outline-hidden"
-                        >
+                        <TabsContent value="comments" className="mt-5">
                             <WorkItemCommentsTab
                                 workItemId={workItemId!}
                                 discussions={discussions}
@@ -376,10 +335,7 @@ const WorkItemDetailsPage = () => {
                             />
                         </TabsContent>
 
-                        <TabsContent
-                            value="attachments"
-                            className="mt-4 focus-visible:outline-hidden"
-                        >
+                        <TabsContent value="attachments" className="mt-5">
                             <WorkItemAttachmentsTab
                                 mediaList={mediaList}
                                 isMediaLoading={isMediaLoading}
@@ -394,10 +350,7 @@ const WorkItemDetailsPage = () => {
                             />
                         </TabsContent>
 
-                        <TabsContent
-                            value="activities"
-                            className="mt-4 focus-visible:outline-hidden"
-                        >
+                        <TabsContent value="activities" className="mt-5">
                             <WorkItemActivitiesTab
                                 activities={activities}
                                 isActivitiesLoading={isActivitiesLoading}
@@ -411,7 +364,7 @@ const WorkItemDetailsPage = () => {
                     </Tabs>
                 </div>
 
-                <div className="space-y-6 lg:sticky lg:top-6 self-start">
+                <div className="self-start xl:sticky xl:top-6">
                     <WorkItemDetailsCard
                         workItem={workItem}
                         project={project}
@@ -429,7 +382,7 @@ const WorkItemDetailsPage = () => {
                     toast.success("Work item updated successfully");
                 }}
             />
-        </div>
+        </PageContainer>
     );
 };
 

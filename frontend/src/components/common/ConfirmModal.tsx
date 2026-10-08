@@ -1,4 +1,4 @@
-// using JSX runtime
+import { AlertTriangle } from "lucide-react";
 import {
     AlertDialog,
     AlertDialogContent,
@@ -31,24 +31,24 @@ export default function ConfirmModal({
 }: ConfirmModalProps) {
     return (
         <AlertDialog open={open} onOpenChange={(o) => !o && onCancel()}>
-            <AlertDialogContent size="sm">
-                <AlertDialogHeader>
+            <AlertDialogContent size="sm" className="gap-5">
+                <AlertDialogHeader className="place-items-start text-left">
+                    <div className="mb-1 flex size-10 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                        <AlertTriangle className="size-5" />
+                    </div>
                     <AlertDialogTitle>{title}</AlertDialogTitle>
                     {description && (
-                        <AlertDialogDescription>
+                        <AlertDialogDescription className="leading-relaxed">
                             {description}
                         </AlertDialogDescription>
                     )}
                 </AlertDialogHeader>
 
-                <AlertDialogFooter>
-                    <AlertDialogCancel onClick={onCancel}>
+                <AlertDialogFooter className="grid grid-cols-2 gap-2">
+                    <AlertDialogCancel variant="outline" onClick={onCancel}>
                         {cancelText}
                     </AlertDialogCancel>
-                    <AlertDialogAction
-                        onClick={onConfirm}
-                        className="bg-red-600 text-white"
-                    >
+                    <AlertDialogAction variant="danger" onClick={onConfirm}>
                         {confirmText}
                     </AlertDialogAction>
                 </AlertDialogFooter>

@@ -1,6 +1,6 @@
 import { useState } from "react";
+import { BrandLogo } from "@/components/common/BrandLogo";
 import { useNavigate } from "react-router-dom";
-import { Layers } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { LoginBrandPanel } from "../components/LoginBrandPanel";
@@ -34,19 +34,12 @@ const ForgotPassword = () => {
     const stepTitles = ["Enter email", "Verify code", "Reset password"];
 
     return (
-        <div className="flex min-h-screen bg-background">
+        <div className="flex min-h-dvh bg-background">
             <LoginBrandPanel />
 
             <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
                 <div className="w-full max-w-100 space-y-7">
-                    <div className="flex items-center gap-2 lg:hidden">
-                        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                            <Layers className="w-4 h-4 text-primary-foreground" />
-                        </div>
-                        <span className="font-bold text-lg text-foreground">
-                            Unified
-                        </span>
-                    </div>
+                    <BrandLogo className="lg:hidden" />
 
                     <div className="flex items-center gap-2">
                         {[1, 2, 3].map((s) => (

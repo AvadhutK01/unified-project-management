@@ -1,12 +1,18 @@
 import { create } from "zustand";
 
+/** Presence states emitted by the realtime server. */
+export type PresenceStatus =
+    | "active"
+    | "online"
+    | "away"
+    | "offline"
+    | "onleave"
+    | "on_leave";
+
 interface PresenceState {
-    presenceMap: Record<string, "active" | "away" | "offline">;
-    setPresence: (
-        memberId: string,
-        status: "active" | "away" | "offline",
-    ) => void;
-    syncPresence: (map: Record<string, "active" | "away" | "offline">) => void;
+    presenceMap: Record<string, PresenceStatus>;
+    setPresence: (memberId: string, status: PresenceStatus) => void;
+    syncPresence: (map: Record<string, PresenceStatus>) => void;
     clearPresence: () => void;
 }
 

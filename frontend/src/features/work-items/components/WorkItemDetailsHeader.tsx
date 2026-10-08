@@ -1,20 +1,16 @@
-import { Link } from "react-router-dom";
-import { ArrowLeft, ChevronRight, Edit, Trash2 } from "lucide-react";
+import { Pencil, Trash2, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-    Select,
-    SelectTrigger,
-    SelectValue,
-    SelectContent,
-    SelectItem,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { MetaItem, PageHeader } from "@/components/common/PageHeader";
+import { StatusBadge } from "@/components/common/StatusBadge";
+import { WorkflowStatusSelect } from "@/components/common/WorkflowStatusSelect";
+import { MemberAvatar } from "@/components/common/MemberAvatar";
+import { WORKFLOW_TONE } from "@/lib/tones";
 import {
     WORK_ITEM_STATUS_OPTIONS,
-    STATUS_STYLES,
     STATUS_LABELS,
 } from "../constants/workitem.constants";
 import type { WorkItem, WorkItemStatus } from "../types/workitem.types";
+import { WorkItemTypeBadge, WorkItemTypeIcon } from "./WorkItemTypeBadge";
 
 interface WorkItemDetailsHeaderProps {
     workItem: WorkItem;
@@ -49,127 +45,87 @@ const WorkItemDetailsHeader = ({
     onDelete,
     onStatusChange,
 }: WorkItemDetailsHeaderProps) => {
+    const phasesHref = `/${slug}/projects/${projectId}/phases`;
+    const sprintHref = `${phasesHref}/${phaseId}/sprints/${sprintId}`;
+    const status = workItem.status as WorkItemStatus;
+
     return (
-        <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                <Link
-                    to={`/${slug}/projects/${projectId}/phases`}
-                    className="hover:text-foreground transition-colors"
-                >
-                    {project?.name || "Project"}
-                </Link>
-                <ChevronRight className="size-3" />
-                <Link
-                    to={`/${slug}/projects/${projectId}/phases/${phaseId}/sprints`}
-                    className="hover:text-foreground transition-colors"
-                >
-                    {phaseName || "Phase"}
-                </Link>
-                <ChevronRight className="size-3" />
-                <Link
-                    to={`/${slug}/projects/${projectId}/phases/${phaseId}/sprints/${sprintId}`}
-                    className="hover:text-foreground transition-colors"
-                >
-                    {sprintName || "Sprint"}
-                </Link>
-                <ChevronRight className="size-3" />
-                <Link
-                    to={`/${slug}/projects/${projectId}/phases/${phaseId}/sprints/${sprintId}/work-items`}
-                    className="hover:text-foreground transition-colors"
-                >
-                    Work Items
-                </Link>
-                <ChevronRight className="size-3" />
-                <span className="text-foreground/80 truncate max-w-[150px]">
-                    {workItem.title}
+        <PageHeader
+            breadcrumbs={[
+                { label: "Projects", to: `/${slug}/projects` },
+                {
+                    label: project?.name || "Project",
+                    to: `/${slug}/projects/${projectId}`,
+                },
+                {
+                    label: phaseName || "Phase",
+                    to: `${phasesHref}/${phaseId}`,
+                },
+                { label: sprintName || "Sprint", to: sprintHref },
+                { label: "Work items", to: `${sprintHref}/work-items` },
+                { label: workItem.title },
+            ]}
+            media={
+                <span className="hidden sm:block">
+                    <WorkItemTypeIcon type={workItem.type} />
                 </span>
-            </div>
-
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-1">
-                <div className="flex items-center gap-4">
-                    <Link
-                        to={`/${slug}/projects/${projectId}/phases/${phaseId}/sprints/${sprintId}/work-items`}
-                        className="p-2 bg-secondary/80 hover:bg-secondary text-muted-foreground hover:text-foreground rounded-xl border border-border/40 transition-all hover:scale-105"
-                    >
-                        <ArrowLeft className="size-4" />
-                    </Link>
-                    <div>
-                        <div className="flex flex-wrap items-center gap-3">
-                            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                                {workItem.title}
-                            </h1>
-                            <span
-                                className={cn(
-                                    "px-2.5 py-0.5 text-xs font-semibold rounded-full border shadow-2xs transition-colors duration-200",
-                                    STATUS_STYLES[
-                                        workItem.status as WorkItemStatus
-                                    ] ||
-                                        "bg-secondary text-secondary-foreground",
-                                )}
-                            >
-                                {
-                                    STATUS_LABELS[
-                                        workItem.status as WorkItemStatus
-                                    ]
-                                }
+            }
+            title={workItem.title}
+            meta={
+                <>
+                    <WorkItemTypeBadge type={workItem.type} />
+                    <StatusBadge tone={WORKFLOW_TONE[status] ?? "neutral"}>
+                        {STATUS_LABELS[status] ?? workItem.status}
+                    </StatusBadge>
+                </>
+            }
+            details={
+                workItem.assignedToName ? (
+                    <span className="inline-flex items-center gap-2">
+                        <MemberAvatar
+                            name={workItem.assignedToName}
+                            status={workItem.assignedToStatus || "active"}
+                            size="sm"
+                            memberId={workItem.assignedToUserId || undefined}
+                        />
+                        <span>
+                            Assigned to{" "}
+                            <span className="font-medium text-foreground">
+                                {workItem.assignedToName}
                             </span>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2.5">
-                    {canChangeStatus && (
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden sm:inline">
-                                Status:
-                            </span>
-                            <Select
+                        </span>
+                    </span>
+                ) : (
+                    <MetaItem icon={UserRound}>Unassigned</MetaItem>
+                )
+            }
+            actions={
+                (canChangeStatus || canEdit || canDelete) && (
+                    <>
+                        {canChangeStatus && (
+                            <WorkflowStatusSelect
                                 value={workItem.status}
-                                onValueChange={onStatusChange}
-                            >
-                                <SelectTrigger className="w-[130px] h-9 rounded-xl bg-card border-border/40 shadow-xs ring-0!">
-                                    <SelectValue placeholder="Status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {WORK_ITEM_STATUS_OPTIONS.map((option) => (
-                                        <SelectItem
-                                            key={option.value}
-                                            value={option.value}
-                                        >
-                                            {option.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    )}
-
-                    {canEdit && (
-                        <Button
-                            onClick={onEdit}
-                            variant="outline"
-                            size="sm"
-                            className="h-9 rounded-xl border-border/40 bg-card hover:bg-secondary shadow-xs gap-1.5"
-                        >
-                            <Edit className="size-4" />
-                            <span>Edit</span>
-                        </Button>
-                    )}
-
-                    {canDelete && (
-                        <Button
-                            onClick={onDelete}
-                            variant="destructive"
-                            size="sm"
-                            className="h-9 rounded-xl shadow-xs gap-1.5"
-                        >
-                            <Trash2 className="size-4" />
-                            <span>Delete</span>
-                        </Button>
-                    )}
-                </div>
-            </div>
-        </div>
+                                onChange={onStatusChange}
+                                options={WORK_ITEM_STATUS_OPTIONS}
+                                label="Work item status"
+                            />
+                        )}
+                        {canEdit && (
+                            <Button onClick={onEdit} variant="outline">
+                                <Pencil />
+                                Edit
+                            </Button>
+                        )}
+                        {canDelete && (
+                            <Button onClick={onDelete} variant="destructive">
+                                <Trash2 />
+                                Delete
+                            </Button>
+                        )}
+                    </>
+                )
+            }
+        />
     );
 };
 

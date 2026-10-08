@@ -1,21 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-    Search,
     UserPlus,
     UserMinus,
     Users,
-    ChevronLeft,
-    ChevronRight,
     Eye,
-    Edit,
+    Pencil,
     MessageSquare,
+    Lock,
 } from "lucide-react";
 import { useDirectChat } from "@/features/chat/context/DirectChatContext";
 import { DataTable, type DataTableColumn } from "@/components/common/DataTable";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatDate, useDebounce } from "@/lib/utils";
+import { cn, formatDate, useDebounce } from "@/lib/utils";
 import { InviteMembersModal } from "../components/InviteMembersModal";
 import { EditMemberModal } from "../components/EditMemberModal";
 import { toast } from "sonner";
@@ -29,12 +26,18 @@ import { isAtLeastPlan } from "@/features/subscriptions/utils/subscriptionHelper
 import { useOrganizationStore } from "@/store/organization.store";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { usePresenceStore } from "@/features/presence/store/presence.store";
-
-const ROLE_STYLES: Record<string, string> = {
-    Admin: "bg-primary/10 text-primary border-primary/20",
-    Member: "bg-secondary text-secondary-foreground",
-    Viewer: "bg-muted text-muted-foreground",
-};
+import { PageContainer, PageHeader } from "@/components/common/PageHeader";
+import {
+    IconAction,
+    Pagination,
+    SearchInput,
+    Toolbar,
+} from "@/components/common/Toolbar";
+import { StatusBadge } from "@/components/common/StatusBadge";
+import { EmptyState } from "@/components/common/EmptyState";
+import { SimpleTooltip } from "@/components/ui/tooltip";
+import type { Tone } from "@/lib/tones";
+import { MembersNav } from "../components/MembersNav";
 
 const MemberChatButton = ({
     member,
@@ -75,23 +78,36 @@ const MemberChatButton = ({
     };
 
     return (
-        <button
-            onClick={handleClick}
-            title={`Chat with ${member.name}`}
-            className={`relative inline-flex items-center gap-1.5 px-2 py-1.5 rounded-lg border transition-colors cursor-pointer text-xs font-medium ${
+        <SimpleTooltip
+            label={
                 hasProPlan
-                    ? "text-violet-600 dark:text-violet-400 hover:bg-violet-500/10 border-violet-500/20"
-                    : "text-muted-foreground hover:bg-muted border-border/60"
-            }`}
+                    ? `Message ${member.name}`
+                    : "Direct chat is available on Pro and Premium"
+            }
         >
-            <MessageSquare className="size-3.5 text-violet-500 shrink-0" />
-            <span className="hidden sm:inline">Chat</span>
-            {unreadCount > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full shadow-sm">
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                </span>
-            )}
-        </button>
+            <button
+                onClick={handleClick}
+                aria-label={`Chat with ${member.name}`}
+                className={cn(
+                    "relative inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium transition-colors",
+                    hasProPlan
+                        ? "border-border bg-card text-foreground hover:bg-accent"
+                        : "border-dashed border-border text-muted-foreground hover:bg-accent",
+                )}
+            >
+                {hasProPlan ? (
+                    <MessageSquare className="size-3.5 text-primary" />
+                ) : (
+                    <Lock className="size-3.5" />
+                )}
+                <span className="hidden sm:inline">Chat</span>
+                {unreadCount > 0 && (
+                    <span className="tabular inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-white">
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                )}
+            </button>
+        </SimpleTooltip>
     );
 };
 
@@ -114,6 +130,7 @@ const JoinedMembers = () => {
     const canView = hasPermission(PERMISSIONS.MEMBERS_JOINED.VIEW);
     const canEdit = hasPermission(PERMISSIONS.MEMBERS_JOINED.EDIT);
     const canDelete = hasPermission(PERMISSIONS.MEMBERS_JOINED.DELETE);
+    const canInvite = hasPermission(PERMISSIONS.MEMBERS_INVITED.ADD);
     const hasAnyAction = canView || canEdit || canDelete || canList;
 
     const [searchParams, setSearchParams] = useSearchParams();
@@ -164,6 +181,7 @@ const JoinedMembers = () => {
         if (currentPage !== 1) {
             setCurrentPage(1);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [debouncedSearch]);
 
     useEffect(() => {
@@ -225,7 +243,7 @@ const JoinedMembers = () => {
                 key: "name",
                 label: "Member",
                 render: (member) => (
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex max-w-[20rem] min-w-0 items-center gap-3">
                         <MemberAvatar
                             name={member.name}
                             status={member.status}
@@ -233,10 +251,10 @@ const JoinedMembers = () => {
                             userId={member.userId}
                         />
                         <div className="min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">
+                            <p className="truncate font-medium text-foreground">
                                 {member.name}
                             </p>
-                            <p className="text-xs text-muted-foreground truncate">
+                            <p className="truncate text-xs text-muted-foreground">
                                 {member.email}
                             </p>
                         </div>
@@ -247,12 +265,9 @@ const JoinedMembers = () => {
                 key: "role",
                 label: "Role",
                 render: (member) => (
-                    <Badge
-                        variant="outline"
-                        className={ROLE_STYLES[member.role] ?? ""}
-                    >
+                    <span className="inline-flex h-5.5 items-center rounded-md border border-border bg-muted/60 px-2 text-xs font-medium text-foreground">
                         {member.role}
-                    </Badge>
+                    </span>
                 ),
             },
             ...(canEdit
@@ -263,13 +278,15 @@ const JoinedMembers = () => {
                           render: (member: Member) => {
                               const effectiveId = member.userId || member.id;
                               const realTimePresence = effectiveId
-                                  ? presenceMap[effectiveId]
+                                  ? (presenceMap[effectiveId] as
+                                        | string
+                                        | undefined)
                                   : undefined;
                               const dbStatusLower = (
                                   member.status || ""
                               ).toLowerCase();
 
-                              let color = "#94a3b8";
+                              let tone: Tone = "neutral";
                               let label = "Offline";
 
                               if (
@@ -278,32 +295,21 @@ const JoinedMembers = () => {
                                   dbStatusLower === "on leave" ||
                                   dbStatusLower === "onleave"
                               ) {
-                                  color = "#f59e0b";
+                                  tone = "warning";
                                   label = "On Leave";
                               } else if (realTimePresence === "away") {
-                                  color = "#8b5cf6";
+                                  tone = "violet";
                                   label = "Away";
                               } else if (
                                   realTimePresence === "active" ||
                                   realTimePresence === "online"
                               ) {
-                                  color = "#10b981";
+                                  tone = "success";
                                   label = "Online";
                               }
 
                               return (
-                                  <div className="flex items-center gap-1.5">
-                                      <span
-                                          className="size-2 rounded-full shrink-0"
-                                          style={{ backgroundColor: color }}
-                                      />
-                                      <span
-                                          className="text-xs font-medium"
-                                          style={{ color }}
-                                      >
-                                          {label}
-                                      </span>
-                                  </div>
+                                  <StatusBadge tone={tone}>{label}</StatusBadge>
                               );
                           },
                       },
@@ -314,8 +320,8 @@ const JoinedMembers = () => {
                 label: "Joined",
                 className: "hidden sm:table-cell",
                 render: (member) => (
-                    <span className="text-sm text-muted-foreground">
-                        {formatDate(member.joinedAt)}
+                    <span className="tabular text-[13px] text-muted-foreground">
+                        {member.joinedAt ? formatDate(member.joinedAt) : "—"}
                     </span>
                 ),
             },
@@ -323,55 +329,51 @@ const JoinedMembers = () => {
                 ? [
                       {
                           key: "actions" as const,
-                          label: "Actions",
-                          className: "w-36 text-right",
+                          label: "",
+                          className: "w-px text-right",
                           render: (member: Member) => (
-                              <div className="flex items-center justify-end gap-1">
+                              <div className="flex items-center justify-end gap-0.5">
                                   {canList &&
                                       member.email !==
                                           localStorage.getItem("email") && (
-                                          <MemberChatButton
-                                              member={member}
-                                              onOpenChat={() =>
-                                                  openChatWithMember(
-                                                      member.userId ??
-                                                          member.id,
-                                                      member.name,
-                                                      member.email,
-                                                  )
-                                              }
-                                              hasProPlan={hasProPlan}
-                                              isOrgOwner={isOrgOwner}
-                                              billingPath={billingPath}
-                                          />
+                                          <span className="mr-1">
+                                              <MemberChatButton
+                                                  member={member}
+                                                  onOpenChat={() =>
+                                                      openChatWithMember(
+                                                          member.userId ??
+                                                              member.id,
+                                                          member.name,
+                                                          member.email,
+                                                      )
+                                                  }
+                                                  hasProPlan={hasProPlan}
+                                                  isOrgOwner={isOrgOwner}
+                                                  billingPath={billingPath}
+                                              />
+                                          </span>
                                       )}
-
                                   {canView && (
-                                      <button
-                                          title={`View ${member.name}`}
+                                      <IconAction
+                                          label={`View ${member.name}`}
+                                          icon={Eye}
                                           onClick={() => handleView(member)}
-                                          className="inline-flex items-center justify-center size-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
-                                      >
-                                          <Eye className="size-4" />
-                                      </button>
+                                      />
                                   )}
                                   {canEdit && (
-                                      <button
-                                          title={`Edit ${member.name}`}
+                                      <IconAction
+                                          label={`Edit ${member.name}`}
+                                          icon={Pencil}
                                           onClick={() => handleEdit(member)}
-                                          className="inline-flex items-center justify-center size-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
-                                      >
-                                          <Edit className="size-4" />
-                                      </button>
+                                      />
                                   )}
                                   {canDelete && (
-                                      <button
-                                          title={`Remove ${member.name}`}
+                                      <IconAction
+                                          label={`Remove ${member.name}`}
+                                          icon={UserMinus}
+                                          tone="danger"
                                           onClick={() => handleRemove(member)}
-                                          className="inline-flex items-center justify-center size-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
-                                      >
-                                          <UserMinus className="size-4" />
-                                      </button>
+                                      />
                                   )}
                               </div>
                           ),
@@ -379,6 +381,7 @@ const JoinedMembers = () => {
                   ]
                 : []),
         ],
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [
             hasAnyAction,
             canView,
@@ -399,60 +402,36 @@ const JoinedMembers = () => {
 
     return (
         <>
-            <div className="p-4 sm:p-6 space-y-5">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div>
-                        <h1 className="text-lg font-semibold text-foreground">
-                            Joined Members
-                        </h1>
-                        <p className="text-sm text-muted-foreground mt-0.5">
-                            Manage members who are part of this organization.
-                        </p>
-                    </div>
+            <PageContainer>
+                <PageHeader
+                    title="Members"
+                    description="People who have joined this organization, their roles and availability."
+                    actions={
+                        canInvite && (
+                            <Button onClick={() => setModalOpen(true)}>
+                                <UserPlus />
+                                Invite members
+                            </Button>
+                        )
+                    }
+                />
 
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card border border-border">
-                            <Users className="size-3.5 text-muted-foreground" />
-                            <span className="text-xs font-medium text-foreground">
-                                {members.length} total
-                            </span>
-                        </div>
-                        {canEdit && (
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card border border-border">
-                                <span
-                                    className="size-1.5 rounded-full"
-                                    style={{ backgroundColor: "#798c5e" }}
-                                />
-                                <span className="text-xs font-medium text-foreground">
-                                    {activeCount} active
-                                </span>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                <MembersNav />
 
-                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    {hasPermission(PERMISSIONS.MEMBERS_INVITED.ADD) && (
-                        <Button
-                            onClick={() => setModalOpen(true)}
-                            className="w-full gap-1.5 sm:w-auto"
-                        >
-                            <UserPlus className="size-4" />
-                            Invite Members
-                        </Button>
+                <Toolbar>
+                    <SearchInput
+                        value={search}
+                        onChange={setSearch}
+                        placeholder="Search by name, email or role…"
+                        containerClassName="sm:w-80"
+                    />
+                    {!isLoading && (
+                        <span className="tabular text-[13px] text-muted-foreground sm:ml-1">
+                            {totalMembers} member{totalMembers !== 1 ? "s" : ""}
+                            {canEdit && ` · ${activeCount} active on this page`}
+                        </span>
                     )}
-
-                    <div className="relative w-full sm:w-auto sm:min-w-xs">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-                        <input
-                            type="text"
-                            placeholder="Search by name, email or role..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-border bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-primary transition"
-                        />
-                    </div>
-                </div>
+                </Toolbar>
 
                 <DataTable
                     columns={columns}
@@ -462,68 +441,43 @@ const JoinedMembers = () => {
                     loading={isLoading}
                     showDefaultFooter={false}
                     emptyState={
-                        <tr>
-                            <td colSpan={hasAnyAction ? 5 : 4}>
-                                <div className="flex flex-col items-center justify-center py-16 gap-2">
-                                    <Users className="size-8 text-muted-foreground/40" />
-                                    <p className="text-sm font-medium text-muted-foreground">
-                                        No members yet
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                        Invite people to grow your team.
-                                    </p>
-                                </div>
-                            </td>
-                        </tr>
+                        <EmptyState
+                            icon={Users}
+                            title="No members yet"
+                            description="Invite your team to collaborate on projects."
+                            action={
+                                canInvite ? (
+                                    <Button
+                                        size="sm"
+                                        onClick={() => setModalOpen(true)}
+                                    >
+                                        <UserPlus />
+                                        Invite members
+                                    </Button>
+                                ) : undefined
+                            }
+                        />
                     }
                 />
 
-                <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
-                    <p className="text-xs text-muted-foreground px-1">
-                        Showing{" "}
-                        <span className="font-medium text-foreground">
-                            {members.length}
-                        </span>{" "}
-                        of{" "}
-                        <span className="font-medium text-foreground">
-                            {totalMembers}
-                        </span>{" "}
-                        member{totalMembers !== 1 ? "s" : ""}
-                    </p>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() =>
-                                setCurrentPage((page) => Math.max(1, page - 1))
-                            }
-                            disabled={currentPage === 1}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                        >
-                            <ChevronLeft className="w-4 h-4" />
-                        </button>
-                        <span className="text-xs text-muted-foreground px-2">
-                            Page{" "}
-                            <span className="font-medium text-foreground">
-                                {currentPage}
-                            </span>{" "}
-                            of{" "}
-                            <span className="font-medium text-foreground">
-                                {totalPages}
-                            </span>
-                        </span>
-                        <button
-                            onClick={() =>
-                                setCurrentPage((page) =>
-                                    Math.min(totalPages, page + 1),
-                                )
-                            }
-                            disabled={currentPage === totalPages}
-                            className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                        >
-                            <ChevronRight className="w-4 h-4" />
-                        </button>
-                    </div>
-                </div>
-            </div>
+                {members.length > 0 && (
+                    <Pagination
+                        page={currentPage}
+                        totalPages={totalPages}
+                        onPrevious={() =>
+                            setCurrentPage((page) => Math.max(1, page - 1))
+                        }
+                        onNext={() =>
+                            setCurrentPage((page) =>
+                                Math.min(totalPages, page + 1),
+                            )
+                        }
+                        shown={members.length}
+                        total={totalMembers}
+                        noun="member"
+                    />
+                )}
+            </PageContainer>
 
             <InviteMembersModal
                 open={modalOpen}

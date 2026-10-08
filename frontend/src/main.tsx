@@ -6,6 +6,7 @@ import App from "./App.tsx";
 import QueryProvider from "./providers/QueryProvider.tsx";
 import ConfirmProvider from "@/providers/ConfirmProvider.tsx";
 import { AppInitializer } from "@/providers/AppInitializer.tsx";
+import { ThemeProvider } from "@/providers/ThemeProvider.tsx";
 
 const googleClientId =
     import.meta.env.VITE_GOOGLE_CLIENT_ID ||
@@ -13,15 +14,16 @@ const googleClientId =
 
 createRoot(document.getElementById("root")!).render(
     <StrictMode>
-        ,
-        <GoogleOAuthProvider clientId={googleClientId}>
-            <QueryProvider>
-                <ConfirmProvider>
-                    <AppInitializer>
-                        <App />
-                    </AppInitializer>
-                </ConfirmProvider>
-            </QueryProvider>
-        </GoogleOAuthProvider>
+        <ThemeProvider>
+            <GoogleOAuthProvider clientId={googleClientId}>
+                <QueryProvider>
+                    <ConfirmProvider>
+                        <AppInitializer>
+                            <App />
+                        </AppInitializer>
+                    </ConfirmProvider>
+                </QueryProvider>
+            </GoogleOAuthProvider>
+        </ThemeProvider>
     </StrictMode>,
 );

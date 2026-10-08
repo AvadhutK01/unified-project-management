@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { OnboardingShell } from "../components/OnboardingShell";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Building2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -120,7 +121,7 @@ export default function CreateOrganization() {
     };
 
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4 py-10">
+        <OnboardingShell>
             <div className="w-full max-w-2xl space-y-6">
                 {/* Back link */}
                 <button
@@ -133,8 +134,8 @@ export default function CreateOrganization() {
 
                 {/* Header */}
                 <div className="flex items-center gap-3">
-                    <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                        <Building2 className="size-5 text-primary" />
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/15">
+                        <Building2 className="size-5" />
                     </div>
                     <SectionHeader
                         title="Create Organization"
@@ -146,7 +147,7 @@ export default function CreateOrganization() {
                 <Stepper steps={STEPS} currentStep={step} />
 
                 {/* Form card */}
-                <Card className="border-2">
+                <Card className="shadow-card">
                     {/* Step 1: Organization Details */}
                     {step === 0 && (
                         <>
@@ -190,9 +191,9 @@ export default function CreateOrganization() {
                                         </span>
                                     </Label>
                                     <div
-                                        className={`flex items-center rounded-md border overflow-hidden focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 ${errors.slug ? "border-destructive" : "border-input"}`}
+                                        className={`flex h-9 items-center overflow-hidden rounded-md border bg-card shadow-xs transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/25 dark:bg-input/20 ${errors.slug ? "border-destructive" : "border-input"}`}
                                     >
-                                        <span className="px-3 py-2 bg-muted text-muted-foreground text-xs sm:text-sm border-r border-input shrink-0 whitespace-nowrap">
+                                        <span className="flex h-full shrink-0 items-center border-r border-input bg-muted px-3 text-xs whitespace-nowrap text-muted-foreground sm:text-sm">
                                             app.example.com/
                                         </span>
                                         <input
@@ -205,7 +206,7 @@ export default function CreateOrganization() {
                                                 )
                                             }
                                             placeholder="technova-solutions"
-                                            className="flex-1 px-3 py-2 text-sm bg-transparent outline-none min-w-0"
+                                            className="h-full min-w-0 flex-1 bg-transparent px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/80"
                                         />
                                     </div>
                                     {errors.slug ? (
@@ -350,26 +351,8 @@ export default function CreateOrganization() {
                         <Button onClick={handleSubmit} disabled={isSubmitting}>
                             {isSubmitting ? (
                                 <>
-                                    <svg
-                                        className="size-4 animate-spin"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                    >
-                                        <circle
-                                            className="opacity-25"
-                                            cx="12"
-                                            cy="12"
-                                            r="10"
-                                            stroke="currentColor"
-                                            strokeWidth="4"
-                                        />
-                                        <path
-                                            className="opacity-75"
-                                            fill="currentColor"
-                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                                        />
-                                    </svg>
-                                    Creating...
+                                    <Loader2 className="size-4 animate-spin" />
+                                    Creating…
                                 </>
                             ) : (
                                 "Create Organization"
@@ -378,6 +361,6 @@ export default function CreateOrganization() {
                     )}
                 </div>
             </div>
-        </div>
+        </OnboardingShell>
     );
 }

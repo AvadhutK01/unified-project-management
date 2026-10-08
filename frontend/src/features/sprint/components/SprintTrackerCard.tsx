@@ -1,7 +1,8 @@
 import { format } from "date-fns";
 import { isAfter, isBefore } from "date-fns";
-import { Calendar, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { SectionCard } from "@/components/common/SectionCard";
 import type { SprintTrackerCardProps } from "../types/sprint.types";
 
 const SprintTrackerCard = ({ sprint }: SprintTrackerCardProps) => {
@@ -44,55 +45,45 @@ const SprintTrackerCard = ({ sprint }: SprintTrackerCardProps) => {
     }
 
     return (
-        <div className="p-4 rounded-2xl border border-border/60 bg-card/60 backdrop-blur-md shadow-xs space-y-5">
-            <div className="flex items-center justify-between border-b border-border/40 pb-3">
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                    Sprint Tracker
-                </h3>
-                <Clock className="size-4 text-muted-foreground" />
-            </div>
-
+        <SectionCard title="Timeline" icon={Clock}>
             <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-foreground/90">
+                <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-[13px] font-medium text-foreground">
                         {timelineMessage}
                     </span>
-                    <span className="text-muted-foreground">
+                    <span className="tabular shrink-0 text-xs text-muted-foreground">
                         {progressPercent}% elapsed
                     </span>
                 </div>
                 <Progress
                     value={progressPercent}
-                    className="h-2 rounded-full"
+                    className="h-2"
+                    aria-label="Sprint time elapsed"
+                    indicatorClassName={
+                        progressPercent >= 100 ? "bg-success" : "bg-primary"
+                    }
                 />
             </div>
 
-            <div className="grid grid-cols-1 gap-4 pt-1">
-                <div className="flex items-center gap-3 p-3 bg-secondary/20 rounded-xl border border-border/30">
-                    <Calendar className="size-4.5 text-primary/80" />
-                    <div>
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-                            Start Date
-                        </p>
-                        <p className="text-xs font-semibold text-foreground/90 mt-0.5">
-                            {sDate ? format(sDate, "PPP") : "Not Set"}
-                        </p>
-                    </div>
+            <dl className="mt-4 grid grid-cols-2 gap-3">
+                <div className="rounded-lg border border-border bg-muted/40 px-3 py-2.5">
+                    <dt className="text-[11px] font-medium text-muted-foreground">
+                        Start date
+                    </dt>
+                    <dd className="mt-0.5 text-[13px] font-semibold text-foreground">
+                        {sDate ? format(sDate, "PP") : "Not set"}
+                    </dd>
                 </div>
-
-                <div className="flex items-center gap-3 p-3 bg-secondary/20 rounded-xl border border-border/30">
-                    <Calendar className="size-4.5 text-primary/80" />
-                    <div>
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-                            End Date
-                        </p>
-                        <p className="text-xs font-semibold text-foreground/90 mt-0.5">
-                            {eDate ? format(eDate, "PPP") : "Not Set"}
-                        </p>
-                    </div>
+                <div className="rounded-lg border border-border bg-muted/40 px-3 py-2.5">
+                    <dt className="text-[11px] font-medium text-muted-foreground">
+                        End date
+                    </dt>
+                    <dd className="mt-0.5 text-[13px] font-semibold text-foreground">
+                        {eDate ? format(eDate, "PP") : "Not set"}
+                    </dd>
                 </div>
-            </div>
-        </div>
+            </dl>
+        </SectionCard>
     );
 };
 

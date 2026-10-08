@@ -119,7 +119,7 @@ const AddSprintModal = ({ onAddSprint, canAdd }: AddSprintModalProps) => {
                         Add a new sprint to track iteration work.
                     </SheetDescription>
                 </SheetHeader>
-                <div className="grid flex-1 min-h-0 auto-rows-min gap-6 px-4 overflow-y-auto">
+                <div className="grid min-h-0 flex-1 auto-rows-min gap-6 overflow-y-auto px-5 pt-5">
                     <Form {...form}>
                         <form
                             onSubmit={form.handleSubmit(onSubmit)}
@@ -135,7 +135,6 @@ const AddSprintModal = ({ onAddSprint, canAdd }: AddSprintModalProps) => {
                                             <Input
                                                 {...field}
                                                 placeholder="Enter sprint title"
-                                                className="ring-0!"
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -159,7 +158,7 @@ const AddSprintModal = ({ onAddSprint, canAdd }: AddSprintModalProps) => {
                                                         <button
                                                             type="button"
                                                             className={cn(
-                                                                "w-full flex items-center justify-between border rounded-md px-3 py-2 text-sm",
+                                                                "flex h-9 w-full items-center justify-between rounded-md border border-input bg-card px-3 text-sm text-foreground shadow-xs transition-[border-color,box-shadow] outline-none hover:border-foreground/20 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25 dark:bg-input/20",
                                                                 !field.value &&
                                                                     "text-muted-foreground",
                                                             )}
@@ -213,7 +212,7 @@ const AddSprintModal = ({ onAddSprint, canAdd }: AddSprintModalProps) => {
                                                         <button
                                                             type="button"
                                                             className={cn(
-                                                                "w-full flex items-center justify-between border rounded-md px-3 py-2 text-sm",
+                                                                "flex h-9 w-full items-center justify-between rounded-md border border-input bg-card px-3 text-sm text-foreground shadow-xs transition-[border-color,box-shadow] outline-none hover:border-foreground/20 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25 dark:bg-input/20",
                                                                 !field.value &&
                                                                     "text-muted-foreground",
                                                             )}
@@ -360,7 +359,6 @@ const AddSprintModal = ({ onAddSprint, canAdd }: AddSprintModalProps) => {
                                                         );
                                                     }}
                                                     placeholder="Enter sequence number"
-                                                    className="ring-0!"
                                                 />
                                             </FormControl>
                                             <FormMessage />
@@ -369,13 +367,13 @@ const AddSprintModal = ({ onAddSprint, canAdd }: AddSprintModalProps) => {
                                 />
                             </div>
 
-                            <SheetFooter className="flex flex-col-reverse gap-2 px-0 mt-6 sm:flex-row sm:justify-end">
+                            <SheetFooter className="sticky bottom-0 -mx-5 mt-6 flex flex-col-reverse gap-2 border-t border-border bg-popover px-5 py-4 sm:flex-row sm:justify-end">
                                 <SheetClose asChild>
                                     <Button
                                         variant="outline"
                                         className="flex-1 sm:flex-none"
                                     >
-                                        Close
+                                        Cancel
                                     </Button>
                                 </SheetClose>
                                 <Button
@@ -386,7 +384,7 @@ const AddSprintModal = ({ onAddSprint, canAdd }: AddSprintModalProps) => {
                                     {isSubmitting ? (
                                         <>
                                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                            Saving...
+                                            Saving…
                                         </>
                                     ) : (
                                         "Save Sprint"

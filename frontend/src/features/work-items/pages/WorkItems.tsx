@@ -3,12 +3,16 @@ import { useParams, useSearchParams } from "react-router-dom";
 import {
     LayoutList,
     Columns3,
-    PlayCircle,
-    ClipboardList,
-    CheckCircle,
+    Activity,
+    CheckCircle2,
     Sparkles,
-    Bug,
+    ListChecks,
 } from "lucide-react";
+import { PageContainer, PageHeader } from "@/components/common/PageHeader";
+import { StatCard, StatGrid } from "@/components/common/StatCard";
+import { Toolbar, ViewSwitcher } from "@/components/common/Toolbar";
+import { usePhaseByIdQuery } from "../../phases/hooks/usePhases";
+import { useSprintQuery } from "../../sprint/hooks/useSprints";
 import { type WorkItem } from "../types/workitem.types";
 import { mapWorkItem } from "../api/workitem.api";
 import WorkItemList from "../components/WorkItemList";
@@ -16,7 +20,6 @@ import WorkItemKanbanBoard from "../components/WorkItemKanbanBoard";
 import AddWorkItemModal from "../components/AddWorkItemModal";
 import EditWorkItemModal from "../components/EditWorkItemModal";
 import { useWorkItemViewStore } from "../store/workitem.store";
-import { cn } from "@/lib/utils";
 import { useConfirm } from "@/providers/ConfirmProvider";
 import { toast } from "sonner";
 import {
@@ -33,8 +36,15 @@ import { PERMISSIONS } from "@/features/rbac/types/rbac.types";
 
 const WorkItems = () => {
     const { view, setView } = useWorkItemViewStore();
-    const { id: projectId, sprintId } = useParams<{
+    const {
+        slug,
+        id: projectId,
+        phaseId,
+        sprintId,
+    } = useParams<{
+        slug: string;
         id: string;
+        phaseId: string;
         sprintId: string;
     }>();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -77,6 +87,12 @@ const WorkItems = () => {
 
     const { data: projectData } = useProjectByIdQuery(projectId);
     const { data: projectMembersData } = useProjectMembersQuery(projectId);
+    const { data: phaseRes } = usePhaseByIdQuery(phaseId);
+    const { data: sprintRes } = useSprintQuery(sprintId);
+    const projectName: string | undefined =
+        projectData?.data?.title ?? projectData?.data?.name;
+    const phaseName: string | undefined = phaseRes?.data?.name;
+    const sprintName: string | undefined = sprintRes?.data?.title;
 
     const [pendingWorkItemId, setPendingWorkItemId] = useState<string | null>(
         null,
@@ -164,131 +180,87 @@ const WorkItems = () => {
     const canEdit = hasPermission(PERMISSIONS.WORKITEM.EDIT);
     const canDelete = hasPermission(PERMISSIONS.WORKITEM.DELETE);
 
+    const phasesHref = `/${slug}/projects/${projectId}/phases`;
+    const sprintHref = `${phasesHref}/${phaseId}/sprints/${sprintId}`;
+
     return (
-        <div className="p-4 sm:p-6 space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/40">
-                <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-primary/10 text-primary rounded-xl border border-primary/20 shadow-xs">
-                        <Bug className="size-5" />
-                    </div>
-                    <div>
-                        <h1 className="text-xl font-bold tracking-tight text-foreground">
-                            Work Items
-                        </h1>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                            Manage and track tasks, bugs, and their progress.
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="p-4 rounded-2xl border border-border/60 bg-card/60 backdrop-blur-md shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            Total Items
-                        </span>
-                        <div className="p-1.5 bg-primary/5 text-primary rounded-lg group-hover:bg-primary/10 transition-colors">
-                            <ClipboardList className="size-4" />
-                        </div>
-                    </div>
-                    <div className="mt-2.5 flex items-baseline gap-2">
-                        <span className="text-2xl font-bold tracking-tight text-foreground">
-                            {totalItems}
-                        </span>
-                        <span className="text-xs text-muted-foreground font-normal">
-                            items tracked
-                        </span>
-                    </div>
-                </div>
+        <PageContainer size="wide">
+            <PageHeader
+                breadcrumbs={[
+                    { label: "Projects", to: `/${slug}/projects` },
+                    {
+                        label: projectName || "Project",
+                        to: `/${slug}/projects/${projectId}`,
+                    },
+                    {
+                        label: phaseName || "Phase",
+                        to: `${phasesHref}/${phaseId}`,
+                    },
+                    { label: sprintName || "Sprint", to: sprintHref },
+                    { label: "Work items" },
+                ]}
+                title="Work items"
+                description="Track tasks and bugs, estimates and ownership for this sprint."
+                actions={
+                    <AddWorkItemModal
+                        onAddWorkItem={() => {}}
+                        canAdd={canAdd}
+                    />
+                }
+            />
 
-                <div className="p-4 rounded-2xl border border-border/60 bg-card/60 backdrop-blur-md shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border-l-4 border-l-green-500 group">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            Active
-                        </span>
-                        <div className="p-1.5 bg-green-500/5 text-green-500 rounded-lg group-hover:bg-green-500/10 transition-colors">
-                            <PlayCircle className="size-4" />
-                        </div>
-                    </div>
-                    <div className="mt-2.5 flex items-baseline gap-2">
-                        <span className="text-2xl font-bold tracking-tight text-foreground">
-                            {activeItems}
-                        </span>
-                        <span className="text-xs text-muted-foreground font-normal">
-                            in progress
-                        </span>
-                    </div>
-                </div>
+            <StatGrid columns={4}>
+                <StatCard
+                    label="Total"
+                    value={totalItems}
+                    icon={ListChecks}
+                    tone="primary"
+                    hint="Items tracked"
+                />
+                <StatCard
+                    label="Active"
+                    value={activeItems}
+                    icon={Activity}
+                    tone="info"
+                    hint="In progress"
+                />
+                <StatCard
+                    label="New"
+                    value={newItems}
+                    icon={Sparkles}
+                    tone="violet"
+                    hint="Awaiting start"
+                />
+                <StatCard
+                    label="Closed"
+                    value={closedItems}
+                    icon={CheckCircle2}
+                    tone="success"
+                    hint="Completed"
+                />
+            </StatGrid>
 
-                <div className="p-4 rounded-2xl border border-border/60 bg-card/60 backdrop-blur-md shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border-l-4 border-l-purple-500 group">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            Backlog / New
-                        </span>
-                        <div className="p-1.5 bg-purple-500/5 text-purple-500 rounded-lg group-hover:bg-purple-500/10 transition-colors">
-                            <Sparkles className="size-4" />
-                        </div>
-                    </div>
-                    <div className="mt-2.5 flex items-baseline gap-2">
-                        <span className="text-2xl font-bold tracking-tight text-foreground">
-                            {newItems}
-                        </span>
-                        <span className="text-xs text-muted-foreground font-normal">
-                            awaiting start
-                        </span>
-                    </div>
-                </div>
+            <Toolbar
+                actions={
+                    <ViewSwitcher
+                        value={view}
+                        onChange={setView}
+                        options={[
+                            { value: "kanban", label: "Board", icon: Columns3 },
+                            { value: "list", label: "List", icon: LayoutList },
+                        ]}
+                        className="w-full sm:w-auto"
+                    />
+                }
+            >
+                {view === "kanban" && (
+                    <p className="text-[13px] text-muted-foreground">
+                        Drag a card between columns to change its status.
+                    </p>
+                )}
+            </Toolbar>
 
-                <div className="p-4 rounded-2xl border border-border/60 bg-card/60 backdrop-blur-md shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border-l-4 border-l-gray-400 group">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            Closed
-                        </span>
-                        <div className="p-1.5 bg-gray-500/5 text-gray-500 rounded-lg group-hover:bg-gray-500/10 transition-colors">
-                            <CheckCircle className="size-4" />
-                        </div>
-                    </div>
-                    <div className="mt-2.5 flex items-baseline gap-2">
-                        <span className="text-2xl font-bold tracking-tight text-foreground">
-                            {closedItems}
-                        </span>
-                        <span className="text-xs text-muted-foreground font-normal">
-                            completed
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <AddWorkItemModal onAddWorkItem={() => {}} canAdd={canAdd} />
-                <div className="flex items-center gap-1 bg-secondary/60 p-1 rounded-xl border border-border/40 shadow-inner w-full sm:w-auto">
-                    <button
-                        onClick={() => setView("kanban")}
-                        className={cn(
-                            "flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 ease-out cursor-pointer select-none",
-                            view === "kanban"
-                                ? "bg-card text-primary shadow-sm scale-102 border border-border/30"
-                                : "text-muted-foreground hover:text-foreground hover:bg-secondary/40",
-                        )}
-                    >
-                        <Columns3 className="size-4" />
-                        <span>Kanban</span>
-                    </button>
-                    <button
-                        onClick={() => setView("list")}
-                        className={cn(
-                            "flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 ease-out cursor-pointer select-none",
-                            view === "list"
-                                ? "bg-card text-primary shadow-sm scale-102 border border-border/30"
-                                : "text-muted-foreground hover:text-foreground hover:bg-secondary/40",
-                        )}
-                    >
-                        <LayoutList className="size-4" />
-                        <span>List</span>
-                    </button>
-                </div>
-            </div>
-
-            <div className="transition-all duration-300">
+            <div>
                 {view === "list" ? (
                     <WorkItemList
                         workItems={workItems}
@@ -329,7 +301,7 @@ const WorkItems = () => {
                 workItem={editingWorkItem}
                 onEditWorkItem={() => setEditingWorkItem(null)}
             />
-        </div>
+        </PageContainer>
     );
 };
 

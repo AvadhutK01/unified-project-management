@@ -1,23 +1,21 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import {
-    Sparkles,
     ShieldCheck,
-    CreditCard,
     CheckCircle2,
+    Check,
     Calendar,
     Loader2,
     History,
     Zap,
-    AlertCircle,
     Mail,
     Phone,
     ArrowRight,
-    Phone as PhoneIcon,
     Video,
     FileText,
-    Bot,
     Crown,
+    LifeBuoy,
+    Receipt,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useOrganizationStore } from "@/store/organization.store";
@@ -31,13 +29,13 @@ import {
     useSupportContactQuery,
 } from "../hooks/useSubscription";
 import { Button } from "@/components/ui/button";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { PageContainer, PageHeader } from "@/components/common/PageHeader";
+import { SectionCard } from "@/components/common/SectionCard";
+import { StatusBadge } from "@/components/common/StatusBadge";
+import { EmptyState } from "@/components/common/EmptyState";
+import { Pagination } from "@/components/common/Toolbar";
+import { CardSkeleton, TableSkeleton } from "@/components/common/Skeletons";
 import {
     Table,
     TableBody,
@@ -57,56 +55,11 @@ import {
     type SubscriptionPlan,
 } from "../utils/subscriptionHelpers";
 
-// Tier visual config
-const PLAN_CONFIG: Record<
-    SubscriptionPlan,
-    {
-        gradient: string;
-        activeBg: string;
-        activeText: string;
-        activeBorder: string;
-        buttonBg: string;
-        icon: React.ReactNode;
-        badgeText: string;
-    }
-> = {
-    free: {
-        gradient: "from-slate-500/10 to-slate-600/5",
-        activeBg: "bg-slate-500/10",
-        activeText: "text-slate-600 dark:text-slate-400",
-        activeBorder: "border-slate-500/20",
-        buttonBg: "bg-slate-500 hover:bg-slate-600 text-white",
-        icon: <Zap className="w-5 h-5 text-slate-400" />,
-        badgeText: "Current",
-    },
-    basic: {
-        gradient: "from-blue-500/10 to-blue-600/5",
-        activeBg: "bg-blue-500/10",
-        activeText: "text-blue-600 dark:text-blue-400",
-        activeBorder: "border-blue-500/20",
-        buttonBg: "bg-blue-500 hover:bg-blue-600 text-white",
-        icon: <FileText className="w-5 h-5 text-blue-500" />,
-        badgeText: "Basic",
-    },
-    pro: {
-        gradient: "from-violet-500/10 to-purple-600/5",
-        activeBg: "bg-violet-500/10",
-        activeText: "text-violet-600 dark:text-violet-400",
-        activeBorder: "border-violet-500/20",
-        buttonBg: "bg-violet-500 hover:bg-violet-600 text-white",
-        icon: <PhoneIcon className="w-5 h-5 text-violet-500" />,
-        badgeText: "Pro",
-    },
-    premium: {
-        gradient: "from-amber-500/10 to-orange-600/5",
-        activeBg: "bg-amber-500/10",
-        activeText: "text-amber-600 dark:text-amber-400",
-        activeBorder: "border-amber-500/20",
-        buttonBg:
-            "bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold",
-        icon: <Crown className="w-5 h-5 text-amber-500" />,
-        badgeText: "Premium",
-    },
+const PLAN_ICON: Record<SubscriptionPlan, React.ReactNode> = {
+    free: <Zap className="size-4" />,
+    basic: <FileText className="size-4" />,
+    pro: <Video className="size-4" />,
+    premium: <Crown className="size-4" />,
 };
 
 export const BillingPage = () => {
@@ -223,526 +176,371 @@ export const BillingPage = () => {
     const transactions = transactionsData?.data ?? [];
     const pagination = transactionsData?.pagination;
 
-    const paidPlans = PLAN_HIERARCHY.filter((p) => p !== "free") as Exclude<
-        SubscriptionPlan,
-        "free"
-    >[];
-
     return (
-        <div className="p-4 space-y-6 sm:p-6 sm:space-y-8 max-w-7xl mx-auto">
-            {/* Page Header */}
-            <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                    <CreditCard className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                    <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-                        Billing & Subscriptions
-                    </h1>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                        Manage your organization's subscription plan and payment
-                        history.
-                    </p>
-                </div>
-            </div>
+        <PageContainer>
+            <PageHeader
+                title="Billing"
+                description="Manage your organization's subscription plan and payment history."
+            />
 
-            {/* Current Plan Status */}
-            {!isSubLoading && (
-                <Card className="border-border/60 shadow-sm relative overflow-hidden">
-                    <div
-                        className={`absolute top-0 left-0 right-0 h-1 ${
-                            currentPlan === "premium"
-                                ? "bg-linear-to-r from-amber-400 to-orange-400"
-                                : currentPlan === "pro"
-                                  ? "bg-linear-to-r from-violet-500 to-purple-500"
-                                  : currentPlan === "basic"
-                                    ? "bg-linear-to-r from-blue-400 to-blue-500"
-                                    : "bg-linear-to-r from-slate-300 to-slate-400"
-                        }`}
-                    />
-                    <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between flex-wrap gap-3">
-                            <div className="flex items-center gap-3">
-                                <div
-                                    className={`w-10 h-10 rounded-xl flex items-center justify-center ${PLAN_CONFIG[currentPlan].activeBg}`}
-                                >
-                                    {PLAN_CONFIG[currentPlan].icon}
+            {/* Current plan */}
+            {isSubLoading ? (
+                <CardSkeleton lines={2} />
+            ) : (
+                <section className="overflow-hidden rounded-xl border border-border bg-card shadow-card">
+                    <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-start gap-3.5">
+                            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/15">
+                                {PLAN_ICON[currentPlan]}
+                            </span>
+                            <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <p className="text-xs font-medium text-muted-foreground">
+                                        Current plan
+                                    </p>
+                                    <StatusBadge tone="success" size="sm">
+                                        Active
+                                    </StatusBadge>
                                 </div>
-                                <div>
-                                    <CardTitle className="text-lg">
-                                        {PLAN_LABELS[currentPlan]} Plan
-                                    </CardTitle>
-                                    <CardDescription className="text-xs mt-0.5">
-                                        {PLAN_DESCRIPTIONS[currentPlan]}
-                                    </CardDescription>
-                                </div>
+                                <h2 className="mt-0.5 text-lg font-semibold tracking-tight text-foreground">
+                                    {PLAN_LABELS[currentPlan]}
+                                </h2>
+                                <p className="mt-0.5 max-w-xl text-[13px] text-muted-foreground">
+                                    {PLAN_DESCRIPTIONS[currentPlan]}
+                                </p>
                             </div>
-                            <span
-                                className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border ${PLAN_CONFIG[currentPlan].activeBg} ${PLAN_CONFIG[currentPlan].activeText} ${PLAN_CONFIG[currentPlan].activeBorder}`}
-                            >
-                                Active
+                        </div>
+                        <div className="shrink-0 sm:text-right">
+                            <p className="tabular text-2xl font-semibold tracking-tight text-foreground">
+                                {currentPlan === "free"
+                                    ? "₹0"
+                                    : `₹${PLAN_PRICES_INR[currentPlan]}`}
+                                <span className="ml-1 text-sm font-normal text-muted-foreground">
+                                    {currentPlan === "free"
+                                        ? "forever"
+                                        : "/ month"}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    {expiresAt && currentPlan !== "free" && (
+                        <div className="flex items-center gap-2 border-t border-border bg-muted/30 px-5 py-2.5 text-[13px] text-muted-foreground">
+                            <Calendar className="size-4 shrink-0" />
+                            <span>
+                                Renews or expires on{" "}
+                                <span className="font-medium text-foreground">
+                                    {format(
+                                        expiresAt,
+                                        "MMMM dd, yyyy 'at' hh:mm a",
+                                    )}
+                                </span>
                             </span>
                         </div>
-                    </CardHeader>
-                    {expiresAt && currentPlan !== "free" && (
-                        <CardContent className="pt-0">
-                            <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/40 border border-border/40 text-sm">
-                                <Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
-                                <span className="text-muted-foreground">
-                                    Subscription expires on{" "}
-                                    <span className="font-medium text-foreground">
-                                        {format(
-                                            expiresAt,
-                                            "MMMM dd, yyyy 'at' hh:mm a",
-                                        )}
-                                    </span>
-                                </span>
-                            </div>
-                        </CardContent>
                     )}
-                </Card>
+                </section>
             )}
 
-            {/* Plan Tier Cards */}
-            <div>
-                <h2 className="text-base font-semibold text-foreground mb-4">
-                    Available Plans
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {/* Free Plan Card */}
-                    <Card
-                        className={`border-border/60 shadow-sm flex flex-col relative overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5 ${
-                            currentPlan === "free"
-                                ? "ring-2 ring-slate-400/40"
-                                : ""
-                        }`}
-                    >
-                        <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-slate-300 to-slate-400" />
-                        <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    {PLAN_CONFIG.free.icon}
-                                    <CardTitle className="text-base">
-                                        Free
-                                    </CardTitle>
-                                </div>
-                                {currentPlan === "free" && (
-                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20 uppercase">
-                                        Current
-                                    </span>
-                                )}
-                            </div>
-                            <p className="text-2xl font-bold text-foreground mt-1">
-                                ₹0
-                                <span className="text-sm font-normal text-muted-foreground ml-1">
-                                    /forever
-                                </span>
-                            </p>
-                            <p className="text-xs text-muted-foreground leading-relaxed">
-                                {PLAN_DESCRIPTIONS.free}
-                            </p>
-                        </CardHeader>
-                        <CardContent className="flex-1 flex flex-col justify-between gap-4 pt-0">
-                            <ul className="space-y-1.5">
-                                {PLAN_FEATURES.free.map((f) => (
-                                    <li
-                                        key={f}
-                                        className="flex items-start gap-2 text-xs text-muted-foreground"
-                                    >
-                                        <CheckCircle2 className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
-                                        {f}
-                                    </li>
-                                ))}
-                            </ul>
-                        </CardContent>
-                    </Card>
-
-                    {/* Paid Plan Cards */}
-                    {paidPlans.map((plan) => {
+            {/* Plans */}
+            <section className="space-y-3">
+                <div>
+                    <h2 className="text-sm font-semibold text-foreground">
+                        Plans
+                    </h2>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                        Upgrades charge only the price difference — your expiry
+                        date stays the same.
+                    </p>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    {PLAN_HIERARCHY.map((plan) => {
                         const isCurrentPlan = currentPlan === plan;
-                        const upgradePrice = getUpgradePriceINR(
-                            currentPlan,
-                            plan,
-                        );
-                        const canUpgrade = upgradePrice !== null && isOrgOwner;
-                        const cfg = PLAN_CONFIG[plan];
+                        const isFree = plan === "free";
+                        const upgradePrice = isFree
+                            ? null
+                            : getUpgradePriceINR(currentPlan, plan);
+                        const canUpgrade =
+                            !isFree && upgradePrice !== null && isOrgOwner;
                         const isLoadingThis = upgradingPlan === plan;
+                        const included = isAtLeastPlan(currentPlan, plan);
 
                         return (
-                            <Card
+                            <div
                                 key={plan}
-                                className={`border-border/60 shadow-sm flex flex-col relative overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5 ${
+                                className={cn(
+                                    "relative flex flex-col rounded-xl border bg-card p-5 shadow-card transition-shadow",
                                     isCurrentPlan
-                                        ? `ring-2 ring-offset-1 ${cfg.activeBorder.replace("border-", "ring-")}`
-                                        : ""
-                                } ${plan === "premium" ? "shadow-amber-500/10" : ""}`}
+                                        ? "border-primary/60 ring-3 ring-primary/15"
+                                        : "border-border hover:border-foreground/15",
+                                )}
                             >
-                                <div
-                                    className={`absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r ${
-                                        plan === "basic"
-                                            ? "from-blue-400 to-blue-500"
-                                            : plan === "pro"
-                                              ? "from-violet-500 to-purple-500"
-                                              : "from-amber-400 to-orange-400"
-                                    }`}
-                                />
-                                <CardHeader className="pb-3">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            {cfg.icon}
-                                            <CardTitle className="text-base">
-                                                {PLAN_LABELS[plan]}
-                                            </CardTitle>
-                                        </div>
-                                        {isCurrentPlan && (
-                                            <span
-                                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${cfg.activeBg} ${cfg.activeText} ${cfg.activeBorder}`}
-                                            >
-                                                Current
-                                            </span>
-                                        )}
-                                        {plan === "premium" &&
-                                            !isCurrentPlan && (
-                                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 uppercase">
-                                                    Best Value
-                                                </span>
-                                            )}
-                                    </div>
-                                    <p className="text-2xl font-bold text-foreground mt-1">
-                                        ₹{PLAN_PRICES_INR[plan]}
-                                        <span className="text-sm font-normal text-muted-foreground ml-1">
-                                            /mo
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2 text-foreground">
+                                        <span className="text-muted-foreground">
+                                            {PLAN_ICON[plan]}
                                         </span>
-                                    </p>
-                                    <p className="text-xs text-muted-foreground leading-relaxed">
-                                        {PLAN_DESCRIPTIONS[plan]}
-                                    </p>
-                                </CardHeader>
-                                <CardContent className="flex-1 flex flex-col justify-between gap-4 pt-0">
-                                    <ul className="space-y-1.5">
-                                        {PLAN_FEATURES[plan].map((f) => (
-                                            <li
-                                                key={f}
-                                                className={`flex items-start gap-2 text-xs ${
-                                                    isCurrentPlan ||
-                                                    isAtLeastPlan(
-                                                        currentPlan,
-                                                        plan,
-                                                    )
-                                                        ? "text-foreground"
-                                                        : "text-muted-foreground"
-                                                }`}
+                                        <h3 className="text-sm font-semibold">
+                                            {PLAN_LABELS[plan]}
+                                        </h3>
+                                    </div>
+                                    {isCurrentPlan ? (
+                                        <StatusBadge
+                                            tone="primary"
+                                            size="sm"
+                                            dot={false}
+                                        >
+                                            Current plan
+                                        </StatusBadge>
+                                    ) : (
+                                        plan === "premium" && (
+                                            <StatusBadge
+                                                tone="warning"
+                                                size="sm"
+                                                dot={false}
                                             >
-                                                <CheckCircle2
-                                                    className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${
-                                                        isCurrentPlan ||
-                                                        isAtLeastPlan(
-                                                            currentPlan,
-                                                            plan,
-                                                        )
-                                                            ? cfg.activeText
-                                                            : "text-muted-foreground/40"
-                                                    }`}
-                                                />
-                                                {f}
-                                            </li>
-                                        ))}
-                                    </ul>
+                                                Best value
+                                            </StatusBadge>
+                                        )
+                                    )}
+                                </div>
 
+                                <p className="tabular mt-4 text-3xl font-semibold tracking-tight text-foreground">
+                                    {isFree
+                                        ? "₹0"
+                                        : `₹${PLAN_PRICES_INR[plan]}`}
+                                    <span className="ml-1 text-sm font-normal text-muted-foreground">
+                                        {isFree ? "forever" : "/ month"}
+                                    </span>
+                                </p>
+                                <p className="mt-2 min-h-10 text-[13px] leading-relaxed text-muted-foreground">
+                                    {PLAN_DESCRIPTIONS[plan]}
+                                </p>
+
+                                <ul className="mt-4 flex-1 space-y-2 border-t border-border pt-4">
+                                    {PLAN_FEATURES[plan].map((f) => (
+                                        <li
+                                            key={f}
+                                            className={cn(
+                                                "flex items-start gap-2 text-[13px]",
+                                                included
+                                                    ? "text-foreground"
+                                                    : "text-muted-foreground",
+                                            )}
+                                        >
+                                            <Check
+                                                className={cn(
+                                                    "mt-0.5 size-3.5 shrink-0",
+                                                    included
+                                                        ? "text-primary"
+                                                        : "text-muted-foreground/50",
+                                                )}
+                                            />
+                                            {f}
+                                        </li>
+                                    ))}
+                                </ul>
+
+                                <div className="mt-5">
                                     {canUpgrade && (
                                         <Button
-                                            className={`w-full text-xs h-9 gap-1.5 cursor-pointer shadow-sm ${cfg.buttonBg}`}
+                                            className="w-full"
+                                            variant={
+                                                plan === "premium"
+                                                    ? "default"
+                                                    : "outline"
+                                            }
                                             disabled={isLoadingThis}
-                                            onClick={() => handleUpgrade(plan)}
+                                            onClick={() =>
+                                                handleUpgrade(
+                                                    plan as Exclude<
+                                                        SubscriptionPlan,
+                                                        "free"
+                                                    >,
+                                                )
+                                            }
                                         >
                                             {isLoadingThis ? (
                                                 <>
-                                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                    Processing...
+                                                    <Loader2 className="animate-spin" />
+                                                    Processing…
                                                 </>
                                             ) : (
                                                 <>
-                                                    <ArrowRight className="w-3.5 h-3.5" />
                                                     Upgrade for ₹{upgradePrice}
+                                                    <ArrowRight />
                                                 </>
                                             )}
                                         </Button>
                                     )}
 
                                     {isCurrentPlan && (
-                                        <div
-                                            className={`text-center text-xs font-medium py-1.5 rounded-md ${cfg.activeBg} ${cfg.activeText}`}
-                                        >
-                                            ✓ Active Plan
+                                        <div className="flex h-9 items-center justify-center gap-1.5 rounded-md bg-primary/10 text-[13px] font-medium text-primary dark:bg-primary/15">
+                                            <CheckCircle2 className="size-4" />
+                                            Your current plan
                                         </div>
                                     )}
 
-                                    {!canUpgrade &&
+                                    {!isFree &&
+                                        !canUpgrade &&
                                         !isCurrentPlan &&
                                         !isOrgOwner &&
                                         upgradePrice !== null && (
-                                            <p className="text-[11px] text-center text-muted-foreground">
-                                                Ask your org owner to upgrade
+                                            <p className="text-center text-xs text-muted-foreground">
+                                                Ask your organization owner to
+                                                upgrade
                                             </p>
                                         )}
 
-                                    {upgradePrice === null &&
+                                    {!isFree &&
+                                        upgradePrice === null &&
                                         !isCurrentPlan && (
-                                            <div className="text-center text-xs text-muted-foreground/60 py-1">
-                                                Lower tier
-                                            </div>
+                                            <p className="text-center text-xs text-muted-foreground">
+                                                Included in your plan
+                                            </p>
                                         )}
-                                </CardContent>
-                            </Card>
+                                </div>
+                            </div>
                         );
                     })}
                 </div>
-            </div>
+            </section>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Payment Security Card */}
-                <Card className="border-border/60 shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="text-base flex items-center gap-2">
-                            <ShieldCheck className="w-4 h-4 text-blue-500" />
-                            <span>Payment Security</span>
-                        </CardTitle>
-                        <CardDescription className="text-xs leading-relaxed">
-                            All payments are securely processed via Razorpay
-                            with HMAC SHA-256 signature verification.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4 text-xs text-muted-foreground">
-                        <div className="p-3 rounded-lg bg-secondary/50 border border-border/40 space-y-2">
-                            <p className="font-semibold text-foreground">
-                                Need support?
-                            </p>
-                            <p>
-                                Contact organization billing support if you
-                                encounter any payment issues.
-                            </p>
-                            {supportContact && (
-                                <div className="space-y-1 pt-1 border-t border-border/40 text-xs font-medium text-foreground">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                        <Mail className="w-3.5 h-3.5 text-primary shrink-0" />
-                                        <a
-                                            href={`mailto:${supportContact.email}`}
-                                            className="hover:underline truncate min-w-0"
-                                        >
-                                            {supportContact.email}
-                                        </a>
-                                    </div>
-                                    <div className="flex items-center gap-2 min-w-0">
-                                        <Phone className="w-3.5 h-3.5 text-primary shrink-0" />
-                                        <a
-                                            href={`tel:${supportContact.phone}`}
-                                            className="hover:underline truncate min-w-0"
-                                        >
-                                            {supportContact.phone}
-                                        </a>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                        <div className="p-3 rounded-lg bg-secondary/50 border border-border/40 space-y-1.5">
-                            <p className="font-semibold text-foreground">
-                                Upgrade Pricing
-                            </p>
-                            <p>
-                                Upgrading your plan charges only the price
-                                difference. Your expiry date stays unchanged.
-                            </p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Feature Summary Card */}
-                <Card className="border-border/60 shadow-sm md:col-span-2">
-                    <CardHeader>
-                        <CardTitle className="text-base flex items-center gap-2">
-                            <Sparkles className="w-4 h-4 text-amber-500" />
-                            <span>Plan Features Summary</span>
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                            <div className="flex items-start gap-2">
-                                <FileText className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-                                <div>
-                                    <p className="font-medium text-foreground">
-                                        Reports (Basic+)
-                                    </p>
-                                    <p className="text-muted-foreground">
-                                        Project, phase, sprint & member activity
-                                        reports.
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <Video className="w-4 h-4 text-violet-500 shrink-0 mt-0.5" />
-                                <div>
-                                    <p className="font-medium text-foreground">
-                                        Member Calls (Pro+)
-                                    </p>
-                                    <p className="text-muted-foreground">
-                                        Voice/video calling with screen sharing
-                                        between members.
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <Bot className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                                <div>
-                                    <p className="font-medium text-foreground">
-                                        AI Assistant (Premium)
-                                    </p>
-                                    <p className="text-muted-foreground">
-                                        AI Chat + AI-generated project & sprint
-                                        summaries.
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <CreditCard className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                                <div>
-                                    <p className="font-medium text-foreground">
-                                        Differential Pricing
-                                    </p>
-                                    <p className="text-muted-foreground">
-                                        Pay only the difference when upgrading.
-                                        Expiry unchanged.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Transaction History */}
-            <Card className="border-border/60 shadow-sm">
-                <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                        <History className="w-5 h-5 text-primary" />
-                        <span>Transaction History</span>
-                    </CardTitle>
-                    <CardDescription>
-                        List of all payment transactions processed for this
-                        organization.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {isTxLoading ? (
-                        <div className="flex items-center justify-center py-12">
-                            <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                        </div>
-                    ) : transactions.length === 0 ? (
-                        <div className="text-center py-12 space-y-2">
-                            <AlertCircle className="w-8 h-8 text-muted-foreground/40 mx-auto" />
-                            <p className="text-sm text-muted-foreground">
-                                No transactions recorded yet.
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            <div className="rounded-md border border-border/60 overflow-hidden">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow className="bg-secondary/40">
-                                            <TableHead>Date</TableHead>
-                                            <TableHead>Description</TableHead>
-                                            <TableHead className="hidden md:table-cell">
-                                                Razorpay Order ID
-                                            </TableHead>
-                                            <TableHead>Amount</TableHead>
-                                            <TableHead>Status</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {transactions.map((tx) => (
-                                            <TableRow key={tx.id}>
-                                                <TableCell className="text-xs">
-                                                    {format(
-                                                        new Date(tx.createdAt),
-                                                        "MMM dd, yyyy HH:mm",
-                                                    )}
-                                                </TableCell>
-                                                <TableCell className="text-xs text-muted-foreground max-w-35 sm:max-w-50 truncate">
-                                                    {tx.description ||
-                                                        "Subscription"}
-                                                </TableCell>
-                                                <TableCell className="hidden md:table-cell font-mono text-xs text-muted-foreground">
-                                                    {tx.razorpayOrderId}
-                                                </TableCell>
-                                                <TableCell className="font-semibold text-xs">
-                                                    ₹
-                                                    {Number(tx.amount).toFixed(
-                                                        2,
-                                                    )}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <span
-                                                        className={`px-2 py-0.5 rounded-full text-[11px] font-medium uppercase ${
-                                                            tx.status ===
-                                                            "captured"
-                                                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                                                                : tx.status ===
-                                                                    "failed"
-                                                                  ? "bg-red-500/10 text-red-600 dark:text-red-400"
-                                                                  : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                                                        }`}
-                                                    >
-                                                        {tx.status ===
-                                                        "captured"
-                                                            ? "Paid"
-                                                            : tx.status}
-                                                    </span>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </div>
-
-                            {pagination && pagination.totalPages > 1 && (
-                                <div className="flex items-center justify-between text-xs pt-2">
-                                    <span className="text-muted-foreground">
-                                        Page {pagination.page} of{" "}
-                                        {pagination.totalPages}
-                                    </span>
-                                    <div className="flex gap-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={page <= 1}
-                                            onClick={() =>
-                                                setPage((p) =>
-                                                    Math.max(1, p - 1),
-                                                )
-                                            }
-                                        >
-                                            Previous
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={
-                                                page >= pagination.totalPages
-                                            }
-                                            onClick={() =>
-                                                setPage((p) => p + 1)
-                                            }
-                                        >
-                                            Next
-                                        </Button>
-                                    </div>
-                                </div>
-                            )}
+            {/* Support + payment info */}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <SectionCard title="Secure payments" icon={ShieldCheck}>
+                    <p className="text-[13px] leading-relaxed text-muted-foreground">
+                        All payments are processed by Razorpay with HMAC SHA-256
+                        signature verification. Upgrading charges only the price
+                        difference and keeps your expiry date unchanged.
+                    </p>
+                </SectionCard>
+                <SectionCard title="Billing support" icon={LifeBuoy}>
+                    <p className="text-[13px] leading-relaxed text-muted-foreground">
+                        Contact billing support if you run into any payment
+                        issues.
+                    </p>
+                    {supportContact && (
+                        <div className="mt-3 flex flex-col gap-1.5 text-[13px] font-medium sm:flex-row sm:gap-5">
+                            <a
+                                href={`mailto:${supportContact.email}`}
+                                className="inline-flex min-w-0 items-center gap-2 text-foreground hover:text-primary"
+                            >
+                                <Mail className="size-4 shrink-0 text-muted-foreground" />
+                                <span className="truncate">
+                                    {supportContact.email}
+                                </span>
+                            </a>
+                            <a
+                                href={`tel:${supportContact.phone}`}
+                                className="inline-flex min-w-0 items-center gap-2 text-foreground hover:text-primary"
+                            >
+                                <Phone className="size-4 shrink-0 text-muted-foreground" />
+                                <span className="truncate">
+                                    {supportContact.phone}
+                                </span>
+                            </a>
                         </div>
                     )}
-                </CardContent>
-            </Card>
-        </div>
+                </SectionCard>
+            </div>
+
+            {/* Transaction history */}
+            <SectionCard
+                title="Transaction history"
+                description="Payments processed for this organization."
+                icon={History}
+                flush
+            >
+                {isTxLoading ? (
+                    <div className="p-5">
+                        <TableSkeleton
+                            rows={3}
+                            columns={4}
+                            className="border-0 shadow-none"
+                        />
+                    </div>
+                ) : transactions.length === 0 ? (
+                    <EmptyState
+                        icon={Receipt}
+                        title="No transactions yet"
+                        description="Payments will appear here after your first upgrade."
+                        size="sm"
+                    />
+                ) : (
+                    <>
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="hover:bg-transparent">
+                                    <TableHead className="pl-5">Date</TableHead>
+                                    <TableHead>Description</TableHead>
+                                    <TableHead className="hidden md:table-cell">
+                                        Razorpay order ID
+                                    </TableHead>
+                                    <TableHead className="text-right">
+                                        Amount
+                                    </TableHead>
+                                    <TableHead className="pr-5">
+                                        Status
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {transactions.map((tx) => (
+                                    <TableRow key={tx.id}>
+                                        <TableCell className="tabular pl-5 text-[13px] whitespace-nowrap">
+                                            {format(
+                                                new Date(tx.createdAt),
+                                                "MMM dd, yyyy HH:mm",
+                                            )}
+                                        </TableCell>
+                                        <TableCell className="max-w-56 truncate text-[13px] text-muted-foreground">
+                                            {tx.description || "Subscription"}
+                                        </TableCell>
+                                        <TableCell className="hidden font-mono text-xs text-muted-foreground md:table-cell">
+                                            {tx.razorpayOrderId}
+                                        </TableCell>
+                                        <TableCell className="tabular text-right text-[13px] font-semibold">
+                                            ₹{Number(tx.amount).toFixed(2)}
+                                        </TableCell>
+                                        <TableCell className="pr-5">
+                                            <StatusBadge
+                                                size="sm"
+                                                tone={
+                                                    tx.status === "captured"
+                                                        ? "success"
+                                                        : tx.status === "failed"
+                                                          ? "danger"
+                                                          : "warning"
+                                                }
+                                            >
+                                                {tx.status === "captured"
+                                                    ? "Paid"
+                                                    : tx.status
+                                                          .charAt(0)
+                                                          .toUpperCase() +
+                                                      tx.status.slice(1)}
+                                            </StatusBadge>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+
+                        {pagination && pagination.totalPages > 1 && (
+                            <div className="border-t border-border px-5 py-3">
+                                <Pagination
+                                    page={page}
+                                    totalPages={pagination.totalPages}
+                                    onPrevious={() =>
+                                        setPage((p) => Math.max(1, p - 1))
+                                    }
+                                    onNext={() => setPage((p) => p + 1)}
+                                />
+                            </div>
+                        )}
+                    </>
+                )}
+            </SectionCard>
+        </PageContainer>
     );
 };
 

@@ -1,5 +1,12 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, UserPlus, Share2 } from "lucide-react";
+import { OnboardingShell } from "../components/OnboardingShell";
+import {
+    ArrowRight,
+    UserPlus,
+    Share2,
+    FolderPlus,
+    Settings,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { SuccessCard } from "@/features/organization/components/SuccessCard";
@@ -8,17 +15,17 @@ import { useOrganizationStore } from "@/store/organization.store";
 
 const QUICK_ACTIONS = [
     {
-        icon: "📋",
+        icon: FolderPlus,
         label: "Create your first project",
         description: "Organize work into projects",
     },
     {
-        icon: "👥",
+        icon: UserPlus,
         label: "Invite team members",
         description: "Bring your team onboard",
     },
     {
-        icon: "⚙️",
+        icon: Settings,
         label: "Configure settings",
         description: "Customize your workspace",
     },
@@ -33,13 +40,13 @@ export default function OrganizationSuccess() {
     };
 
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4 py-10">
+        <OnboardingShell>
             <div className="w-full max-w-lg space-y-6">
                 {/* Main success card */}
-                <Card className="border-2">
-                    <CardContent className="p-8 sm:p-10">
+                <Card className="shadow-card">
+                    <CardContent className="p-6 sm:p-8">
                         <SuccessCard
-                            title="Organization Created Successfully 🎉"
+                            title="Your organization is ready"
                             description="Your workspace is ready. You can now invite team members and start managing projects right away."
                         >
                             <Button
@@ -50,7 +57,7 @@ export default function OrganizationSuccess() {
                                     )
                                 }
                             >
-                                Go To Dashboard
+                                Go to dashboard
                                 <ArrowRight className="size-4" />
                             </Button>
                             <Button
@@ -59,7 +66,7 @@ export default function OrganizationSuccess() {
                                 onClick={handleInvite}
                             >
                                 <UserPlus className="size-4" />
-                                Invite Team Members
+                                Invite team members
                             </Button>
                         </SuccessCard>
                     </CardContent>
@@ -67,20 +74,20 @@ export default function OrganizationSuccess() {
 
                 {/* Quick actions */}
                 <div className="space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">
+                    <p className="px-1 text-xs font-medium text-muted-foreground">
                         What&apos;s next
                     </p>
-                    <div className="rounded-xl border border-border bg-card divide-y divide-border overflow-hidden">
+                    <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card shadow-card">
                         {QUICK_ACTIONS.map((action) => (
                             <button
                                 key={action.label}
-                                className="flex items-center gap-4 w-full px-5 py-4 text-left hover:bg-accent/50 transition-colors group"
+                                className="group flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors outline-none hover:bg-accent/60 focus-visible:bg-accent"
                                 onClick={() =>
                                     toast.info(`${action.label} — coming soon!`)
                                 }
                             >
-                                <span className="text-xl shrink-0">
-                                    {action.icon}
+                                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary">
+                                    <action.icon className="size-4" />
                                 </span>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium text-foreground">
@@ -105,6 +112,6 @@ export default function OrganizationSuccess() {
                     Share invite link with your team
                 </button>
             </div>
-        </div>
+        </OnboardingShell>
     );
 }

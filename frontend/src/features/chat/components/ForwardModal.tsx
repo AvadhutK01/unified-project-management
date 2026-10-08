@@ -120,14 +120,17 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Forward messages"
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px] duration-150 animate-in fade-in dark:bg-black/60"
             onClick={onClose}
         >
             <div
-                className="relative w-full max-w-md rounded-2xl border border-border bg-card shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
+                className="relative flex max-h-[85dvh] w-full max-w-md flex-col overflow-hidden rounded-xl border border-border bg-popover shadow-elevated"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-card/80 backdrop-blur-md">
+                <div className="flex items-center justify-between border-b border-border px-5 py-4">
                     <div>
                         <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
                             <Send className="size-4 text-primary" />
@@ -141,12 +144,13 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                        aria-label="Close"
+                        className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                     >
                         <X className="size-4" />
                     </button>
                 </div>
-                <div className="p-4 border-b border-border bg-background/50">
+                <div className="border-b border-border p-4">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                         <input
@@ -154,7 +158,7 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
                             placeholder="Search members by name or email..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-border bg-card placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                            className="h-9 w-full rounded-md border border-input bg-card pr-3 pl-9 text-[13px] text-foreground shadow-xs outline-none placeholder:text-muted-foreground/80 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25 dark:bg-input/20"
                         />
                     </div>
                 </div>

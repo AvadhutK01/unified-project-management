@@ -1,81 +1,21 @@
 import { useState, useRef, useMemo } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
-    FileText,
-    MessageSquare,
-    Paperclip,
-    History,
-    LayoutGrid,
-    Sparkles,
-    Zap,
-    CheckCircle2,
-    XCircle,
-    Trash2,
-    PauseCircle,
-} from "lucide-react";
-import type { WorkItemStatus } from "../types/sprint.types";
-import {
-    STATUS_LABELS as WI_STATUS_LABELS,
-    WORK_ITEM_STATUSES,
-} from "@/features/work-items/constants/workitem.constants";
-
-const WI_KPI_CONFIG: Record<
-    WorkItemStatus,
-    {
-        icon: React.ElementType;
-        bg: string;
-        iconBg: string;
-        iconColor: string;
-        valueColor: string;
-    }
-> = {
-    new: {
-        icon: Sparkles,
-        bg: "bg-purple-50 dark:bg-purple-950/30",
-        iconBg: "bg-purple-100 dark:bg-purple-900/40",
-        iconColor: "text-purple-600 dark:text-purple-400",
-        valueColor: "text-purple-700 dark:text-purple-300",
-    },
-    active: {
-        icon: Zap,
-        bg: "bg-green-50 dark:bg-green-950/30",
-        iconBg: "bg-green-100 dark:bg-green-900/40",
-        iconColor: "text-green-600 dark:text-green-400",
-        valueColor: "text-green-700 dark:text-green-300",
-    },
-    resolved: {
-        icon: CheckCircle2,
-        bg: "bg-blue-50 dark:bg-blue-950/30",
-        iconBg: "bg-blue-100 dark:bg-blue-900/40",
-        iconColor: "text-blue-600 dark:text-blue-400",
-        valueColor: "text-blue-700 dark:text-blue-300",
-    },
-    closed: {
-        icon: XCircle,
-        bg: "bg-gray-50 dark:bg-gray-950/30",
-        iconBg: "bg-gray-100 dark:bg-gray-900/40",
-        iconColor: "text-gray-600 dark:text-gray-400",
-        valueColor: "text-gray-700 dark:text-gray-300",
-    },
-    removed: {
-        icon: Trash2,
-        bg: "bg-red-50 dark:bg-red-950/30",
-        iconBg: "bg-red-100 dark:bg-red-900/40",
-        iconColor: "text-red-600 dark:text-red-400",
-        valueColor: "text-red-700 dark:text-red-300",
-    },
-    onhold: {
-        icon: PauseCircle,
-        bg: "bg-amber-50 dark:bg-amber-950/30",
-        iconBg: "bg-amber-100 dark:bg-amber-900/40",
-        iconColor: "text-amber-600 dark:text-amber-400",
-        valueColor: "text-amber-700 dark:text-amber-300",
-    },
-};
+    Link,
+    useParams,
+    useNavigate,
+    useSearchParams,
+} from "react-router-dom";
 import { toast } from "sonner";
 import { useConfirm } from "@/providers/ConfirmProvider";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { DetailTabsList } from "@/components/common/collab/DetailTabsList";
+import { PageContainer } from "@/components/common/PageHeader";
+import { Button } from "@/components/ui/button";
+import { ListChecks } from "lucide-react";
+import { WorkItemBreakdown } from "../components/WorkItemBreakdown";
+import { usePermission } from "@/features/rbac/hooks/usePermission";
+import { PERMISSIONS } from "@/features/rbac/types/rbac.types";
 
 import { STATUS_LABELS } from "../constants/sprint.constants";
 import type { SprintStatus } from "../types/sprint.types";
@@ -129,6 +69,8 @@ const SprintDetailsPage = () => {
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const { hasPermission } = usePermission();
+    const canListWorkItems = hasPermission(PERMISSIONS.WORKITEM.LIST);
 
     // Queries
     const {
@@ -363,7 +305,7 @@ const SprintDetailsPage = () => {
     const mediaCount = mediaList.length;
 
     return (
-        <div className="p-4 sm:p-6 space-y-6 max-w-[1400px] mx-auto">
+        <PageContainer>
             <SprintDetailsHeader
                 sprint={sprint}
                 project={project}
@@ -376,123 +318,39 @@ const SprintDetailsPage = () => {
                 onStatusChange={handleStatusChange}
             />
 
-            {/* Work Items KPI */}
             {sprint.metrics && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-                    {/* Total */}
-                    <div className="col-span-2 sm:col-span-4 lg:col-span-1 rounded-xl border p-4 bg-violet-50 dark:bg-violet-950/30 flex items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-900/40">
-                            <LayoutGrid
-                                size={18}
-                                className="text-violet-600 dark:text-violet-400"
-                            />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-violet-700 dark:text-violet-300">
-                                {sprint.metrics.totalWorkItems}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                Total Items
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Per-status */}
-                    {WORK_ITEM_STATUSES.map((status) => {
-                        const {
-                            icon: Icon,
-                            bg,
-                            iconBg,
-                            iconColor,
-                            valueColor,
-                        } = WI_KPI_CONFIG[status];
-                        const count =
-                            sprint.metrics!.workitemsByStatus[status] ?? 0;
-                        return (
-                            <div
-                                key={status}
-                                className={`rounded-xl border p-4 ${bg} flex items-center gap-3`}
-                            >
-                                <div
-                                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${iconBg}`}
-                                >
-                                    <Icon size={15} className={iconColor} />
-                                </div>
-                                <div>
-                                    <p
-                                        className={`text-xl font-bold ${valueColor}`}
-                                    >
-                                        {count}
-                                    </p>
-                                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">
-                                        {WI_STATUS_LABELS[status]}
-                                    </p>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
+                <WorkItemBreakdown
+                    metrics={sprint.metrics}
+                    action={
+                        canListWorkItems ? (
+                            <Button asChild variant="outline" size="sm">
+                                <Link to="work-items">
+                                    <ListChecks />
+                                    View work items
+                                </Link>
+                            </Button>
+                        ) : undefined
+                    }
+                />
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div className="lg:col-span-2 space-y-6">
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+                <div className="min-w-0 space-y-6 xl:col-span-2">
                     <Tabs
                         value={activeTab}
                         onValueChange={setActiveTab}
                         className="w-full"
                     >
-                        <TabsList className="bg-secondary/60 border border-border/40 rounded-xl p-1 w-full sm:w-auto flex flex-wrap gap-1">
-                            <TabsTrigger
-                                value="overview"
-                                className="flex items-center gap-2 px-4 py-2 font-semibold hover:text-primary data-active:bg-primary/10 data-active:text-primary"
-                            >
-                                <FileText className="size-4" />
-                                <span>Overview</span>
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="comments"
-                                className="flex items-center gap-2 px-4 py-2 font-semibold hover:text-primary data-active:bg-primary/10 data-active:text-primary"
-                            >
-                                <MessageSquare className="size-4" />
-                                <span>Comments</span>
-                                {discussionCount > 0 && (
-                                    <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded-full text-[10px] font-bold">
-                                        {discussionCount}
-                                    </span>
-                                )}
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="attachments"
-                                className="flex items-center gap-2 px-4 py-2 font-semibold hover:text-primary data-active:bg-primary/10 data-active:text-primary"
-                            >
-                                <Paperclip className="size-4" />
-                                <span>Attachments</span>
-                                {mediaCount > 0 && (
-                                    <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded-full text-[10px] font-bold">
-                                        {mediaCount}
-                                    </span>
-                                )}
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="activities"
-                                className="flex items-center gap-2 px-4 py-2 font-semibold hover:text-primary data-active:bg-primary/10 data-active:text-primary"
-                            >
-                                <History className="size-4" />
-                                <span>Activity Log</span>
-                            </TabsTrigger>
-                        </TabsList>
+                        <DetailTabsList
+                            commentCount={discussionCount}
+                            attachmentCount={mediaCount}
+                        />
 
-                        <TabsContent
-                            value="overview"
-                            className="mt-4 focus-visible:outline-hidden"
-                        >
+                        <TabsContent value="overview" className="mt-5">
                             <SprintOverviewTab sprint={sprint} />
                         </TabsContent>
 
-                        <TabsContent
-                            value="comments"
-                            className="mt-4 focus-visible:outline-hidden"
-                        >
+                        <TabsContent value="comments" className="mt-5">
                             <SprintCommentsTab
                                 sprintId={sprintId!}
                                 discussions={discussions}
@@ -508,10 +366,7 @@ const SprintDetailsPage = () => {
                             />
                         </TabsContent>
 
-                        <TabsContent
-                            value="attachments"
-                            className="mt-4 focus-visible:outline-hidden"
-                        >
+                        <TabsContent value="attachments" className="mt-5">
                             <SprintAttachmentsTab
                                 mediaList={mediaList}
                                 isMediaLoading={isMediaLoading}
@@ -526,10 +381,7 @@ const SprintDetailsPage = () => {
                             />
                         </TabsContent>
 
-                        <TabsContent
-                            value="activities"
-                            className="mt-4 focus-visible:outline-hidden"
-                        >
+                        <TabsContent value="activities" className="mt-5">
                             <SprintActivitiesTab
                                 activities={activities}
                                 isActivitiesLoading={isActivitiesLoading}
@@ -543,7 +395,7 @@ const SprintDetailsPage = () => {
                     </Tabs>
                 </div>
 
-                <div className="space-y-6 sticky top-6 self-start">
+                <div className="grid gap-4 self-start sm:grid-cols-2 xl:sticky xl:top-6 xl:grid-cols-1">
                     <SprintTrackerCard sprint={sprint} />
                     <SprintDetailsCard
                         sprint={sprint}
@@ -561,7 +413,7 @@ const SprintDetailsPage = () => {
                     toast.success("Sprint updated successfully");
                 }}
             />
-        </div>
+        </PageContainer>
     );
 };
 

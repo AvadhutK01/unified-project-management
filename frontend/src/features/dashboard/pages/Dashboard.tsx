@@ -1,65 +1,106 @@
-import { LayoutDashboard, Loader2, AlertCircle } from "lucide-react";
+import { Globe, AtSign } from "lucide-react";
 import {
     useDashboardQuery,
     useDashboardSummaryMutation,
 } from "../hooks/useDashboard";
-import OrganizationInfo from "../components/OrganizationInfo";
 import StatsCards from "../components/StatsCards";
 import AiSummary from "../components/AiSummary";
 import ProjectProgressList from "../components/ProjectProgressList";
 import RecentWorkItems from "../components/RecentWorkItems";
+import {
+    MetaItem,
+    PageContainer,
+    PageHeader,
+} from "@/components/common/PageHeader";
+import { PageSkeleton } from "@/components/common/Skeletons";
+import { ErrorState } from "@/components/common/EmptyState";
+import { OrganizationAvatar } from "@/components/common/OrgSwitcher";
+import { getColor } from "@/lib/utils";
+import { usePermission } from "@/features/rbac/hooks/usePermission";
+import { PERMISSIONS } from "@/features/rbac/types/rbac.types";
+
+function greeting() {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 18) return "Good afternoon";
+    return "Good evening";
+}
 
 const Dashboard = () => {
-    const { data, isLoading, isError, error } = useDashboardQuery();
+    const { data, isLoading, isError, refetch } = useDashboardQuery();
     const summaryMutation = useDashboardSummaryMutation();
+    const { hasPermission } = usePermission();
 
     if (isLoading) {
-        return (
-            <div className="flex h-[calc(100vh-65px)] items-center justify-center">
-                <Loader2
-                    size={32}
-                    className="animate-spin text-muted-foreground"
-                />
-            </div>
-        );
+        return <PageSkeleton stats={4} variant="dashboard" />;
     }
 
     if (isError || !data) {
         return (
-            <div className="flex h-[calc(100vh-65px)] flex-col items-center justify-center gap-2 text-muted-foreground">
-                <AlertCircle size={28} />
-                <p className="text-sm">
-                    {error instanceof Error
-                        ? error.message
-                        : "Failed to load dashboard"}
-                </p>
-            </div>
+            <PageContainer>
+                <ErrorState
+                    title="We couldn't load your dashboard"
+                    description="Your workspace overview is temporarily unavailable. Please try again."
+                    onRetry={() => refetch()}
+                />
+            </PageContainer>
         );
     }
 
-    return (
-        <div className="space-y-6 p-4 sm:p-6">
-            <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-                    <LayoutDashboard size={18} className="text-primary" />
-                </div>
-                <div>
-                    <h1 className="text-xl font-semibold text-foreground leading-tight">
-                        Dashboard
-                    </h1>
-                    <p className="text-xs text-muted-foreground">
-                        Overview of your organization
-                    </p>
-                </div>
-            </div>
+    const firstName = (localStorage.getItem("name") || "").split(" ")[0];
+    const websiteHref = data.websiteUrl
+        ? /^https?:\/\//i.test(data.websiteUrl)
+            ? data.websiteUrl
+            : `https://${data.websiteUrl}`
+        : null;
 
-            <OrganizationInfo
-                title={data.title}
-                slug={data.slug}
-                logoUrl={data.logoUrl}
-                websiteUrl={data.websiteUrl}
-                description={data.description}
-            />
+    return (
+        <PageContainer>
+            <div>
+                <p className="mb-3 text-[13px] text-muted-foreground">
+                    {greeting()}
+                    {firstName ? `, ${firstName}` : ""} — here's what's
+                    happening across your workspace.
+                </p>
+                <PageHeader
+                    media={
+                        <OrganizationAvatar
+                            organization={{
+                                name: data.title,
+                                logoUrl: data.logoUrl,
+                            }}
+                            color={getColor(data.slug)}
+                            className="size-11 rounded-lg text-sm"
+                        />
+                    }
+                    title={data.title}
+                    description={
+                        data.description ? (
+                            <span className="line-clamp-1">
+                                {data.description}
+                            </span>
+                        ) : undefined
+                    }
+                    details={
+                        <>
+                            <MetaItem icon={AtSign}>{data.slug}</MetaItem>
+                            {websiteHref && (
+                                <a
+                                    href={websiteHref}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex min-w-0 items-center gap-1.5 transition-colors hover:text-foreground"
+                                >
+                                    <Globe className="size-3.5 shrink-0" />
+                                    <span className="truncate">
+                                        {data.websiteUrl}
+                                    </span>
+                                </a>
+                            )}
+                        </>
+                    }
+                />
+            </div>
 
             <StatsCards
                 totalProjectsCount={data.totalProjectsCount}
@@ -68,18 +109,30 @@ const Dashboard = () => {
                 totalMembersCount={data.totalMembersCount}
             />
 
-            <AiSummary
-                data={data}
-                summary={summaryMutation.data}
-                isPending={summaryMutation.isPending}
-                onGenerate={() => summaryMutation.mutate()}
-            />
-
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <ProjectProgressList projects={data.projects} />
-                <RecentWorkItems workItems={data.recentWorkItems} />
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-5 xl:gap-6">
+                <div className="xl:col-span-3">
+                    <ProjectProgressList
+                        projects={data.projects}
+                        viewAllHref={
+                            hasPermission(PERMISSIONS.PROJECTS.LIST)
+                                ? `/${data.slug}/projects`
+                                : undefined
+                        }
+                    />
+                </div>
+                <AiSummary
+                    data={data}
+                    summary={summaryMutation.data}
+                    isPending={summaryMutation.isPending}
+                    onGenerate={() => summaryMutation.mutate()}
+                    title="AI Workspace Insights"
+                    subject="workspace"
+                    className="self-start xl:col-span-2"
+                />
             </div>
-        </div>
+
+            <RecentWorkItems workItems={data.recentWorkItems} />
+        </PageContainer>
     );
 };
 
